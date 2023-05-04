@@ -1,12 +1,12 @@
-cl_bootnode_privkey: ENC[AES256_GCM,data:MyxnSrBqssI8pkylW3qcIRgqzzz8lH2a5OyAIrlLW3Atit1JCAx3cSrq3Fx8so3iLKEAUQghUST2j6L+EXyxjw==,iv:JQsqFJFmBbRccLb/A68whCWHfofXQ2FOcCrPuyUbBQU=,tag:DOT3HvJSvdBAktncWGH+tQ==,type:str]
+cl_bootnode_privkey: ENC[AES256_GCM,data:1rqR,iv:i8pJEXj5piOEWNOwNuZWpjdf8S87Y6aO+o4r4f0kIts=,tag:U9eF9h0uyBs+LihMHXpTMw==,type:str]
 sops:
     kms: []
     gcp_kms: []
     azure_kv: []
     hc_vault: []
     age: []
-    lastmodified: "2023-04-20T10:54:43Z"
-    mac: ENC[AES256_GCM,data:mbOdHLrBHX6s5gKC/ETM+RIfhXAxIGLq3J0hosQqCnlBbKbni/U4fg3jvVsM6iIvjScBSrEbn5ffUwEJaaHZUfPq9FA71MYqMEbBgbqX45i3vu5YxdDYat0uhZcHLbN90ULc6NC3Hib7ufGVEgHa/rgFpuuJycDE2+ZeaRC/Re0=,iv:RL9DlmesszskrKEvnuiPqB6oBI7bg+vLQr8zxvmBSAU=,tag:gXA0MIK4FaxRDu+DTB/P8w==,type:str]
+    lastmodified: "2023-05-04T09:46:57Z"
+    mac: ENC[AES256_GCM,data:FTssOZs2fDxEhsdwh3pcPRFwNIgK7oFZAer94B9Wt5ZkThm/ofcKWfl3vCZbx2LtI3hYIS2AdW9/LqalBYvClKqW0TKYfTJkb+8wTeflk9uR/dwMwelbGPV5LCeKSS+AxCCTsBGm3gKtXk15iThxx6srNehlzedfx0FmYFqbWds=,iv:mUHdSt8zaYlzJaJrlQ43/uaoZdDYo2J8YU+p2U0zyxA=,tag:i1PnDiazrqehQ7elrU/zeg==,type:str]
     pgp:
         - created_at: "2023-01-24T13:12:13Z"
           enc: |-

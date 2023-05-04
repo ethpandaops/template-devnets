@@ -1,9 +1,9 @@
 # role: ethpandaops.general.bootstrap
 bootstrap_default_user_authorized_keys_github_team_el:
-  - mariusVanDerWijden
-  - holiman
-  - karalabe
-  - g11tech
+  # - mariusVanDerWijden
+  # - holiman
+  # - karalabe
+  # - g11tech
 
 # role: ethpandaops.general.ethereum_node
 ethereum_node_el: geth
@@ -23,3 +23,4 @@ geth_container_command_extra_args:
   - --ethstats={{ inventory_hostname }}:{{ ethstats_secret }}@{{ ethstats_url }}
 geth_init_custom_network: true
 geth_init_custom_network_genesis_file: "{{ eth_testnet_config_dir }}/genesis.json"
+geth_container_pull: true
