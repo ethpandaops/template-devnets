@@ -1,9 +1,9 @@
 # role: ethpandaops.general.bootstrap
 bootstrap_default_user_authorized_keys_github_team_el:
-  - g11tech
-  - acolytec3
-  - holgerd77
-  - jochem-brouwer
+  # - g11tech
+  # - acolytec3
+  # - holgerd77
+  # - jochem-brouwer
 
 # role: ethpandaops.general.ethereum_node
 ethereum_node_el: ethereumjs
@@ -25,3 +25,4 @@ ethereumjs_container_command_extra_args:
   - --maxPeers=75
   - --isSingleNode=true
   - --logLevel=debug
+ethereumjs_container_pull: true

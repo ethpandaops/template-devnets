@@ -1,7 +1,7 @@
 # role: ethpandaops.general.bootstrap
 bootstrap_default_user_authorized_keys_github_team_el:
-  - Giulio2002
-  - yperbasis
+  # - Giulio2002
+  # - yperbasis
 
 # role: ethpandaops.general.ethereum_node
 ethereum_node_el: erigon
@@ -22,3 +22,4 @@ erigon_container_command_extra_args:
   - --ethstats={{ inventory_hostname }}:{{ ethstats_secret }}@{{ ethstats_url }}
 erigon_init_custom_network: true
 erigon_init_custom_network_genesis_file: "{{ eth_testnet_config_dir }}/genesis.json"
+erigon_container_pull: true

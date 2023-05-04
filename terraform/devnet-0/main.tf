@@ -40,7 +40,7 @@ variable "digitalocean_project_name" {
 
 variable "digitalocean_ssh_key_name" {
   type    = string
-  default = "shared-devops-eth2"
+  default = "examplesshkey"
 }
 
 variable "digitalocean_vpcs" {
@@ -432,6 +432,7 @@ resource "local_file" "ansible_inventory" {
           for key, server in digitalocean_droplet.main : "do.${key}" => {
             ip       = "${server.ipv4_address}"
             group    = split(".", key)[0]
+            tags     = "${server.tags}"
             hostname = "${split(".", key)[0]}-${split(".", key)[1]}"
             cloud    = "digitalocean"
             region   = "${server.region}"
