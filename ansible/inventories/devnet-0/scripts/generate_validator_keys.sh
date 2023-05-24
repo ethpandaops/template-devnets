@@ -6,8 +6,9 @@ if [ -z "$VALIDATORS_MNEMONIC_0" ]; then
 fi
 
 OUTPUT_DIR=../files/validator_keys
+mkdir -p $OUTPUT_DIR
 PRYSM_WALLET_PASSWORD="prysm"
-echo $PRYSM_WALLET_PASSWORD > ../files/validator_keys/prysm_wallet_password.txt
+echo $PRYSM_WALLET_PASSWORD > "$OUTPUT_DIR/prysm_wallet_pass.txt"
 function prep_group {
   let group_base=$1
   validators_source_mnemonic="$2"
@@ -16,8 +17,8 @@ function prep_group {
   naming_prefix="$5"
   validators_per_host=$6
   el_address=$(cat ../group_vars/all/all.yaml| yq .ethereum_node_cl_validator_fee_recipient)
-  genesis_root=$(cat ../../../../network-configs/devnet-5/parsedBeaconState.json| jq -r .genesis_validators_root)
-  genesis_version=$(cat ../../../../network-configs/devnet-5/config.yaml| yq .GENESIS_FORK_VERSION)
+  genesis_root=$(cat ../../../../network-configs/devnet-0/parsedBeaconState.json| jq -r .genesis_validators_root)
+  genesis_version=$(cat ../../../../network-configs/devnet-0/config.yaml| yq .GENESIS_FORK_VERSION)
   echo "Group base: $group_base"
   for (( i = 0; i < keys_to_create; i++ )); do
     let node_index=group_base+i
