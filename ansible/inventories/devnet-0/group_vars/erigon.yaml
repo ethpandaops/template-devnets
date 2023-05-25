@@ -17,8 +17,7 @@ erigon_container_command_extra_args:
   - --http.vhosts=*
   - --prune=htc
   - --networkid={{ ethereum_network_id }}
-  - --externalcl
-  - --bootnodes={{ ethereum_el_bootnode }}
+  - --bootnodes={{ ethereum_el_bootnodes | join(',') }}
   - --ethstats={{ inventory_hostname }}:{{ ethstats_secret }}@{{ ethstats_url }}
 erigon_init_custom_network: true
 erigon_init_custom_network_genesis_file: "{{ eth_testnet_config_dir }}/genesis.json"
