@@ -38,3 +38,6 @@ docker_daemon_options:
 
 # role: ethpandaops.general.prometheus
 prometheus_container_networks: "{{ docker_networks_shared }}"
+
+# role: ethpandaops.general.ethereum_node
+ethereum_node_images_always_pull: true
