@@ -107,4 +107,4 @@ docker_nginx_proxy_container_volumes:
   - "{{ docker_nginx_proxy_datadir }}/htpasswd:/etc/nginx/htpasswd:ro"
 
 # Checkpointsync URL
-checkpoint_sync_url: https://{{secret_nginx_shared_basic_auth.name}}:{{secret_nginx_shared_basic_auth.password}}@bn.lighthouse-nethermind-1.srv.devnet-0.ethpandaops.io #example
+checkpoint_sync_url: https://checkpoint-sync.devnet-0.ethpandaops.io #example

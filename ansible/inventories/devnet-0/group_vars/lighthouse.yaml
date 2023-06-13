@@ -34,7 +34,7 @@ lighthouse_container_command_extra_args:
   - --testnet-dir=/network-config
   - --boot-nodes={{ ethereum_cl_bootnodes | join(',') }}
   - --debug-level=debug
-  - --checkpoint-sync-url={{ checkpoint_sync_url }}
+  #- --checkpoint-sync-url={{ checkpoint_sync_url }}
 lighthouse_validator_container_volumes:
   - "{{ lighthouse_validator_datadir }}:/validator-data"
   - "{{ eth_testnet_config_dir }}:/network-config:ro"
