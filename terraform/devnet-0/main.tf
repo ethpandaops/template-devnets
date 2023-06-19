@@ -72,28 +72,28 @@ variable "digitalocean_vm_groups" {
         "1" = { validator_start = 0, validator_end = 100 }
       },
     },
-        {
+    {
       id = "lighthouse-besu"
       vms = {
-        "1" = {validator_start = 100, validator_end = 200 }
+        "1" = { validator_start = 100, validator_end = 200 }
       },
     },
     {
       id = "lighthouse-nethermind"
       vms = {
-        "1" = {validator_start = 200, validator_end = 300 }
+        "1" = { validator_start = 200, validator_end = 300 }
       },
     },
     {
       id = "lighthouse-ethereumjs"
       vms = {
-        "1" = {validator_start = 300, validator_end = 400 }
+        "1" = { validator_start = 300, validator_end = 400 }
       },
     },
     {
       id = "lighthouse-erigon"
       vms = {
-        "1" = {validator_start = 400, validator_end = 500 }
+        "1" = { validator_start = 400, validator_end = 500 }
       },
     },
     // Prysm combos
@@ -162,7 +162,7 @@ variable "digitalocean_vm_groups" {
     {
       id = "nimbus-geth"
       vms = {
-        "1" = { validator_start = 1500, validator_end = 1600}
+        "1" = { validator_start = 1500, validator_end = 1600 }
       }
     },
     {
@@ -180,7 +180,7 @@ variable "digitalocean_vm_groups" {
     {
       id = "nimbus-ethereumjs"
       vms = {
-        "1" = { validator_start = 1800, validator_end = 1900}
+        "1" = { validator_start = 1800, validator_end = 1900 }
       }
     },
     {
