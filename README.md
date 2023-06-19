@@ -85,3 +85,19 @@ lodestar-besu-1 ansible_host=167.99.34.241 cloud=digitalocean cloud_region=ams3 
 1. Run `ansible-playbook -i inventories/devnet-0/inventory.ini cleanup_ethereum.yaml` from the [ansible/](ansible/) directory to clean up the network. This will delete the genesis file, validators and clean up the network on all the nodes.
 2. Run `ansible-playbook -i inventories/devnet-0/inventory.ini ansible-playbook playbook.yaml -t ethereum_genesis -e ethereum_genesis_cleanup=true` from the [ansible/](ansible/) directory to clean up the network-configs and validators directories on your local machine. This step is required if you would like to reuse the nodes but with a different genesis configuration. (For example, if you would like to change the validator indexes assigned to the nodes, due to a relaunch).
 3. Run `terraform destroy` from the [terraform/devnet-0/](terraform/devnet-0/) directory to delete the nodes. This will remove all the virtual machines and the inventory file. Be careful when running this command, as it will delete all the nodes and the inventory file. You will need to run `terraform apply` again to create the nodes and the inventory file.
+
+## Tooling and Infrastructure
+* The tooling for the different test networks is managed by our Kubernetes stack. These tools utilize the [ethereum-helm-charts](https://github.com/ethpandaops/ethereum-helm-charts) repository. The deployment of the tooling is handled by ArgoCD, a continuous delivery and GitOps tool for Kubernetes.
+* Place any custom tooling in the [kubernetes/devnet-0](kubernetes/devnet-0) directory. The tooling will be deployed to the Kubernetes cluster by ArgoCD.
+* Keep the format of kubernetes/devnet-name/tool-name/ as this will be used by ArgoCD to deploy the tooling to the Kubernetes cluster.
+* To update a kubernetes helm chart, remove Chart.lock and run `helm dependency update` from the tool directory. This will update the dependencies for the helm chart. Commit the changes to the repository and ArgoCD will automatically deploy the updated tooling to the Kubernetes cluster.
+* To add a new tool, create a new directory in the [kubernetes/devnet-0](kubernetes/devnet-0) directory. The directory name will be used as the tool name. Place the helm chart in the tool directory. Commit the changes to the repository and ArgoCD will automatically deploy the new tooling to the Kubernetes cluster.
+* To modify the configuration of a tool, modify the values.yaml file in the tool directory. Commit the changes to the repository and ArgoCD will automatically deploy the updated tooling to the Kubernetes cluster.
+* To delete a tool, delete the tool directory or move the devnet to kubernetes-archive directory, as this will not be monitored by ArgoCD. Commit the changes to the repository and ArgoCD will automatically delete the tooling from the Kubernetes cluster.
+
+## Additional tips and tricks
+* To get the IP addresses of the nodes, run `terraform output` from the [terraform/devnet-0/](terraform/devnet-0/) directory.
+* To get the validator ranges run `curl -s https://bootnode-1.srv.devnet-0.ethpandaops.io/meta/api/v1/validator-ranges.json`
+* To get which validator proposed a specific block run `ethdo --connection=https://user:password@bn.lighthouse-nethermind-1.srv.devnet-0.ethpandaops.io block info --blockid 100 --json | jq -r .message.proposer_index | ./whose_validator.zsh` from the [ansible/](ansible/) directory.
+* Getting execution layer client enodes `curl -s https://config.devnet-0.ethpandaops.io/api/v1/nodes/inventory | jq -r '.ethereum_pairs[] | .execution.enode'`
+* Getting conseus layer client ENRs `curl -s https://config.devnet-0.ethpandaops.io/api/v1/nodes/inventory | jq -r '.ethereum_pairs[] | .consensus.enr'`
