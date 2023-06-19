@@ -69,155 +69,155 @@ variable "digitalocean_vm_groups" {
     {
       id = "lighthouse-geth"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 0, validator_end = 100 }
       },
     },
     {
       id = "lighthouse-besu"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 100, validator_end = 200 }
       },
     },
     {
       id = "lighthouse-nethermind"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 200, validator_end = 300 }
       },
     },
     {
       id = "lighthouse-ethereumjs"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 300, validator_end = 400 }
       },
     },
     {
       id = "lighthouse-erigon"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 400, validator_end = 500 }
       },
     },
     // Prysm combos
     {
       id = "prysm-geth"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 500, validator_end = 600 }
       },
     },
     {
       id = "prysm-besu"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 600, validator_end = 700 }
       },
     },
     {
       id = "prysm-nethermind"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 700, validator_end = 800 }
       },
     },
     {
       id = "prysm-ethereumjs"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 800, validator_end = 900 }
       },
     },
     {
       id = "prysm-erigon"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 900, validator_end = 1000 }
       },
     },
     // Lodestar combos
     {
       id = "lodestar-geth"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 1000, validator_end = 1100 }
       }
     },
     {
       id = "lodestar-besu"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 1100, validator_end = 1200 }
       },
     },
     {
       id = "lodestar-nethermind"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 1200, validator_end = 1300 }
       }
     },
     {
       id = "lodestar-ethereumjs"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 1300, validator_end = 1400 }
       }
     },
     {
       id = "lodestar-erigon"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 1400, validator_end = 1500 }
       }
     },
     // Nimbus combos
     {
       id = "nimbus-geth"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 1500, validator_end = 1600 }
       }
     },
     {
       id = "nimbus-besu"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 1600, validator_end = 1700 }
       },
     },
     {
       id = "nimbus-nethermind"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 1700, validator_end = 1800 }
       }
     },
     {
       id = "nimbus-ethereumjs"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 1800, validator_end = 1900 }
       }
     },
     {
       id = "nimbus-erigon"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 1900, validator_end = 2000 }
       }
     },
     // Teku combos
     {
       id = "teku-geth"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 2000, validator_end = 2100 }
       }
     },
     {
       id = "teku-besu"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 2100, validator_end = 2200 }
       },
     },
     {
       id = "teku-nethermind"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 2200, validator_end = 2300 }
       }
     },
     {
       id = "teku-ethereumjs"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 2300, validator_end = 2400 }
       }
     },
     {
       id = "teku-erigon"
       vms = {
-        "1" = {}
+        "1" = { validator_start = 2400, validator_end = 2500 }
       }
     },
   ]

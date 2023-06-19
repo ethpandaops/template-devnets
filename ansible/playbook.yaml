@@ -1,3 +1,8 @@
+- hosts: localhost
+  roles:
+    - role: ethpandaops.general.ethereum_genesis
+      tags: [ethereum_genesis]
+
 - import_playbook: ethpandaops.general.bootstrap_server
   tags: [init-server, bootstrap]
 
@@ -69,3 +74,15 @@
   roles:
     - role: eth_inventory_web
       tags: [eth_inventory_web]
+
+- hosts: beaconchain_explorer
+  become: true
+  roles:
+    - role: ethpandaops.general.beaconchain_explorer_aio
+      tags: [beaconchain_explorer]
+
+- hosts: tx_fuzz
+  become: true
+  roles:
+    - role: ethpandaops.general.tx_fuzz
+      tags: [tx_fuzz]
