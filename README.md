@@ -87,7 +87,7 @@ lodestar-besu-1 ansible_host=167.99.34.241 cloud=digitalocean cloud_region=ams3 
 3. Run `terraform destroy` from the [terraform/devnet-0/](terraform/devnet-0/) directory to delete the nodes. This will remove all the virtual machines and the inventory file. Be careful when running this command, as it will delete all the nodes and the inventory file. You will need to run `terraform apply` again to create the nodes and the inventory file.
 
 ## Tooling and Infrastructure
-* The tooling for the different test networks is managed by our Kubernetes stack. These tools utilize the [ethereum-helm-charts](https://github.com/ethpandaops/ethereum-helm-charts) repository. The deployment of the tooling is handled by ArgoCD, a continuous delivery and GitOps tool for Kubernetes.
+* The tooling for the different test networks is managed by our Kubernetes stack. These tools utilize the [ethereum-helm-charts](https://github.com/ethpandaops/ethereum-helm-charts) repository. The deployment of the tooling is handled by ArgoCD, a continuous delivery and GitOps tool for Kubernetes. (Warning, this will not work, unless ArgoCD is configured to monitor the repository).
 * Place any custom tooling in the [kubernetes/devnet-0](kubernetes/devnet-0) directory. The tooling will be deployed to the Kubernetes cluster by ArgoCD.
 * Keep the format of kubernetes/devnet-name/tool-name/ as this will be used by ArgoCD to deploy the tooling to the Kubernetes cluster.
 * To update a kubernetes helm chart, remove Chart.lock and run `helm dependency update` from the tool directory. This will update the dependencies for the helm chart. Commit the changes to the repository and ArgoCD will automatically deploy the updated tooling to the Kubernetes cluster.
