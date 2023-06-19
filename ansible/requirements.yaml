@@ -16,7 +16,6 @@ roles:
   - name: robertdebock.fail2ban
     version: "4.2.3"
 
-
 collections:
   - name: ansible.posix
   - name: community.sops
