@@ -21,7 +21,7 @@ Status   | Network    | Links   | Ansible                                       
 
 We're using [asdf](https://github.com/asdf-vm/asdf) to make sure that we all use the same versions across tools. Our repositories should contain versions defined in .tools-versions.
 
-You can then use [`./asdf-setup.sh`](./asdf-setup.sh) to install all dependencies.
+You can then use [`./setup.sh`](./asdf-setup.sh) to install all dependencies.
 
 ## Terraform
 From [`./terraform/devnet-0/`](./terraform/devnet-0/)
@@ -83,23 +83,23 @@ lodestar-besu-1 ansible_host=167.99.34.241 cloud=digitalocean cloud_region=ams3 
 1. [ansible/inventories/devnet-0/group_vars/all.yaml](ansible/inventories/devnet-0/group_vars/all.yaml) has all the network configuration parameters. Adjust the parameters according to your requirements. Most likely you will not need to adjust these, unless you would like to use a custom setup. The default configuration will work for most networks.
 
 ## Deploying the Network
-1. Run 
+1. Run
 ```shell
 ansible-playbook -i inventories/devnet-0/inventory.ini cleanup_ethereum.yaml
 ```
-from the [ansible/](ansible/) directory to deploy the network. This will generate the genesis file, validators and deploy the network according to the configuration parameters specified in the [ansible/inventories/devnet-0/group_vars/all.yaml](ansible/inventories/devnet-0/group_vars/all.yaml) file. 
+from the [ansible/](ansible/) directory to deploy the network. This will generate the genesis file, validators and deploy the network according to the configuration parameters specified in the [ansible/inventories/devnet-0/group_vars/all.yaml](ansible/inventories/devnet-0/group_vars/all.yaml) file.
 
 ## Cleaning up the Network
-1. Run 
+1. Run
 ```shell
 ansible-playbook -i inventories/devnet-0/inventory.ini cleanup_ethereum.yaml
-``` 
+```
 from the [ansible/](ansible/) directory to clean up the network. This will delete the genesis file, validators and clean up the network on all the nodes.
 
-2. Run 
+2. Run
 ```shell
 ansible-playbook -i inventories/devnet-0/inventory.ini ansible-playbook playbook.yaml -t ethereum_genesis -e ethereum_genesis_cleanup=true
-``` 
+```
 from the [ansible/](ansible/) directory to clean up the network-configs and validators directories on your local machine. This step is required if you would like to reuse the nodes but with a different genesis configuration. (For example, if you would like to change the validator indexes assigned to the nodes, due to a relaunch).
 
 3. Run `terraform destroy` from the [terraform/devnet-0/](terraform/devnet-0/) directory to delete the nodes. This will remove all the virtual machines and the inventory file. Be careful when running this command, as it will delete all the nodes and the inventory file. You will need to run `terraform apply` again to create the nodes and the inventory file.
@@ -115,20 +115,20 @@ from the [ansible/](ansible/) directory to clean up the network-configs and vali
 
 ## Additional tips and tricks
 * To get the IP addresses of the nodes, run `terraform output` from the [terraform/devnet-0/](terraform/devnet-0/) directory.
-* To get the validator ranges run 
+* To get the validator ranges run
 ```shell
 curl -s https://bootnode-1.srv.devnet-0.ethpandaops.io/meta/api/v1/validator-ranges.json
 ```
-* To get which validator proposed a specific block run 
+* To get which validator proposed a specific block run
 ```shell
 ethdo --connection=https://user:password@bn.lighthouse-nethermind-1.srv.devnet-0.ethpandaops.io block info --blockid 100 --json | jq -r .message.proposer_index | ./whose_validator.zsh
-``` 
+```
 from the [ansible/](ansible/) directory.
-* Getting execution layer client enodes 
+* Getting execution layer client enodes
 ```shell
 curl -s https://config.devnet-0.ethpandaops.io/api/v1/nodes/inventory | jq -r '.ethereum_pairs[] | .execution.enode'
 ```
-* Getting conseus layer client ENRs 
+* Getting conseus layer client ENRs
 ```shell
 curl -s https://config.devnet-0.ethpandaops.io/api/v1/nodes/inventory | jq -r '.ethereum_pairs[] | .consensus.enr'
 ```
