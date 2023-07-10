@@ -85,9 +85,13 @@ lodestar-besu-1 ansible_host=167.99.34.241 cloud=digitalocean cloud_region=ams3 
 ## Deploying the Network
 1. Run
 ```shell
-ansible-playbook -i inventories/devnet-0/inventory.ini cleanup_ethereum.yaml
+ansible-playbook -i inventories/devnet-0/inventory.ini playbook.yaml
 ```
-from the [ansible/](ansible/) directory to deploy the network. This will generate the genesis file, validators and deploy the network according to the configuration parameters specified in the [ansible/inventories/devnet-0/group_vars/all.yaml](ansible/inventories/devnet-0/group_vars/all.yaml) file.
+from the [ansible/](ansible/) directory to deploy the network. This will generate the genesis file, validators and deploy the network according to the configuration parameters specified in the [ansible/inventories/devnet-0/group_vars/all.yaml](ansible/inventories/devnet-0/group_vars/all.yaml) file.  
+
+Don't forget the following gotchas:
+- Change the `ethereum_genesis_chain_id` value in [ansible/inventories/devnet-0/group_vars/all.yaml](ansible/inventories/devnet-0/group_vars/all.yaml) to avoid clashing with an existing network
+- Ensure you have `docker` running on your local machine, this is essential for generating some post-testnet files
 
 ## Cleaning up the Network
 1. Run
