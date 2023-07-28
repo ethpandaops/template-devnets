@@ -14,10 +14,18 @@ validator_keys_sync_files:
   - src: "{{ inventory_dir }}/files/validator_keys/{{ inventory_hostname }}/secrets/"
     dest: "{{ lodestar_validator_datadir }}/secrets/"
 
+validator_bls_sync_files:
+  - src: "{{ inventory_dir }}/files/validator_keys/{{ inventory_hostname }}/change_operations.json"
+    dest: "{{ lodestar_validator_datadir }}/change_operations.json"
+    owner: lodestar
+    group: lodestar
+
 # role: ethpandaops.general.ethereum_node
 ethereum_node_cl: lodestar
 
 # role: ethpandaops.general.lodestar
+lodestar_container_name: beacon
+lodestar_validator_container_name: validator
 lodestar_container_image: "{{ default_ethereum_client_images.lodestar }}"
 lodestar_container_env:
   VIRTUAL_HOST: "{{ ethereum_node_beacon_hostname }}"
@@ -30,9 +38,8 @@ lodestar_container_volumes:
 lodestar_container_command_extra_args:
   - --paramsFile=/network-config/config.yaml
   - --genesisStateFile=/network-config/genesis.ssz
-  - --rest.namespace=*
-  #- --logLevel=debug
   - --bootnodes={{ ethereum_cl_bootnodes | join(',') }}
+  - --rest.namespace="*"
   - --network.connectToDiscv5Bootnodes
   - --nat=true
   #- --chain.trustedSetup=/network-config/trusted_setup.txt
@@ -44,3 +51,4 @@ lodestar_validator_container_command_extra_args:
   - --paramsFile=/network-config/config.yaml
   - --graffiti={{ ethereum_node_cl }}/{{ ethereum_node_el }}
 lodestar_validator_datadir: /data/lodestar-validator
+lodestar_container_pull: true
