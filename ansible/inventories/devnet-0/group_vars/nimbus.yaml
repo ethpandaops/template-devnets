@@ -12,6 +12,12 @@ validator_keys_sync_files:
   - src: "{{ inventory_dir }}/files/validator_keys/{{ inventory_hostname }}/secrets/"
     dest: "{{ nimbus_validator_datadir }}/secrets/"
 
+validator_bls_sync_files:
+  - src: "{{ inventory_dir }}/files/validator_keys/{{ inventory_hostname }}/change_operations.json"
+    dest: "{{ nimbus_validator_datadir }}/change_operations.json"
+    owner: nimbus
+    group: nimbus
+
 # role: ethpandaops.general.ethereum_node
 ethereum_node_cl: nimbus
 
@@ -25,6 +31,7 @@ nimbus_checkpoint_autoremove_enabled: true
 
 
 # role: ethpandaops.general.nimbus
+nimbus_container_name: beacon
 nimbus_container_image: "{{ default_ethereum_client_images.nimbus }}"
 nimbus_container_env:
   VIRTUAL_HOST: "{{ ethereum_node_beacon_hostname }}"
@@ -34,7 +41,6 @@ nimbus_container_volumes:
   - "{{ nimbus_datadir }}:/data"
   - "{{ nimbus_auth_jwt_path }}:/execution-auth.jwt:ro"
   - "{{ eth_testnet_config_dir }}:/network-config:ro"
-
 nimbus_container_command_extra_args: >-
   {{ nimbus_container_command_extra_simple_args + nimbus_container_command_extra_bootnode_args }}
 nimbus_container_command_extra_simple_args:
@@ -42,6 +48,7 @@ nimbus_container_command_extra_simple_args:
   - --validator-monitor-auto=false
   - --doppelganger-detection=off
   - --log-level=INFO
+  - --light-client-data-serve=false
   - --graffiti={{ ethereum_node_cl }}/{{ ethereum_node_el }}
 nimbus_container_command_extra_bootnode_args: >-
   {{ ethereum_cl_bootnodes | map('regex_replace', '^', '--bootstrap-node=') | list }}
@@ -49,3 +56,4 @@ nimbus_container_command_extra_bootnode_args: >-
 nimbus_validator_datadir: /data/nimbus-validator
 nimbus_container_validator_volumes:
   - "{{ nimbus_validator_datadir }}:/validator-data"
+nimbus_container_pull: true

@@ -13,10 +13,16 @@ validator_keys_sync_files:
   - src: "{{ inventory_dir }}/files/validator_keys/{{ inventory_hostname }}/teku-secrets/"
     dest: "{{ teku_validator_datadir }}/secrets/"
 
+validator_bls_sync_files:
+  - src: "{{ inventory_dir }}/files/validator_keys/{{ inventory_hostname }}/change_operations.json"
+    dest: "{{ teku_validator_datadir }}/change_operations.json"
+    owner: teku
+    group: teku
 # role: ethpandaops.general.ethereum_node
 ethereum_node_cl: teku
 
 # role: ethpandaops.general.teku
+teku_container_name: beacon
 teku_container_image: "{{ default_ethereum_client_images.teku }}"
 teku_container_env:
   VIRTUAL_HOST: "{{ ethereum_node_beacon_hostname }}"
@@ -35,13 +41,12 @@ teku_container_command_extra_args:
   - --data-storage-mode=PRUNE
   - --validators-graffiti={{ ethereum_node_cl }}/{{ ethereum_node_el }}
   - --logging=info
-  - --Xee-version=kilnv2
   - --Xlog-include-p2p-warnings-enabled
-  - --Xmetrics-block-timing-tracking-enabled
-  - --Xprogressive-balances-mode=USED
-  - --Xtrusted-setup=/network-config/trusted_setup.txt
+  - --metrics-block-timing-tracking-enabled
   # - --initial-state={{ checkpoint_sync_url }} # Need to remove genesis.ssz if using this
 teku_validator_container_volumes:
   - "{{ teku_validator_datadir }}:/validator-data"
   - "{{ eth_testnet_config_dir }}:/network-config:ro"
 teku_validator_datadir: /data/teku-validator
+
+teku_container_pull: true
