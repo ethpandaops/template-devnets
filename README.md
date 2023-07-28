@@ -92,7 +92,7 @@ from the [ansible/](ansible/) directory to deploy the network. This will generat
 Don't forget the following gotchas:
 - Change the `ethereum_genesis_chain_id` value in [ansible/inventories/devnet-0/group_vars/all.yaml](ansible/inventories/devnet-0/group_vars/all.yaml) to avoid clashing with an existing network
 - Ensure you have `docker` running on your local machine, this is essential for generating some post-testnet files
-
+- Make sure you add the github usernames to `bootstrap_default_user_authorized_keys_github_...`, otherwise ansible will fail on the bootstrap step
 ## Cleaning up the Network
 1. Run
 ```shell

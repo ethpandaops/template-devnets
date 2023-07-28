@@ -427,7 +427,7 @@ resource "cloudflare_record" "server_record_beacon" {
 resource "local_file" "ansible_inventory" {
   content = templatefile("ansible_inventory.tmpl",
     {
-      ethereum_network_name = "${var.ethereum_network}"
+      ethereum_network_name              = "${var.ethereum_network}"
       groups = merge(
         { for group in var.digitalocean_vm_groups : "${group.id}" => true },
       )
@@ -440,10 +440,15 @@ resource "local_file" "ansible_inventory" {
             hostname = "${split(".", key)[0]}-${split(".", key)[1]}"
             cloud    = "digitalocean"
             region   = "${server.region}"
+            ansible_vars = try(
+              var.digitalocean_vm_groups[
+                index([for v in var.digitalocean_vm_groups : v.id], split(".", key)[0])
+              ].vms[split(".", key)[1]].ansible_vars
+            , null)
           }
         }
       )
     }
   )
-  filename = "../../ansible/inventories/devnet-0/inventory.ini"
+  filename = "../../ansible/inventories/devnet-2m-test/inventory.ini"
 }
