@@ -440,6 +440,11 @@ resource "local_file" "ansible_inventory" {
             hostname = "${split(".", key)[0]}-${split(".", key)[1]}"
             cloud    = "digitalocean"
             region   = "${server.region}"
+            ansible_vars = try(
+              var.digitalocean_vm_groups[
+                index([for v in var.digitalocean_vm_groups : v.id], split(".", key)[0])
+              ].vms[split(".", key)[1]].ansible_vars
+            , null)
           }
         }
       )
