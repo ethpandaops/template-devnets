@@ -5,9 +5,6 @@ ethereum_cl_bootnodes:
 ethereum_el_bootnodes: 
   - "{{ hostvars['bootnode-1']['ethereum_node_fact_el_enode'] }}"
 
-ethereum_node_fact_discovery_el_enode_cmd:
-  ethereumjs: cat /data/ethereumjs/sepolia/rlpx
-
 # role: ethpandaops.general.prometheus
 prometheus_remote_push_url: https://victoriametrics.ethdevops.io/insert/0/prometheus/api/v1/write
 prometheus_remote_write_username: "{{ secret_prometheus_remote_write.username }}"
