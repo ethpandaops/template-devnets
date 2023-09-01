@@ -1,8 +1,8 @@
 #!/bin/zsh
-node="teku-geth-1"
-network="sepolia-sf1"
+node="lighthouse-geth-1"
+network="devnet-0"
 domain="ethpandaops.io"
-prefix="4844"
+prefix=""
 sops_name=$(sops --decrypt ../ansible/inventories/$network/group_vars/all/all.sops.yaml | yq -r '.secret_nginx_shared_basic_auth.name')
 sops_password=$(sops --decrypt ../ansible/inventories/$network/group_vars/all/all.sops.yaml | yq -r '.secret_nginx_shared_basic_auth.password')
 sops_mnemonic=$(sops --decrypt ../ansible/inventories/$network/group_vars/all/all.sops.yaml | yq -r '.secret_genesis_mnemonic')
@@ -22,6 +22,7 @@ print_usage() {
   echo "  latest_slot                       Get the latest slot"
   echo "  latest_slot_verbose               Get the latest slot with verbose output"
   echo "  latest_block                      Get the latest block"
+  echo "  get_slot n                        Get the slot number n [default head]"
   echo "  get_block n                       Get the block number n [default latest]"
   echo "  get_balance address               Get the balance of address - mandatory argument"
   echo "  finalized_epoch                   Get the finalized epoch"
@@ -96,6 +97,21 @@ for arg in "${command[@]}"; do
       # Get the latest block of the network
       latest_block=$(curl -s --data-raw '{"jsonrpc":"2.0","method":"eth_getBlockByNumber", "params":["latest"], "id":0}' $rpc_endpoint | jq .)
       echo "Latest Block: $latest_block"
+      ;;
+    "get_slot")
+      if [[ -z "${command[2]}" ]]; then
+        echo "Please provide a slot number as the second argument, or get the latest slot"
+        echo "  Example: ${0} get_slot 100"
+        # since none is provided, get latest slot
+        ${0} latest_slot
+        exit;
+      else
+        slot=${command[2]}
+        # Get the slot specified on the network
+        get_slot=$(curl -s $bn_endpoint/eth/v2/beacon/blocks/${slot} | jq .)
+        echo "$get_slot"
+        exit;
+      fi
       ;;
     "get_block")
       # Get a specific block of the network
@@ -263,7 +279,7 @@ for arg in "${command[@]}"; do
         exit;
       else
         slot=${command[2]}
-        proposer_index=$(ethdo --connection=$bn_endpoint block info --blockid=$slot --json | jq -r .message.proposer_index)
+        proposer_index=$(ethdo --connection=$bn_endpoint proposer duties --slot=$slot | grep -oE '[0-9]+')
         curl -s $bootnode_endpoint/meta/api/v1/validator-ranges.json | jq .ranges | jq -r 'to_entries[] | "\(.key | split("-") | .[0]),\(.key | split("-") | .[1] | tonumber - 1),\(.value)"' > validator.csv
         declare -A validators
         while IFS="," read -r low high whose
@@ -308,7 +324,7 @@ for arg in "${command[@]}"; do
       ;;
     "send_blob")
       # Get a private key from a mnemonic
-      privatekey=$(ethereal hd keys --path="m/44'/60'/0'/0/2" --seed="$sops_mnemonic" | awk '/Private key/{print $NF}')
+      privatekey=$(ethereal hd keys --path="m/44'/60'/0'/0/3" --seed="$sops_mnemonic" | awk '/Private key/{print $NF}')
       if [[ -z "${command[2]}" ]]; then
         # sending only one blob
         echo "Sending a blob"
@@ -360,8 +376,9 @@ for arg in "${command[@]}"; do
               --from="$publickey" \
               --privatekey="$privatekey"
             echo "Sent deposit for validator $account_name $pubkey"
-            sleep 2
+            sleep 3
           done < deposits_$prefix-$network-${command[2]}_${command[3]}.txt
+          exit;
         else
           echo "Exiting without depositing to the network"
           exit;

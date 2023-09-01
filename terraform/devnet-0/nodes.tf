@@ -12,27 +12,27 @@ variable "bootnode" {
 variable "lighthouse_geth" {
   default = {
     name            = "lighthouse-geth"
-    count           = 5
+    count           = 2
     validator_start = 0
-    validator_end   = 25
+    validator_end   = 100
   }
 }
 
 variable "lighthouse_besu" {
   default = {
     name            = "lighthouse-besu"
-    count           = 2
-    validator_start = 25
-    validator_end   = 35
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
   }
 }
 
 variable "lighthouse_nethermind" {
   default = {
     name            = "lighthouse-nethermind"
-    count           = 5
-    validator_start = 35
-    validator_end   = 60
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
   }
 }
 
@@ -54,31 +54,40 @@ variable "lighthouse_erigon" {
   }
 }
 
+variable "lighthouse_reth" {
+  default = {
+    name            = "lighthouse-reth"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
 # Prysm
 variable "prysm_geth" {
   default = {
     name            = "prysm-geth"
-    count           = 2
-    validator_start = 60
-    validator_end   = 70
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
   }
 }
 
 variable "prysm_besu" {
   default = {
     name            = "prysm-besu"
-    count           = 2
-    validator_start = 70
-    validator_end   = 80
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
   }
 }
 
 variable "prysm_nethermind" {
   default = {
     name            = "prysm-nethermind"
-    count           = 2
-    validator_start = 80
-    validator_end   = 90
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
   }
 }
 
@@ -100,31 +109,40 @@ variable "prysm_erigon" {
   }
 }
 
+variable "prysm_reth" {
+  default = {
+    name            = "prysm-reth"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
 # Lodestar
 variable "lodestar_geth" {
   default = {
     name            = "lodestar-geth"
-    count           = 2
-    validator_start = 90
-    validator_end   = 100
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
   }
 }
 
 variable "lodestar_nethermind" {
   default = {
     name            = "lodestar-nethermind"
-    count           = 2
-    validator_start = 100
-    validator_end   = 110
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
   }
 }
 
 variable "lodestar_besu" {
   default = {
     name            = "lodestar-besu"
-    count           = 2
-    validator_start = 110
-    validator_end   = 120
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
   }
 }
 
@@ -146,32 +164,40 @@ variable "lodestar_erigon" {
   }
 }
 
+variable "lodestar_reth" {
+  default = {
+    name            = "lodestar-reth"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
 # Nimbus
 variable "nimbus_geth" {
   default = {
     name            = "nimbus-geth"
-    count           = 2
-    validator_start = 120
-    validator_end   = 130
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
   }
 }
 
 variable "nimbus_besu" {
   default = {
     name            = "nimbus-besu"
-    count           = 2
-    validator_start = 130
-    validator_end   = 140
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
   }
-
 }
 
 variable "nimbus_nethermind" {
   default = {
     name            = "nimbus-nethermind"
-    count           = 2
-    validator_start = 140
-    validator_end   = 150
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
   }
 }
 
@@ -193,31 +219,40 @@ variable "nimbus_erigon" {
   }
 }
 
+variable "nimbus_reth" {
+  default = {
+    name            = "nimbus-reth"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
 # Teku
 variable "teku_geth" {
   default = {
     name            = "teku-geth"
-    count           = 5
-    validator_start = 150
-    validator_end   = 175
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
   }
 }
 
 variable "teku_besu" {
   default = {
     name            = "teku-besu"
-    count           = 2
-    validator_start = 175
-    validator_end   = 185
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
   }
 }
 
 variable "teku_nethermind" {
   default = {
     name            = "teku-nethermind"
-    count           = 5
-    validator_start = 185
-    validator_end   = 210
+    count           = 1
+    validator_start = 0
+    validator_end   = 0
   }
 }
 
@@ -233,6 +268,15 @@ variable "teku_ethereumjs" {
 variable "teku_erigon" {
   default = {
     name            = "teku-erigon"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
+variable "teku_reth" {
+  default = {
+    name            = "teku-reth"
     count           = 0
     validator_start = 0
     validator_end   = 0

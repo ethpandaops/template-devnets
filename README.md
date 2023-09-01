@@ -25,6 +25,9 @@ You can then use [`./setup.sh`](./asdf-setup.sh) to install all dependencies.
 
 ## Terraform
 From [`./terraform/devnet-0/`](./terraform/devnet-0/)
+
+Make sure you select either hetzner or digitalocean (default is digitialocean), if you want to use hetzner rename digitalocean.tf to digitalocean.tf.disabled and rename hetzner.tf.disabled to hetzner.tf and vice versa.
+
 ```shell
 terraform init
 terraform apply

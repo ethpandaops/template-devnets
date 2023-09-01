@@ -1,4 +1,4 @@
-- hosts: all
+- hosts: all, !localhost
   serial: "{{ batch_count | default('100%') }}"
   become: true
   tasks:
@@ -49,7 +49,7 @@
             - "ethereum-metrics-exporter"
             - "snooper-engine"
             - "snooper-rpc"
-            #- "cl-bootnode"
+            - "cl-bootnode"
         - name: Remove data dirs
           file:
             state: absent
@@ -75,3 +75,4 @@
             # Config files
             - /data/ethereum-network-config
             - /data/execution-auth.secret
+            - /data/cl-bootnode

@@ -22,9 +22,9 @@ validator_bls_sync_files:
 ethereum_node_cl: nimbus
 
 # Checkpointsync 
-nimbus_checkpoint_sync_enabled: false 
+nimbus_checkpoint_sync_enabled: "{{ checkpoint_sync_enabled }}" 
 nimbus_checkpoint_container_command_extra_args:
-  - --trusted-node-url={{ checkpoint_sync_url }}
+  - --trusted-node-url={{ checkpoint_sync_address }}
   - --network=/network-config
   - --backfill=false
 nimbus_checkpoint_autoremove_enabled: true

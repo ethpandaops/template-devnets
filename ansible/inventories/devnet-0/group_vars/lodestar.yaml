@@ -42,8 +42,7 @@ lodestar_container_command_extra_args:
   - --rest.namespace="*"
   - --network.connectToDiscv5Bootnodes
   - --nat=true
-  #- --chain.trustedSetup=/network-config/trusted_setup.txt
-  #- --checkpointSyncUrl={{ checkpoint_sync_url }}
+  - --chain.trustedSetup=/network-config/trusted_setup.txt
 lodestar_validator_container_volumes:
   - "{{ lodestar_validator_datadir }}:/validator-data"
   - "{{ eth_testnet_config_dir }}:/network-config:ro"
@@ -52,3 +51,4 @@ lodestar_validator_container_command_extra_args:
   - --graffiti={{ ethereum_node_cl }}/{{ ethereum_node_el }}
 lodestar_validator_datadir: /data/lodestar-validator
 lodestar_container_pull: true
+lodestar_checkpoint_sync_enabled: "{{ checkpoint_sync_enabled }}" 

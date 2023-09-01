@@ -1,30 +1,33 @@
 default_ethereum_client_images:
-  # Consensus layer clients
-  prysm: gcr.io/prysmaticlabs/prysm/beacon-chain:v4.0.7
-  prysm_validator: gcr.io/prysmaticlabs/prysm/validator:v4.0.7
-  teku: consensys/teku:23.6.2-amd64
-  lighthouse: sigp/lighthouse:v4.3.0
-  nimbus: statusim/nimbus-eth2:multiarch-v23.7.0
-  lodestar: chainsafe/lodestar:v1.9.2
-  # Execution layer clients
-  geth: ethereum/client-go:v1.12.0
-  nethermind: nethermind/nethermind:1.20.1
-  besu: hyperledger/besu:23.4.4-amd64
-  erigon: ethpandaops/erigon:latest
-  ethereumjs: g11tech/ethereumjs:latest
+### Consensus layer clients
+  lighthouse: sigp/lighthouse:deneb-modern
+  lodestar: chainsafe/lodestar:next
+  nimbus: ethpandaops/nimbus:unstable
+  prysm: ethpandaops/prysm:devnet8-fix
+  prysm_validator: ethpandaops/prysm-validator:devnet8-fix
+  teku: consensys/teku:develop
+### Execution layer clients
+  besu: ethpandaops/besu:main
+  geth: ethpandaops/geth:lightclient-devnet-8
+  erigon: ethpandaops/erigon:devel
+  ethereumjs: ethpandaops/ethereumjs:master
+  nethermind: nethermindeth/nethermind:cancun
+  reth: ethpandaops/reth:main
+
 
 default_tooling_images:
-  xatu_sentry: ethpandaops/xatu:0.0.60
-  ethereum_metrics_exporter: ethpandaops/ethereum-metrics-exporter:0.21.0
-  tx_fuzz: ethpandaops/tx-fuzz:1.1.0
+  xatu_sentry: ethpandaops/xatu:latest
+  ethereum_metrics_exporter: ethpandaops/ethereum-metrics-exporter:latest
+  tx_fuzz: ethpandaops/tx-fuzz:latest
   forkmon: skylenet/nodemonitor:darkmode
-  forky: ethpandaops/forky:0.0.34-debian
+  forky: ethpandaops/forky:latest
   fauceth: skylenet/fauceth:fix_fee_estimation
   ethstats: skylenet/ethstats-server:poa-no-geoip
   homepage: ethpandaops/ethereum-testnet-homepage:latest
-  checkpointz: ethpandaops/checkpointz:0.15.0
+  checkpointz: ethpandaops/checkpointz:0.0.10-dencun-debian
   blockscout: blockscout/blockscout:master
-  beacon_metrics_gazer: dapplion/beacon-metrics-gazer:v0.1.3
+  beacon_metrics_gazer: dapplion/beacon-metrics-gazer:latest
   eth_fauceth: chainflag/eth-faucet:latest
   blobscan: blossomlabs/blobscan:latest
   blobscan_indexer: blossomlabs/blobscan-indexer:latest
+  light_beaconchain_explorer: pk910/light-beaconchain-explorer:latest
