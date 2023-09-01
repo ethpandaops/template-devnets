@@ -29,4 +29,4 @@ ethereumjs_container_command_extra_args:
   - --maxPeers=75
   - --isSingleNode=true
   - --logLevel=debug
-  #- --trustedSetup=/network-config/trusted_setup.txt
+  - --trustedSetup=/network-config/trusted_setup.txt
