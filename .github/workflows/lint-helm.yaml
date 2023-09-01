@@ -27,15 +27,15 @@ jobs:
         run: |
           if [ "$(ls -A kubernetes/*/* 2>/dev/null)" ]; then
             echo "Kubernetes directory is not empty."
-            echo "true" >> $KUBE_ENV
+            echo "::set-output name=not_empty::true"
           else
             echo "Kubernetes directory is empty."
-            echo "false" >> $KUBE_ENV
+            echo "::set-output name=not_empty::false"
           fi
 
       - name: Lint
         run: |
-          if ${{ KUBE_ENV }}; then
+          if ${{ steps.check-kubernetes-directory.outputs.not_empty }}; then
             helm lint kubernetes/*/*
           else
             echo "Skipping Helm lint because kubernetes/*/* is empty."
