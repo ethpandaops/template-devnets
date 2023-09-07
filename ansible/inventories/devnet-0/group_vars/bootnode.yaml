@@ -13,7 +13,6 @@ eth_inventory_web_container_env:
 ethereum_node_el: geth
 ethereum_node_cl: teku
 ethereum_node_cl_validator_enabled: false
-ethereum_node_cl_checkpoint_sync_enabled: "{{ checkpoint_sync_enabled }}"
 
 # role: ethpandaops.general.teku
 teku_container_name: beacon

@@ -2,7 +2,7 @@
 variable "bootnode" {
   default = {
     name            = "bootnode"
-    count           = 1
+    count           = 0
     validator_start = 0
     validator_end   = 0
   }
@@ -12,7 +12,7 @@ variable "bootnode" {
 variable "lighthouse_geth" {
   default = {
     name            = "lighthouse-geth"
-    count           = 2
+    count           = 0
     validator_start = 0
     validator_end   = 100
   }

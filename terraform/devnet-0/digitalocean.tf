@@ -3,12 +3,12 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 variable "digitalocean_project_name" {
   type    = string
-  default = "4844 Testnets"
+  default = "ProjectName"
 }
 
 variable "digitalocean_ssh_key_name" {
   type    = string
-  default = "barnabasbusa"
+  default = "examplekey"
 }
 
 variable "digitalocean_regions" {
@@ -61,7 +61,7 @@ locals {
 
 locals {
   digitalocean_default_region = "ams3"
-  digitalocean_default_size   = "c-4"
+  digitalocean_default_size   = "c-2"
   digitalocean_default_image  = "debian-12-x64"
   digitalocean_global_tags = [
     "Owner:Devops",

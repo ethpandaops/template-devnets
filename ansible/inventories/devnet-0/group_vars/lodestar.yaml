@@ -42,7 +42,6 @@ lodestar_container_command_extra_args:
   - --rest.namespace="*"
   - --network.connectToDiscv5Bootnodes
   - --nat=true
-  - --chain.trustedSetup=/network-config/trusted_setup.txt
 lodestar_validator_container_volumes:
   - "{{ lodestar_validator_datadir }}:/validator-data"
   - "{{ eth_testnet_config_dir }}:/network-config:ro"

@@ -20,4 +20,3 @@ reth_container_command_extra_args:
   - --chain=/network-config/genesis.json
   - --bootnodes={{ ethereum_el_bootnodes | join(',') }}
   - --db.log-level=debug
-  - --trustedSetup=/network-config/trusted_setup.txt
