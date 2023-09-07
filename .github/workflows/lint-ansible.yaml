@@ -16,7 +16,7 @@ on:
       - '.github/workflows/lint-ansible.yaml'
 
 jobs:
-  job:
+  ansible-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

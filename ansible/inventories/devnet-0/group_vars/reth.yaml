@@ -1,6 +1,6 @@
 # role: ethpandaops.general.bootstrap
 bootstrap_default_user_authorized_keys_github_team_el:
-#- gakonst
+  # - gakonst
 
 # role: ethpandaops.general.ethereum_node
 ethereum_node_el: reth
@@ -20,4 +20,3 @@ reth_container_command_extra_args:
   - --chain=/network-config/genesis.json
   - --bootnodes={{ ethereum_el_bootnodes | join(',') }}
   - --db.log-level=debug
-  #- --trustedSetup=/network-config/trusted_setup.txt
