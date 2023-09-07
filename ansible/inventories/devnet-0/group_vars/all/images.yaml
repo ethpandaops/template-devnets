@@ -1,15 +1,15 @@
 default_ethereum_client_images:
 ### Consensus layer clients
-  lighthouse: sigp/lighthouse:deneb-modern
-  lodestar: chainsafe/lodestar:next
-  nimbus: ethpandaops/nimbus:unstable
-  prysm: ethpandaops/prysm:devnet8-fix
-  prysm_validator: ethpandaops/prysm-validator:devnet8-fix
-  teku: consensys/teku:develop
+  lighthouse: sigp/lighthouse:latest
+  lodestar: chainsafe/lodestar:latest
+  nimbus: statusim/nimbus-eth2:multiarch-latest
+  prysm: ethpandaops/prysm:develop
+  prysm_validator: ethpandaops/prysm-validator:develop
+  teku: consensys/teku:latest
 ### Execution layer clients
-  besu: ethpandaops/besu:main
-  geth: ethpandaops/geth:lightclient-devnet-8
-  erigon: ethpandaops/erigon:devel
+  besu: hyperledger/besu:latest
+  geth: ethereum/client-go:stable
+  erigon: thorax/erigon:stable
   ethereumjs: ethpandaops/ethereumjs:master
   nethermind: nethermindeth/nethermind:cancun
   reth: ethpandaops/reth:main
