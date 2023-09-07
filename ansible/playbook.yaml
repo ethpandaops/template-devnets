@@ -77,7 +77,7 @@
   roles:
     - role: ethpandaops.general.ethereum_inventory_web
       tags: [eth_inventory_web, ethereum_inventory_web]
-      
+
 - hosts: beaconlight
   become: true
   roles:
