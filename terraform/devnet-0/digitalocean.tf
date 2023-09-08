@@ -30,7 +30,7 @@ variable "digitalocean_regions" {
 //                                        LOCALS                                      
 ////////////////////////////////////////////////////////////////////////////////////////
 locals {
-  digitalocean_base_cidr_block = var.digitalocean_base_cidr_block
+  base_cidr_block = var.base_cidr_block
   digitalocean_vpcs = {
     for region in var.digitalocean_regions : region => {
       name     = "${var.ethereum_network}-${region}"
