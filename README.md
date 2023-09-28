@@ -142,7 +142,5 @@ curl -s https://config.devnet-0.ethpandaops.io/api/v1/nodes/inventory | jq -r '.
 * Update all sops files
 ```shell
 # Find all .sops.* and *.enc.* files and update their keys
-for file in $(find . -type f \( -name "*.sops.*" -o -name "*.enc.*" \)); do
-    sops updatekeys "$file" -y
-done
+find . -type d -name "vendor" -prune -o \( -type f \( -name "*.sops.*" -o -name "*.enc.*" \) \) -exec sops updatekeys {} -y \;
 ```
