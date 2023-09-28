@@ -139,3 +139,10 @@ curl -s https://config.devnet-0.ethpandaops.io/api/v1/nodes/inventory | jq -r '.
 ```shell
 curl -s https://config.devnet-0.ethpandaops.io/api/v1/nodes/inventory | jq -r '.ethereum_pairs[] | .consensus.enr'
 ```
+* Update all sops files
+```shell
+# Find all .sops.yaml and *.enc.yaml files and update their keys
+ for file in $(find . -type f \( -name "*.sops.yaml" -o -name "*.enc.yaml" \)); do
+     sops updatekeys "$file" -y
+ done
+```
