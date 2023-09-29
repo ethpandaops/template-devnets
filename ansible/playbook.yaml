@@ -78,11 +78,11 @@
     - role: ethpandaops.general.ethereum_inventory_web
       tags: [eth_inventory_web, ethereum_inventory_web]
 
-- hosts: beaconlight
+- hosts: dora
   become: true
   roles:
-    - role: ethpandaops.general.beaconlight_explorer
-      tags: [beaconlight_explorer]
+    - role: ethpandaops.general.dora
+      tags: [dora]
 
 - hosts: localhost
   roles:
