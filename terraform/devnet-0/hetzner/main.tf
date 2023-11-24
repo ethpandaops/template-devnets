@@ -15,6 +15,10 @@ terraform {
       source  = "hetznercloud/hcloud"
       version = "~> 1.42.1"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "3.5.1"
+    }
   }
 }
 
@@ -26,7 +30,7 @@ terraform {
     skip_requesting_account_id  = true
     region                      = "us-east-1"
     bucket                      = "merge-testnets"
-    key                         = "infrastructure/devnet-0/terraform.tfstate"
+    key                         = "infrastructure/devnet-0/hetzner-terraform.tfstate"
   }
 }
 
@@ -49,14 +53,14 @@ variable "cloudflare_api_token" {
 
 variable "ethereum_network" {
   type    = string
-  default = "devnet-0"
+  default = "template-devnet-0"
 }
 
 variable "base_cidr_block" {
   default = "10.76.0.0/16"
 }
 ////////////////////////////////////////////////////////////////////////////////////////
-//                                        LOCALS                                      
+//                                        LOCALS
 ////////////////////////////////////////////////////////////////////////////////////////
 locals {
   vm_groups = [

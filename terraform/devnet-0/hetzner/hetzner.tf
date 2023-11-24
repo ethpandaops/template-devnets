@@ -21,8 +21,8 @@ variable "hcloud_ssh_key_fingerprint" {
 variable "hetzner_regions" {
   default = [
     "nbg1",
-    "hel1",
-    "fsn1"
+    "fsn1",
+    "hel1"
   ]
 }
 
@@ -50,13 +50,13 @@ locals {
     [
       for i in range(0, vm_group.count) : {
         group_name = "${vm_group.name}"
-        id         = "${vm_group.name}-${i + 1}"
+        id         = "${vm_group.name}-${i + 1}-arm"
         vms = {
           "${i + 1}" = {
             labels = "group_name:${vm_group.name},val_start:${vm_group.validator_start + (i * (vm_group.validator_end -
               vm_group.validator_start) / vm_group.count)},val_end:${min(vm_group.validator_start + ((i + 1) * (vm_group.validator_end -
             vm_group.validator_start) / vm_group.count), vm_group.validator_end)}"
-            location     = element(var.hetzner_regions, i % length(var.hetzner_regions))
+            location     = try(vm_group.location, local.hcloud_default_location)
             size         = try(vm_group.size, local.hcloud_default_server_type)
             ansible_vars = try(vm_group.ansible_vars, null)
           }
@@ -69,7 +69,7 @@ locals {
 locals {
   hcloud_default_location    = "nbg1"
   hcloud_default_image       = "debian-12"
-  hcloud_default_server_type = "cpx21"
+  hcloud_default_server_type = "cax31"
   hcloud_global_labels = [
     "Owner:Devops",
     "EthNetwork:${var.ethereum_network}"
@@ -138,6 +138,7 @@ resource "hcloud_server_network" "main" {
   }
   server_id  = hcloud_server.main[each.key].id
   network_id = hcloud_network.main[each.value.location].id
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -149,18 +150,6 @@ data "cloudflare_zone" "default" {
 }
 
 resource "cloudflare_record" "server_record" {
-  for_each = {
-    for vm in local.hcloud_vms : "${vm.id}" => vm
-  }
-  zone_id = data.cloudflare_zone.default.id
-  name    = "${each.value.name}.srv.${var.ethereum_network}"
-  type    = "A"
-  value   = hcloud_server.main[each.value.id].ipv4_address
-  proxied = false
-  ttl     = 120
-}
-
-resource "cloudflare_record" "server_record_short" {
   for_each = {
     for vm in local.hcloud_vms : "${vm.id}" => vm
   }
@@ -177,7 +166,7 @@ resource "cloudflare_record" "server_record_rpc" {
     for vm in local.hcloud_vms : "${vm.id}" => vm
   }
   zone_id = data.cloudflare_zone.default.id
-  name    = "rpc.${each.value.name}.srv.${var.ethereum_network}"
+  name    = "rpc.${each.value.name}.${var.ethereum_network}"
   type    = "A"
   value   = hcloud_server.main[each.value.id].ipv4_address
   proxied = false
@@ -189,7 +178,7 @@ resource "cloudflare_record" "server_record_beacon" {
     for vm in local.hcloud_vms : "${vm.id}" => vm
   }
   zone_id = data.cloudflare_zone.default.id
-  name    = "bn.${each.value.name}.srv.${var.ethereum_network}"
+  name    = "bn.${each.value.name}.${var.ethereum_network}"
   type    = "A"
   value   = hcloud_server.main[each.value.id].ipv4_address
   proxied = false
@@ -202,7 +191,7 @@ resource "cloudflare_record" "server_record_beacon" {
 
 resource "local_file" "ansible_inventory" {
   depends_on = [hcloud_server.main]
-  content = templatefile("ansible_inventory.tmpl",
+  content = templatefile("../ansible_inventory.tmpl",
     {
       ethereum_network_name = "${var.ethereum_network}"
       groups = merge(
@@ -224,5 +213,5 @@ resource "local_file" "ansible_inventory" {
       )
     }
   )
-  filename = "../../ansible/inventories/devnet-0/inventory.ini"
+  filename = "../../../ansible/inventories/devnet-0/hetzner_inventory.ini"
 }
