@@ -2,7 +2,7 @@
 variable "bootnode" {
   default = {
     name            = "bootnode"
-    count           = 0
+    count           = 1
     validator_start = 0
     validator_end   = 0
   }
@@ -12,7 +12,7 @@ variable "bootnode" {
 variable "lighthouse_geth" {
   default = {
     name            = "lighthouse-geth"
-    count           = 0
+    count           = 1
     validator_start = 0
     validator_end   = 100
   }
@@ -21,7 +21,7 @@ variable "lighthouse_geth" {
 variable "lighthouse_besu" {
   default = {
     name            = "lighthouse-besu"
-    count           = 0
+    count           = 1
     validator_start = 0
     validator_end   = 0
   }
@@ -30,7 +30,7 @@ variable "lighthouse_besu" {
 variable "lighthouse_nethermind" {
   default = {
     name            = "lighthouse-nethermind"
-    count           = 0
+    count           = 1
     validator_start = 0
     validator_end   = 0
   }
@@ -39,7 +39,7 @@ variable "lighthouse_nethermind" {
 variable "lighthouse_ethereumjs" {
   default = {
     name            = "lighthouse-ethereumjs"
-    count           = 0
+    count           = 1
     validator_start = 0
     validator_end   = 0
   }
@@ -48,7 +48,7 @@ variable "lighthouse_ethereumjs" {
 variable "lighthouse_erigon" {
   default = {
     name            = "lighthouse-erigon"
-    count           = 0
+    count           = 1
     validator_start = 0
     validator_end   = 0
   }
@@ -57,7 +57,7 @@ variable "lighthouse_erigon" {
 variable "lighthouse_reth" {
   default = {
     name            = "lighthouse-reth"
-    count           = 0
+    count           = 1
     validator_start = 0
     validator_end   = 0
   }
@@ -250,7 +250,7 @@ variable "teku_besu" {
 variable "teku_nethermind" {
   default = {
     name            = "teku-nethermind"
-    count           = 1
+    count           = 0
     validator_start = 0
     validator_end   = 0
   }

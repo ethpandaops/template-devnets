@@ -3,12 +3,12 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 variable "digitalocean_project_name" {
   type    = string
-  default = "ProjectName"
+  default = "4844 Testnets"
 }
 
 variable "digitalocean_ssh_key_name" {
   type    = string
-  default = "examplekey"
+  default = "shared-devops-eth2"
 }
 
 variable "digitalocean_regions" {

@@ -1,10 +1,10 @@
 # role: ethpandaops.general.bootstrap
-bootstrap_default_user_authorized_keys_github_team_el:
+bootstrap_default_user_authorized_keys_github_team_el: []
   # - gakonst
 
 # role: ethpandaops.general.ethereum_node
 ethereum_node_el: reth
-
+reth_announced_ipv6: "{{ ansible_default_ipv6.address }}"
 # role: ethpandaops.general.reth
 reth_container_name: execution
 reth_container_image: "{{ default_ethereum_client_images.reth }}"
@@ -19,8 +19,6 @@ reth_container_volumes:
 reth_container_command_extra_args:
   - --chain=/network-config/genesis.json
   - --bootnodes={{ ethereum_el_bootnodes | join(',') }}
-  - --db.log-level=debug
-
 prometheus_config: |
   global:
     scrape_interval: 30s

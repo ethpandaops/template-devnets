@@ -11,7 +11,7 @@ bootstrap_default_user_authorized_keys_github_team_el: []
 
 # role: ethpandaops.general.ethereum_node
 ethereum_node_el: besu
-
+besu_announced_ipv6: "{{ ansible_default_ipv6.address }}"
 # role: ethpandaops.general.besu
 besu_container_name: execution
 besu_container_image: "{{ default_ethereum_client_images.besu }}"
@@ -30,13 +30,6 @@ besu_container_command_extra_args:
   - --sync-mode=FULL
   - --data-storage-format=BONSAI
   - --ethstats={{ inventory_hostname }}:{{ ethstats_secret }}@{{ ethstats_url }}:443
-  - --Xfilter-on-enr-fork-id=true
+  - --p2p-host={{ besu_announced_ipv6 }} # not supported
 
 besu_container_pull: true
-
-besu_container_ports:
-  - "127.0.0.1:{{ besu_ports_http_rpc }}:{{ besu_ports_http_rpc }}"
-  - "127.0.0.1:{{ besu_ports_engine }}:{{ besu_ports_engine }}"
-  - "{{ besu_ports_p2p }}:{{ besu_ports_p2p }}"
-  - "{{ besu_ports_p2p }}:{{ besu_ports_p2p }}/udp"
-  - "5005:5005"
