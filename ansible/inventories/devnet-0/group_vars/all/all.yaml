@@ -6,7 +6,7 @@
 #  ░╚═════╝░╚══════╝░╚════╝░╚═════╝░╚═╝░░╚═╝╚══════╝  ░░░╚═╝░░░╚═╝░░╚═╝╚═╝░░╚═╝╚═════╝░
 
 network_subdomain: "{{ ethereum_network_name }}.ethpandaops.io"
-server_fqdn: "{{ inventory_hostname }}.srv.{{ network_subdomain }}"
+server_fqdn: "{{ inventory_hostname }}.{{ network_subdomain }}"
 
 ethereum_network_id: >-
   {{ (lookup('file', eth_testnet_config_local_dir_src + '/genesis.json') | from_json).config.chainId }}
