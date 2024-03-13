@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 variable "digitalocean_project_name" {
   type    = string
-  default = "4844 Testnets"
+  default = "ProjectName"
 }
 
 variable "digitalocean_ssh_key_name" {
