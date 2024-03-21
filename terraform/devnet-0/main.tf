@@ -91,6 +91,12 @@ locals {
     var.teku_erigon,
     var.teku_besu,
     var.teku_ethereumjs,
-    var.teku_reth
+    var.teku_reth,
+    var.grandine_geth,
+    var.grandine_nethermind,
+    var.grandine_erigon,
+    var.grandine_besu,
+    var.grandine_ethereumjs,
+    var.grandine_reth,
   ]
 }
