@@ -51,4 +51,3 @@ lodestar_validator_container_command_extra_args:
   - --useProduceBlockV3
 lodestar_validator_datadir: /data/lodestar-validator
 lodestar_container_pull: true
-lodestar_checkpoint_sync_enabled: "{{ checkpoint_sync_enabled }}" 
