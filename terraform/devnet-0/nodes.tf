@@ -282,3 +282,57 @@ variable "teku_reth" {
     validator_end   = 0
   }
 }
+
+variable "grandine_geth" {
+  default = {
+    name            = "grandine-geth"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
+variable "grandine_besu" {
+  default = {
+    name            = "grandine-besu"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
+variable "grandine_nethermind" {
+  default = {
+    name            = "grandine-nethermind"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
+variable "grandine_ethereumjs" {
+  default = {
+    name            = "grandine-ethereumjs"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
+variable "grandine_erigon" {
+  default = {
+    name            = "grandine-erigon"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
+variable "grandine_reth" {
+  default = {
+    name            = "grandine-reth"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
