@@ -7,8 +7,6 @@ roles:
     version: "2.5.0"
   - src: geerlingguy.pip
     version: "2.2.0"
-  - name: robertdebock.bootstrap
-    version: 5.2.5 # Don't update this. Newer versions contain a bug.
   - name: robertdebock.fail2ban
     version: "4.2.3"
 
