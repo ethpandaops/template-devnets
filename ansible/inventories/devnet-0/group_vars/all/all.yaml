@@ -5,7 +5,8 @@
 #  ╚██████╔╝███████╗╚█████╔╝██████╦╝██║░░██║███████╗  ░░╚██╔╝░░██║░░██║██║░░██║██████╔╝
 #  ░╚═════╝░╚══════╝░╚════╝░╚═════╝░╚═╝░░╚═╝╚══════╝  ░░░╚═╝░░░╚═╝░░╚═╝╚═╝░░╚═╝╚═════╝░
 
-network_subdomain: "{{ ethereum_network_name }}.ethpandaops.io"
+domain: ethpandaops.io
+network_subdomain: "{{ ethereum_network_name }}.{{ domain }}"
 server_fqdn: "{{ inventory_hostname }}.{{ network_subdomain }}"
 
 ethereum_network_id: >-
@@ -18,14 +19,14 @@ ethereum_network_deposit_contract_block: >-
 ethereum_node_rcp_hostname: "rpc.{{ server_fqdn }}"
 ethereum_node_beacon_hostname: "bn.{{ server_fqdn }}"
 
-ethstats_url: "ethstats.{{ ethereum_network_name }}.ethpandaops.io"
+ethstats_url: "ethstats.{{ ethereum_network_name }}.{{ domain }}"
 ethstats_secret: "{{ secret_ethstats }}"
 
 ### Checkpoint sync specific for Ansible & Kubernetes
 checkpoint_sync_node: bootnode-1
 ethereum_node_cl_checkpoint_sync_enabled: false
-checkpoint_sync_url: https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@bn.{{ checkpoint_sync_node }}.srv.{{ ethereum_network_name }}.ethpandaops.io
-checkpoint_sync_url_kube: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.dencun-devnets.node_ingress.combined}>@bn.{{ checkpoint_sync_node }}.srv.{{ ethereum_network_name }}.ethpandaops.io
+checkpoint_sync_url: https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@bn.{{ checkpoint_sync_node }}.srv.{{ ethereum_network_name }}.{{ domain }}
+checkpoint_sync_url_kube: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.dencun-devnets.node_ingress.combined}>@bn.{{ checkpoint_sync_node }}.srv.{{ ethereum_network_name }}.{{ domain }}
 #  ██████╗░░█████╗░██╗░░░░░███████╗  ██╗░░░██╗░█████╗░██████╗░░██████╗
 #  ██╔══██╗██╔══██╗██║░░░░░██╔════╝  ██║░░░██║██╔══██╗██╔══██╗██╔════╝
 #  ██████╔╝██║░░██║██║░░░░░█████╗░░  ╚██╗░██╔╝███████║██████╔╝╚█████╗░
@@ -34,11 +35,11 @@ checkpoint_sync_url_kube: https://<path:/secrets/services/services.enc.yaml#ethe
 #  ╚═╝░░╚═╝░╚════╝░╚══════╝╚══════╝  ░░░╚═╝░░░╚═╝░░╚═╝╚═╝░░╚═╝╚═════╝░
 
 # role: ethpandaops.general.ethereum_genesis
-ethereum_genesis_generator_container_image: "ethpandaops/ethereum-genesis-generator:2.0.12"
+ethereum_genesis_generator_container_image: "{{ default_tooling_images.ethereum_genesis_generator }}"
 ethereum_genesis_generator_version: "{{ ethereum_genesis_generator_container_image.split(':')[-1] }}"
 ethereum_genesis_network_seed: "{{ ansible_inventory_sources[0] }}"
 ethereum_genesis_chain_id: "70{{ 99999999 | random(start=10000000, seed=ethereum_genesis_network_seed) }}"
-ethereum_genesis_generator_output_dir: "../network-configs/{{ ethereum_network_name | replace('4844-', '') }}"
+ethereum_genesis_generator_output_dir: "../network-configs/{{ ethereum_network_name | replace('template-', '') }}"
 ethereum_genesis_timestamp: "{{ lookup('ansible.builtin.pipe', '{{ ethereum_genesis_timestamp_relative_cmd[ansible_system] }}') }}"
 ethereum_genesis_timedelay: 60
 ethereum_genesis_timestamp_relative_cmd:
@@ -61,7 +62,8 @@ ethereum_genesis_generator_config_files:
     export BELLATRIX_FORK_VERSION="0x30{{ ethereum_genesis_fork_version_suffix }}"
     export CAPELLA_FORK_VERSION="0x40{{ ethereum_genesis_fork_version_suffix }}"
     export DENEB_FORK_VERSION="0x50{{ ethereum_genesis_fork_version_suffix }}"
-    export DENEB_FORK_EPOCH="2"
+    export ELECTRA_FORK_VERSION="0x60{{ ethereum_genesis_fork_version_suffix }}"
+    export ELECTRA_FORK_EPOCH="5"
     export WITHDRAWAL_TYPE="0x00"
     export WITHDRAWAL_ADDRESS={{ ethereum_genesis_validator_bls_change_execution_address }}
     export BEACON_STATIC_ENR=""
@@ -120,7 +122,6 @@ ethereum_node_el_ports_http_rpc: 8545
 ethereum_node_el_ports_ws_rpc: 8546
 ethereum_node_el_ports_engine: 8551
 ethereum_node_el_ports_metrics: 6060
-ethereum_node_ipv6_enabled: true
 
 ethereum_node_json_rpc_snooper_engine_enabled: true
 ethereum_node_json_rpc_snooper_engine_port: 8561
@@ -148,7 +149,7 @@ gen_basic_auth_nginx_password: "{{ secret_nginx_shared_basic_auth.password }}"
 
 # role: ethpandaops.general.docker_nginx_proxy
 docker_nginx_proxy_container_name: nginx-proxy
-docker_nginx_proxy_default_email: "certs@ethpandaops.io"
+docker_nginx_proxy_default_email: "certs@{{ domain }}"
 docker_nginx_proxy_docker_gen_container_name: nginx-proxy-gen
 docker_nginx_proxy_docker_gen_container_env:
   RESOLVERS: "1.1.1.1"

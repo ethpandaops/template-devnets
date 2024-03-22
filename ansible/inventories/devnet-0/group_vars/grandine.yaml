@@ -30,8 +30,8 @@ grandine_container_volumes:
   - "{{ eth_testnet_config_dir }}:/network-config:ro"
 grandine_container_command_extra_args:
   - --configuration-directory=/network-config/
-  - --boot-nodes=={{ ethereum_cl_bootnodes | join(',') }}
-  - --graffiti={{ ethereum_node_cl }}/{{ ethereum_node_el }}
+  - --boot-nodes={{ ethereum_cl_bootnodes | join(',') }}
+  - --graffiti={{ ansible_hostname }}
 
 grandine_validator_container_volumes:
   - "{{ grandine_validator_datadir }}:/validator-data"

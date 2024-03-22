@@ -6,6 +6,7 @@ default_ethereum_client_images:
   prysm: gcr.io/prysmaticlabs/prysm/beacon-chain:latest
   prysm_validator: gcr.io/prysmaticlabs/prysm/validator:latest
   teku: consensys/teku:latest
+  grandine: ethpandaops/grandine:develop
 ### Execution layer clients
   besu: hyperledger/besu:latest
   geth: ethereum/client-go:stable
@@ -33,3 +34,4 @@ default_tooling_images:
   blobscan_indexer: blossomlabs/blobscan-indexer:latest
   dora: ethpandaops/dora:master
   dugtrio: ethpandaops/dugtrio:latest
+  ethereum_genesis_generator: ethpandaops/ethereum-genesis-generator:3.0.0

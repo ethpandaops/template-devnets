@@ -15,7 +15,7 @@ ${host.hostname} ansible_host=${host.ip} ipv6=${host.ipv6} cloud=${host.cloud} c
 
 # Consensus client groups
 
-%{ for cl in ["lighthouse", "lodestar", "nimbus", "teku", "prysm"] ~}
+%{ for cl in ["lighthouse", "lodestar", "nimbus", "teku", "prysm", "grandine"] ~}
 [${cl}:children]
 %{ for gid, group in groups ~}
 %{ if split("-", gid)[0] == "${cl}" ~}
@@ -52,6 +52,3 @@ ${x}
 [ethereum_node:children]
 consensus_node
 execution_node
-
-#[beaconchain_explorer:children]
-#lighthouse_erigon
