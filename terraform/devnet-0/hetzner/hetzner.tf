@@ -137,6 +137,7 @@ resource "hcloud_server" "main" {
     ipv4_enabled = try(each.value.ipv4_enabled, true)
     ipv6_enabled = try(each.value.ipv6_enabled, true)
   }
+  firewall_ids = [hcloud_firewall.machine_firewall.id]
 }
 
 resource "hcloud_server_network" "main" {
