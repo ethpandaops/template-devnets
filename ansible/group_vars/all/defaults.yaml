@@ -1,6 +1,13 @@
 ansible_user: devops
 ansible_python_interpreter: /usr/bin/python3
 devnet_name: template
+
+# IPv6 Specific configuration
+global_ipv6_enabled: true
+global_ipv6_subnet_ranges:
+  hetzner: "64"
+  digitalocean: "124"
+
 ######################################################
 ##
 ##          Role specific overwrites
@@ -15,6 +22,7 @@ bootstrap_default_user_authorized_keys_github:
   # - samcm
   # - savid
   # - skylenet
+  # - pk910
 
 # role: robertdebock.fail2ban
 fail2ban_loglevel: INFO
@@ -28,6 +36,13 @@ fail2ban_ignoreips:
 
 # role: ethpandaops.general.docker_network
 docker_network_name: shared
+docker_network_enable_ipv6: "{{ global_ipv6_enabled }}"
+docker_network_ipam_config: >-
+  {{ global_ipv6_enabled | ternary(
+    [ { 'subnet': ansible_default_ipv6.address | ansible.utils.ipsubnet(global_ipv6_subnet_ranges[hostvars[inventory_hostname]['cloud']]) } ]
+    , [])
+  }}
+
 docker_networks_shared:
   - name: "{{ docker_network_name }}"
 

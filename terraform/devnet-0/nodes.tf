@@ -2,7 +2,7 @@
 variable "bootnode" {
   default = {
     name            = "bootnode"
-    count           = 0
+    count           = 1
     validator_start = 0
     validator_end   = 0
   }
@@ -12,7 +12,7 @@ variable "bootnode" {
 variable "lighthouse_geth" {
   default = {
     name            = "lighthouse-geth"
-    count           = 0
+    count           = 1
     validator_start = 0
     validator_end   = 100
   }
@@ -250,7 +250,7 @@ variable "teku_besu" {
 variable "teku_nethermind" {
   default = {
     name            = "teku-nethermind"
-    count           = 1
+    count           = 0
     validator_start = 0
     validator_end   = 0
   }
@@ -277,6 +277,60 @@ variable "teku_erigon" {
 variable "teku_reth" {
   default = {
     name            = "teku-reth"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
+variable "grandine_geth" {
+  default = {
+    name            = "grandine-geth"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
+variable "grandine_besu" {
+  default = {
+    name            = "grandine-besu"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
+variable "grandine_nethermind" {
+  default = {
+    name            = "grandine-nethermind"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
+variable "grandine_ethereumjs" {
+  default = {
+    name            = "grandine-ethereumjs"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
+variable "grandine_erigon" {
+  default = {
+    name            = "grandine-erigon"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
+variable "grandine_reth" {
+  default = {
+    name            = "grandine-reth"
     count           = 0
     validator_start = 0
     validator_end   = 0

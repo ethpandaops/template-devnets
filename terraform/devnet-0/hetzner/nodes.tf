@@ -13,8 +13,8 @@ variable "lighthouse_geth" {
   default = {
     name            = "lighthouse-geth"
     count           = 1
-    validator_start = 0
-    validator_end   = 0
+    validator_start = 100
+    validator_end   = 200
     location        = "hel1"
   }
 }
@@ -58,10 +58,9 @@ variable "lighthouse_erigon" {
 variable "lighthouse_reth" {
   default = {
     name            = "lighthouse-reth"
-    count           = 1
+    count           = 0
     validator_start = 0
     validator_end   = 0
-    location        = "fsn1"
   }
 }
 
@@ -78,10 +77,9 @@ variable "prysm_geth" {
 variable "prysm_besu" {
   default = {
     name            = "prysm-besu"
-    count           = 1
+    count           = 0
     validator_start = 0
     validator_end   = 0
-    location        = "nbg1"
   }
 }
 
@@ -125,7 +123,7 @@ variable "prysm_reth" {
 variable "lodestar_geth" {
   default = {
     name            = "lodestar-geth"
-    count           = 0
+    count           = 1
     validator_start = 0
     validator_end   = 0
   }
@@ -134,10 +132,9 @@ variable "lodestar_geth" {
 variable "lodestar_nethermind" {
   default = {
     name            = "lodestar-nethermind"
-    count           = 1
+    count           = 0
     validator_start = 0
     validator_end   = 0
-    location        = "hel1"
   }
 }
 
@@ -199,10 +196,9 @@ variable "nimbus_besu" {
 variable "nimbus_nethermind" {
   default = {
     name            = "nimbus-nethermind"
-    count           = 1
+    count           = 0
     validator_start = 0
     validator_end   = 0
-    location        = "fsn1"
   }
 }
 
@@ -218,17 +214,16 @@ variable "nimbus_ethereumjs" {
 variable "nimbus_erigon" {
   default = {
     name            = "nimbus-erigon"
-    count           = 1
+    count           = 0
     validator_start = 0
     validator_end   = 0
-    location        = "nbg1"
   }
 }
 
 variable "nimbus_reth" {
   default = {
     name            = "nimbus-reth"
-    count           = 1
+    count           = 0
     validator_start = 0
     validator_end   = 0
   }
@@ -238,17 +233,16 @@ variable "nimbus_reth" {
 variable "teku_geth" {
   default = {
     name            = "teku-geth"
-    count           = 1
+    count           = 0
     validator_start = 0
     validator_end   = 0
-    location        = "hel1"
   }
 }
 
 variable "teku_besu" {
   default = {
     name            = "teku-besu"
-    count           = 1
+    count           = 0
     validator_start = 0
     validator_end   = 0
   }
@@ -257,10 +251,9 @@ variable "teku_besu" {
 variable "teku_nethermind" {
   default = {
     name            = "teku-nethermind"
-    count           = 1
+    count           = 0
     validator_start = 0
     validator_end   = 0
-    location        = "fsn1"
   }
 }
 
@@ -285,9 +278,62 @@ variable "teku_erigon" {
 variable "teku_reth" {
   default = {
     name            = "teku-reth"
-    count           = 1
+    count           = 0
     validator_start = 0
     validator_end   = 0
-    location        = "nbg1"
+  }
+}
+
+variable "grandine_geth" {
+  default = {
+    name            = "grandine-geth"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
+variable "grandine_besu" {
+  default = {
+    name            = "grandine-besu"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
+variable "grandine_nethermind" {
+  default = {
+    name            = "grandine-nethermind"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
+variable "grandine_ethereumjs" {
+  default = {
+    name            = "grandine-ethereumjs"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
+variable "grandine_erigon" {
+  default = {
+    name            = "grandine-erigon"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
+variable "grandine_reth" {
+  default = {
+    name            = "grandine-reth"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
   }
 }

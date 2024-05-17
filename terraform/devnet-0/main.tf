@@ -24,6 +24,7 @@ terraform {
     skip_metadata_api_check     = true
     endpoints                   = { s3 = "https://fra1.digitaloceanspaces.com" }
     skip_requesting_account_id  = true
+    skip_s3_checksum            = true
     region                      = "us-east-1"
     bucket                      = "merge-testnets"
     key                         = "infrastructure/devnet-0/terraform.tfstate"
@@ -49,7 +50,7 @@ variable "cloudflare_api_token" {
 
 variable "ethereum_network" {
   type    = string
-  default = "devnet-0"
+  default = "template-devnet-0"
 }
 
 variable "base_cidr_block" {
@@ -90,6 +91,12 @@ locals {
     var.teku_erigon,
     var.teku_besu,
     var.teku_ethereumjs,
-    var.teku_reth
+    var.teku_reth,
+    var.grandine_geth,
+    var.grandine_nethermind,
+    var.grandine_erigon,
+    var.grandine_besu,
+    var.grandine_ethereumjs,
+    var.grandine_reth,
   ]
 }

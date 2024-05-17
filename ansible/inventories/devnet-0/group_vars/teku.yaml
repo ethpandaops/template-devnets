@@ -41,13 +41,12 @@ teku_container_command_extra_args:
   - --p2p-peer-upper-bound=100
   - --data-storage-non-canonical-blocks-enabled=true
   - --data-storage-mode=PRUNE
-  - --validators-graffiti={{ ethereum_node_cl }}/{{ ethereum_node_el }}
+  - --validators-graffiti={{ ansible_hostname }}
   - --logging=info
   - --Xlog-include-p2p-warnings-enabled
   - --metrics-block-timing-tracking-enabled
+  - --ignore-weak-subjectivity-period-enabled
 teku_validator_container_volumes:
   - "{{ teku_validator_datadir }}:/validator-data"
   - "{{ eth_testnet_config_dir }}:/network-config:ro"
 teku_validator_datadir: /data/teku-validator
-teku_container_pull: true
-teku_checkpoint_sync_enabled: "{{ checkpoint_sync_enabled }}"

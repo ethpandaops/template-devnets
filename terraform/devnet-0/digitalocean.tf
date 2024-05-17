@@ -3,12 +3,12 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 variable "digitalocean_project_name" {
   type    = string
-  default = "ProjectName"
+  default = "Template"
 }
 
 variable "digitalocean_ssh_key_name" {
   type    = string
-  default = "examplekey"
+  default = "shared-devops-eth2"
 }
 
 variable "digitalocean_regions" {
@@ -52,6 +52,7 @@ locals {
             tags   = "group_name:${vm_group.name},val_start:${vm_group.validator_start + (i * (vm_group.validator_end - vm_group.validator_start) / vm_group.count)},val_end:${min(vm_group.validator_start + ((i + 1) * (vm_group.validator_end - vm_group.validator_start) / vm_group.count), vm_group.validator_end)}"
             region = element(var.digitalocean_regions, i % length(var.digitalocean_regions))
             size   = try(vm_group.size, local.digitalocean_default_size)
+            ipv6   = try(vm_group.ipv6, true)
           }
         }
       }
@@ -84,7 +85,7 @@ locals {
         resize_disk  = try(vm.resize_disk, true)
         monitoring   = try(vm.monitoring, true)
         backups      = try(vm.backups, false)
-        ipv6         = try(vm.ipv6, false)
+        ipv6         = try(vm.ipv6, true)
         ansible_vars = try(vm.ansible_vars, null)
         vpc_uuid = try(vm.vpc_uuid, try(
           digitalocean_vpc.main[vm.region].id,
@@ -217,19 +218,7 @@ data "cloudflare_zone" "default" {
   name = "ethpandaops.io"
 }
 
-resource "cloudflare_record" "server_record" {
-  for_each = {
-    for vm in local.digitalocean_vms : "${vm.id}" => vm
-  }
-  zone_id = data.cloudflare_zone.default.id
-  name    = "${each.value.name}.srv.${var.ethereum_network}"
-  type    = "A"
-  value   = digitalocean_droplet.main[each.value.id].ipv4_address
-  proxied = false
-  ttl     = 120
-}
-
-resource "cloudflare_record" "server_record_short" {
+resource "cloudflare_record" "server_record_v4" {
   for_each = {
     for vm in local.digitalocean_vms : "${vm.id}" => vm
   }
@@ -241,29 +230,66 @@ resource "cloudflare_record" "server_record_short" {
   ttl     = 120
 }
 
-resource "cloudflare_record" "server_record_rpc" {
+resource "cloudflare_record" "server_record_v6" {
+  for_each = {
+    for vm in local.digitalocean_vms : "${vm.id}" => vm if vm.ipv6
+  }
+  zone_id = data.cloudflare_zone.default.id
+  name    = "${each.value.name}.${var.ethereum_network}"
+  type    = "AAAA"
+  value   = digitalocean_droplet.main[each.value.id].ipv6_address
+  proxied = false
+  ttl     = 120
+}
+
+resource "cloudflare_record" "server_record_rpc_v4" {
   for_each = {
     for vm in local.digitalocean_vms : "${vm.id}" => vm
   }
   zone_id = data.cloudflare_zone.default.id
-  name    = "rpc.${each.value.name}.srv.${var.ethereum_network}"
+  name    = "rpc.${each.value.name}.${var.ethereum_network}"
   type    = "A"
   value   = digitalocean_droplet.main[each.value.id].ipv4_address
   proxied = false
   ttl     = 120
 }
 
-resource "cloudflare_record" "server_record_beacon" {
+resource "cloudflare_record" "server_record_rpc_v6" {
+  for_each = {
+    for vm in local.digitalocean_vms : "${vm.id}" => vm if vm.ipv6
+  }
+  zone_id = data.cloudflare_zone.default.id
+  name    = "rpc.${each.value.name}.${var.ethereum_network}"
+  type    = "AAAA"
+  value   = digitalocean_droplet.main[each.value.id].ipv6_address
+  proxied = false
+  ttl     = 120
+}
+
+resource "cloudflare_record" "server_record_beacon_v4" {
   for_each = {
     for vm in local.digitalocean_vms : "${vm.id}" => vm
   }
   zone_id = data.cloudflare_zone.default.id
-  name    = "bn.${each.value.name}.srv.${var.ethereum_network}"
+  name    = "bn.${each.value.name}.${var.ethereum_network}"
   type    = "A"
   value   = digitalocean_droplet.main[each.value.id].ipv4_address
   proxied = false
   ttl     = 120
 }
+
+resource "cloudflare_record" "server_record_beacon_v6" {
+  for_each = {
+    for vm in local.digitalocean_vms : "${vm.id}" => vm if vm.ipv6
+  }
+  zone_id = data.cloudflare_zone.default.id
+  name    = "bn.${each.value.name}.${var.ethereum_network}"
+  type    = "AAAA"
+  value   = digitalocean_droplet.main[each.value.id].ipv6_address
+  proxied = false
+  ttl     = 120
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //                          GENERATED FILES AND OUTPUTS
@@ -280,6 +306,7 @@ resource "local_file" "ansible_inventory" {
         {
           for key, server in digitalocean_droplet.main : "do.${key}" => {
             ip              = "${server.ipv4_address}"
+            ipv6            = try(server.ipv6_address, "none")
             group           = try(split(":", tolist(server.tags)[2])[1], "unknown")
             validator_start = try(split(":", tolist(server.tags)[4])[1], 0)
             validator_end   = try(split(":", tolist(server.tags)[3])[1], 0) # if the tag is not a number it will be 0 - e.g no validator keys 

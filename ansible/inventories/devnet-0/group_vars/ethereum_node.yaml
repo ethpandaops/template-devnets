@@ -6,7 +6,7 @@ ethereum_el_bootnodes:
   - "{{ hostvars['bootnode-1']['ethereum_node_fact_el_enode'] }}"
 
 # role: ethpandaops.general.prometheus
-prometheus_remote_push_url: https://victoriametrics.ethdevops.io/insert/0/prometheus/api/v1/write
+prometheus_remote_push_url: https://victoriametrics-public.analytics.production.platform.ethpandaops.io/insert/1/prometheus
 prometheus_remote_write_username: "{{ secret_prometheus_remote_write.username }}"
 prometheus_remote_write_password: "{{ secret_prometheus_remote_write.password }}"
 prometheus_config: |
