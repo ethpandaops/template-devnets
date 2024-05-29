@@ -34,6 +34,7 @@
             - "nethermind"
             - "reth"
             - "execution"
+            - "reth"
             # Consensus layer clients
             - "lighthouse-validator"
             - "lighthouse"
@@ -47,6 +48,7 @@
             - "grandine"
             - "beacon"
             - "validator"
+            - "grandine"
             # Others
             - "ethereum-metrics-exporter"
             - "snooper-engine"
@@ -77,8 +79,6 @@
             - /data/teku-validator
             - /data/grandine
             - /data/grandine-validator
-            - /data/beacon
-            - /data/validator
             # Config files
             - /data/ethereum-network-config
             - /data/execution-auth.secret
