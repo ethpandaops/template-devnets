@@ -34,7 +34,6 @@ teku_container_command_extra_args:
   - --logging=info
   - --Xlog-include-p2p-warnings-enabled
   - --metrics-block-timing-tracking-enabled
-  # - --initial-state={{ checkpoint_sync_url }} # Need to remove genesis.ssz if using this
 
 # role: ethpandaops.general.geth
 geth_container_name: execution
