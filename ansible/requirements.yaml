@@ -1,6 +1,6 @@
 roles:
   - name: gantsign.oh-my-zsh
-    version: "2.4.0"
+    version: "2.7.0"
   - name: geerlingguy.docker
     version: "6.0.3"
   - name: geerlingguy.firewall

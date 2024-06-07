@@ -12,7 +12,6 @@ mev_relay_docker_networks:
   - name: "{{ mev_relay_docker_network_name }}"
 
 beacon_endpoint: http://beacon:5052
-mev_img: flashbots/mev-boost-relay:0.29.1a2
 
 gen_validators_root: "0x31c7fb3b0dc46ad79c8117cbeafe6060a973f662823b08618d915b644472449d"
 
@@ -21,7 +20,7 @@ gen_validators_root: "0x31c7fb3b0dc46ad79c8117cbeafe6060a973f662823b08618d915b64
 mev_relay_housekeeper_enabled: true
 mev_relay_housekeeper_datadir: "{{ mev_relay_datadir }}/mev-relay-housekeeper"
 mev_relay_housekeeper_container_name: mev-relay-housekeeper
-mev_relay_housekeeper_container_image: "{{ mev_img }}"
+mev_relay_housekeeper_container_image: "{{ default_ethereum_client_images.mev_relay }}"
 mev_relay_housekeeper_container_env:
   GENESIS_FORK_VERSION=0x10{{ ethereum_genesis_fork_version_suffix }}
   GENESIS_VALIDATORS_ROOT={{ gen_validators_root }}
@@ -43,7 +42,7 @@ mev_relay_housekeeper_container_command_extra_args:
 mev_relay_api_enabled: true
 mev_relay_api_datadir: "{{ mev_relay_datadir }}/mev-relay-api"
 mev_relay_api_container_name: mev-relay-api
-mev_relay_api_container_image: "{{ mev_img }}"
+mev_relay_api_container_image: "{{ default_ethereum_client_images.mev_relay }}"
 mev_relay_api_container_env:
   GENESIS_FORK_VERSION=0x10{{ ethereum_genesis_fork_version_suffix }}
   GENESIS_VALIDATORS_ROOT={{ gen_validators_root }}
@@ -72,7 +71,7 @@ mev_relay_api_container_command_extra_args:
 mev_relay_website_enabled: true
 mev_relay_website_datadir: "{{ mev_relay_datadir }}/mev-relay-website"
 mev_relay_website_container_name: mev-relay-website
-mev_relay_website_container_image: "{{ mev_img }}"
+mev_relay_website_container_image: "{{ default_ethereum_client_images.mev_relay }}"
 mev_relay_website_container_env:
   GENESIS_FORK_VERSION=0x10{{ ethereum_genesis_fork_version_suffix }}
   GENESIS_VALIDATORS_ROOT={{ gen_validators_root }}
@@ -173,7 +172,7 @@ geth_init_custom_network: true
 geth_init_custom_network_genesis_file: "{{ eth_testnet_config_dir }}/genesis.json"
 geth_container_pull: true
 
-geth_container_image: flashbots/builder:1.13.12.4844.dev1
+geth_container_image: "{{ default_ethereum_client_images.mev_builder }}"
 
 ethereum_node_json_rpc_snooper_engine_enabled: false
 

@@ -32,6 +32,7 @@
             - "geth-init"
             - "geth"
             - "nethermind"
+            - "reth"
             - "execution"
             - "reth"
             # Consensus layer clients
@@ -44,6 +45,7 @@
             - "prysm"
             - "teku-validator"
             - "teku"
+            - "grandine"
             - "beacon"
             - "validator"
             - "grandine"
