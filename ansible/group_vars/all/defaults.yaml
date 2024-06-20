@@ -38,8 +38,8 @@ fail2ban_ignoreips:
 docker_network_name: shared
 docker_network_enable_ipv6: "{{ global_ipv6_enabled }}"
 docker_network_ipam_config: >-
-  {{ global_ipv6_enabled | ternary(
-    [ { 'subnet': ansible_default_ipv6.address | ansible.utils.ipsubnet(global_ipv6_subnet_ranges[hostvars[inventory_hostname]['cloud']]) } ]
+  {{ global_ipv6_enabled | default(false) | ternary(
+    [ { 'subnet': ansible_default_ipv6.address | default('::1') | ansible.utils.ipsubnet(global_ipv6_subnet_ranges[hostvars[inventory_hostname]['cloud']]) } ]
     , [])
   }}
 
