@@ -1,5 +1,8 @@
 ansible_user: devops
 ansible_python_interpreter: /usr/bin/python3
+# Template name refers to the name of the devnet without number
+# Generally refer to the first word of the repository name
+# e.g. peerdas, or pectra
 devnet_name: template
 
 # IPv6 Specific configuration
