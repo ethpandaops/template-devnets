@@ -34,7 +34,8 @@ default_tooling_images:
   blobscan_indexer: blossomlabs/blobscan-indexer:latest
   dora: ethpandaops/dora:master
   dugtrio: ethpandaops/dugtrio:latest
-  ethereum_genesis_generator: ethpandaops/ethereum-genesis-generator:3.3.3
+  ethereum_genesis_generator: ethpandaops/ethereum-genesis-generator:3.3.5
   mev_boost: flashbots/mev-boost:latest
   mev_relay: flashbots/mev-boost-relay:latest
   mev_builder: flashbots/mev-builder:latest
+  tracoor: ethpandaops/tracoor:latest
