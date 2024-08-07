@@ -21,6 +21,7 @@ tx_fuzz_txs_privkey: ENC[AES256_GCM,data:c52KtPzcxyZPj3vQ6tx0Di5uLFy5JoRUSZ5ZH/W
 goomy_private_key: ENC[AES256_GCM,data:+AwqAcOobrvR5gXxdABQki0rH41Ns8H3sJvVtQb5sh/596u1oDPq2bEh6Tpkfx8B+x4rSp+MRQi5wHwk9/Nqcw==,iv:Ibm4sLvU+tNk7EqaSPs/2CRLU1yLlNDgSWjR+uNPrvQ=,tag:oWbWW/jt9pPTWFcRoVTBsg==,type:str]
 nethermind_seq_api_key: ENC[AES256_GCM,data:Zg0SODORD54P9n85F/2cp3MiQvQ=,iv:tNCA6W6hJm1PybTE2piAhfUjDKCqQWeN2FQfgiayJC0=,tag:Vo+R3gcYDAAGRPq3cMcvvA==,type:str]
 nethermind_seq_server: ENC[AES256_GCM,data:uODawQjQ0OhiHU+/h1VuSKd73pMVzv5z6g==,iv:2Iu5nQAjRmxqkOF2Pueup+Kiwd34sfTxWY8aFv0pea0=,tag:Ih4drVTZJ6wZ4m737rXw4w==,type:str]
+nethermind_push_gateway: "Push Gateway URL Encryption"
 sops:
     kms: []
     gcp_kms: []
