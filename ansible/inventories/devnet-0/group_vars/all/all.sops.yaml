@@ -21,14 +21,15 @@ tx_fuzz_txs_privkey: ENC[AES256_GCM,data:c52KtPzcxyZPj3vQ6tx0Di5uLFy5JoRUSZ5ZH/W
 goomy_private_key: ENC[AES256_GCM,data:+AwqAcOobrvR5gXxdABQki0rH41Ns8H3sJvVtQb5sh/596u1oDPq2bEh6Tpkfx8B+x4rSp+MRQi5wHwk9/Nqcw==,iv:Ibm4sLvU+tNk7EqaSPs/2CRLU1yLlNDgSWjR+uNPrvQ=,tag:oWbWW/jt9pPTWFcRoVTBsg==,type:str]
 nethermind_seq_api_key: ENC[AES256_GCM,data:Zg0SODORD54P9n85F/2cp3MiQvQ=,iv:tNCA6W6hJm1PybTE2piAhfUjDKCqQWeN2FQfgiayJC0=,tag:Vo+R3gcYDAAGRPq3cMcvvA==,type:str]
 nethermind_seq_server: ENC[AES256_GCM,data:uODawQjQ0OhiHU+/h1VuSKd73pMVzv5z6g==,iv:2Iu5nQAjRmxqkOF2Pueup+Kiwd34sfTxWY8aFv0pea0=,tag:Ih4drVTZJ6wZ4m737rXw4w==,type:str]
+nethermind_push_gateway: ENC[AES256_GCM,data:pS7ydtdmyF2zGkTHq6HNjH7PBBMVZg9fnhJs4GB0nyYGkLRdO7atdPtEnWZYFr5aRzV6Jncz+c6arAXcvZ6DwcJa/Tg5jej7guRMfdaUDUB9L2DnK+YYQ9Z4EOCK2eQPocukTKKCKIhUYpRLW74aA7UkjOXurc7FqxhbBEhOMslBKngi72gu6rekirtzlg3d4g==,iv:+jy+t0d5P3V2Hd2fm51CHzpccTggF/AzdGbfFxr/N0A=,tag:7ZBM5+yP1wEGa/zMp6TkBg==,type:str]
 sops:
     kms: []
     gcp_kms: []
     azure_kv: []
     hc_vault: []
     age: []
-    lastmodified: "2024-08-07T11:55:03Z"
-    mac: ENC[AES256_GCM,data:W9ucgZMwN9jnkGrhTmUd3dkKlz2r5bCnCvIJP/ohw+xeTvw2mqmDN9ZB77QkRvb5BpVsOvJDj2vhljTPTWpGncIZXePfTe626ofa62Q//aAO0WUQarbtEPsJrsu0wiu4GXsZ/qvnVi+jnEctH9Ksba9F/q2jUtDP6Jh4RdIMizM=,iv:DPEIJ4kxvikx7TagO81Ieu4XfzHwidJNQqalOoUP3c8=,tag:whq7HyhE/NzKMpLapB0Ijg==,type:str]
+    lastmodified: "2024-08-07T15:21:43Z"
+    mac: ENC[AES256_GCM,data:B1GJ1JUTGiiv5v04x+fzIiSZUjoWbofEO117WNSlv7YQ1iFL33M5GtUZPZPKg5BYP0ipfzhxEJus8mSGQ38mHYGN2Kk+YJAaBdn97oOSvHgncLBRWJgoCb2EfOuBkZ0mb53EcM19bTWEw2XsPBu1s4RDjeLVkORfAP1a94laSIw=,iv:weVMqqosMHsMvG3UmHb5zc1ZOrysEK+XxMmiFKkzY+k=,tag:i+7Lc8kgg/QXBWABQStgRg==,type:str]
     pgp:
         - created_at: "2023-09-28T11:48:21Z"
           enc: |-
