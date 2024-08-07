@@ -38,8 +38,6 @@ nethermind_container_command_extra_args:
   - --EthStats.Secret={{ ethstats_secret }}
   - --EthStats.Server=wss://{{ ethstats_url }}/api/
   - --log=DEBUG
-  - --Metrics.Enabled=true
-  - --Metrics.NodeName="{{ ethereum_network_name }}-{{ inventory_hostname }}"
   - --Seq.MinLevel=Info
   - --Seq.ServerUrl={{ nethermind_seq_server }}
   - --Seq.ApiKey={{ nethermind_seq_api_key }}
