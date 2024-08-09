@@ -39,3 +39,7 @@ default_tooling_images:
   mev_relay: flashbots/mev-boost-relay:latest
   mev_builder: flashbots/mev-builder:latest
   tracoor: ethpandaops/tracoor:latest
+  ncli: status-im/nimbus-eth2:unstable
+  lcli: sigp/lighthouse:electra-devnet-1
+  zcli: electra
+  assertoor: ethpandaops/assertoor:latest
