@@ -144,3 +144,21 @@ curl -s https://config.devnet-0.ethpandaops.io/api/v1/nodes/inventory | jq -r '.
 # Find all .sops.* and *.enc.* files and update their keys
 find . -type d -name "vendor" -prune -o \( -type f \( -name "*.sops.*" -o -name "*.enc.*" \) \) -exec sops updatekeys {} -y \;
 ```
+
+## Genesis allocation used:
+Here's a table of where the keys are used
+
+| Account Index | Component Used In | Private Key Used | Public Key Used | Comment                           |
+|---------------|-------------------|------------------|----------------|-----------------------------------|
+| 0             | tx_fuzz blobs     | ✅               |                | Spams blobs on the network        |
+| 1             | tx_fuzz_txs       | ✅               |                | Spams tx on the network           |
+| 2             | mev_flood_signing_key| ✅            |                | Spams mev-able txs on the network |
+| 3             | mev_flood_user_key| ✅               |                | Spams mev-able txs on the network |
+| 4             | faucet-1          | ✅               |                | Faucet 1                          |
+| 5             | faucet-2          | ✅               |                | Faucet 2                          |
+| 6             | mev_flood_private_key | ✅           |                | Spams mev-able txs on the network |
+| 7             | manual-deposits   |   ✅             |                | Used to make manual deposits      |
+| 8             | Marius is rich    |                  |                |                                   |
+| 9             | goomy             | ✅               |                | Spams blobs on the network        |
+| 10            | assertoor         | ✅               |                | Runs various test scenarios       |
+| 11-29         | available         |                  |                |                                   |
