@@ -55,8 +55,8 @@ docker_users:
 docker_daemon_options:
   "log-driver": "json-file"
   "log-opts":
-      "max-size": "250m"
-      "max-file": "2"
+      "max-size": "500m"
+      "max-file": "8"
 
 # role: ethpandaops.general.prometheus
 prometheus_container_networks: "{{ docker_networks_shared }}"
