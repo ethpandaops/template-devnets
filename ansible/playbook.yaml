@@ -75,7 +75,7 @@
       ansible.builtin.import_role:
         name: ethpandaops.general.ethereum_inventory_web
       tags: [ethereum, ethereum_node, eth_inventory_web, ethereum_inventory_web]
-      when: "'bootnode' in group_names"
+      delegate_to: bootnode-1
 
 - hosts: bootnode
   become: true
