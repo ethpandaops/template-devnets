@@ -71,12 +71,17 @@
                 0
               )
           }}
+    - name: refresh inventory
+      import_role:
+        name: ethpandaops.general.ethereum_inventory_web
+      tags: [ethereum, ethereum_node, eth_inventory_web, ethereum_inventory_web]
+      when: "'bootnode' in group_names"
 
 - hosts: bootnode
   become: true
   roles:
     - role: ethpandaops.general.ethereum_inventory_web
-      tags: [ethereum, ethereum_node, eth_inventory_web, ethereum_inventory_web]
+      tags: [eth_inventory_web, ethereum_inventory_web]
 
 - hosts: dora
   become: true
