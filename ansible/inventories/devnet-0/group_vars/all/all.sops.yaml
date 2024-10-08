@@ -4,6 +4,10 @@ secret_zerossl:
 secret_prometheus_remote_write:
     username: ENC[AES256_GCM,data:zpGvEsv1Lrk=,iv:OVx9miE7xFRL/rBM6dkc+hnBYqPuRJTWhhzQ4T/hsmU=,tag:o+ulpT+Hxx8pmp7O6YPdlw==,type:str]
     password: ENC[AES256_GCM,data:14dBuUrGzQ==,iv:sOc8R7kQ0mxeUxTkjVIBCKhr+lvE7W2i3xfkmFlHj4U=,tag:1GhjGilrb32jr4wFVMXZ1w==,type:str]
+secret_loki:
+    endpoint: ENC[AES256_GCM,data:1p4l9AKwvQDa67LQul+2s0Z5gxyuzhpj5cb/R4fGI6JPb0qXLJBfZcP++cVV0Rlffymz6KgDb8Q=,iv:A7oFYrwv7Aszp7348IQ/9qv1RWl3oe7PigjygkV43+I=,tag:HJciMwvYT21QVVV2YfjYcw==,type:str]
+    username: ENC[AES256_GCM,data:ARG3BICw5Hk=,iv:LhfgXsZu5oCLMfGpGrnQTTPAO0AHkm0IxYnOcFVrs9Y=,tag:6T5zDhQRr3FIyBjoVtSbsQ==,type:str]
+    password: ENC[AES256_GCM,data:MWQXJxCptw==,iv:3pgpVjt4EPBREWrg/pmDYxTDwtJvBZQNNs44tDIv0/s=,tag:/ydFBPLPAo/FeC7UCQrBmg==,type:str]
 secret_nginx_shared_basic_auth:
     name: ENC[AES256_GCM,data:bjlM,iv:DiOGlqfOfrDlt7X4OGY27OYlkDDEHguv+kg1zRhBek0=,tag:ZPlucwl2PNXeXcOc8PmCBQ==,type:str]
     password: ENC[AES256_GCM,data:ocIOy4nOHWVmW08S2hb7,iv:yvC4WWOOJvVeegWl0uj2P8yxcfBgNrvYSm5xUB5qux8=,tag:+8MDMeB7gKlCApMv5YrBGQ==,type:str]
@@ -28,8 +32,8 @@ sops:
     azure_kv: []
     hc_vault: []
     age: []
-    lastmodified: "2024-08-07T15:24:00Z"
-    mac: ENC[AES256_GCM,data:I2HVxp1lU7MXgIchSvcIYUA/zv627Hs5q/mPbGxgpEZ5QGTJoE11AcbYYg567KFuinlXhvtjol81NsuuY+guyYz5MsqTF0Tjt66ebgPK2z3XBW8yauKA5Hd6dD/qiHGIOi8iVmNMddmC5luBJSrIS7DeRpmP8Wjtvc3ssBgNeE4=,iv:zditlTFf0KAq8r/iM3YNuOmV3/Ezh8VOj/w/tZM3rYg=,tag:bcszftY9JbTZFkE7iFmVMg==,type:str]
+    lastmodified: "2024-10-08T10:47:41Z"
+    mac: ENC[AES256_GCM,data:jwxnRNOI6O1Gn9BOj+Te1XAJln6wpQzcjukFE4lDEc99qQZb4+do0uszwbXPfMLMJPZ3N2nKEuemNRhLvU3QPQLCrhddyBqYzqTcMs8EZL0jOgRRxbkDpw26IN1IKoaDSDZm99pXWZAXlOUA6G+ZOcX67WgwfQtOpmurhfrhZm8=,iv:iefVyjob9TMj4dh/Iq9DVLr3B2ccL29V/Acc5EXCyG4=,tag:EdxNfGKoTfezBRXrTAbCtg==,type:str]
     pgp:
         - created_at: "2023-09-28T11:48:21Z"
           enc: |-

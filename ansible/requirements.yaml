@@ -13,7 +13,7 @@ roles:
 collections:
   - name: ansible.posix
   - name: community.sops
-    version: 1.6.0
+    version: 1.7.0
   - name: ethpandaops.general
     source: https://github.com/ethpandaops/ansible-collection-general.git,master
     type: git
