@@ -25,8 +25,8 @@ ethstats_secret: "{{ secret_ethstats }}"
 ### Checkpoint sync specific for Ansible & Kubernetes
 checkpoint_sync_node: bootnode-1
 ethereum_node_cl_checkpoint_sync_enabled: false
-checkpoint_sync_url: https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@bn.{{ checkpoint_sync_node }}.srv.{{ ethereum_network_name }}.{{ domain }}
-checkpoint_sync_url_kube: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.dencun-devnets.node_ingress.combined}>@bn.{{ checkpoint_sync_node }}.srv.{{ ethereum_network_name }}.{{ domain }}
+checkpoint_sync_url: https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@bn.{{ checkpoint_sync_node }}.{{ ethereum_network_name }}.{{ domain }}
+checkpoint_sync_url_kube: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.dencun-devnets.node_ingress.combined}>@bn.{{ checkpoint_sync_node }}.{{ ethereum_network_name }}.{{ domain }}
 #  ██████╗░░█████╗░██╗░░░░░███████╗  ██╗░░░██╗░█████╗░██████╗░░██████╗
 #  ██╔══██╗██╔══██╗██║░░░░░██╔════╝  ██║░░░██║██╔══██╗██╔══██╗██╔════╝
 #  ██████╔╝██║░░██║██║░░░░░█████╗░░  ╚██╗░██╔╝███████║██████╔╝╚█████╗░
@@ -51,31 +51,18 @@ ethereum_genesis_generator_config_files:
   cl/mnemonics.yaml: "{{ lookup('ansible.builtin.url', 'https://raw.githubusercontent.com/ethpandaops/ethereum-genesis-generator/v{{ethereum_genesis_generator_version}}/config-example/cl/mnemonics.yaml', split_lines=false) }}" # noqa yaml[line-length]
   el/genesis-config.yaml: "{{ lookup('ansible.builtin.url', 'https://raw.githubusercontent.com/ethpandaops/ethereum-genesis-generator/v{{ethereum_genesis_generator_version}}/config-example/el/genesis-config.yaml', split_lines=false) }}" # noqa yaml[line-length]
   values.env: |-
-    export PRESET_BASE="mainnet"
     export CHAIN_ID="{{ ethereum_genesis_chain_id }}"
-    export DEPOSIT_CONTRACT_ADDRESS="0x6f22fFbC56eFF051aECF839396DD1eD9aD6BBA9D"
     export EL_AND_CL_MNEMONIC="{{ ethereum_genesis_mnemonic }}"
-    export CL_EXEC_BLOCK="0"
-    export DEPOSIT_CONTRACT_BLOCK="0x0000000000000000000000000000000000000000000000000000000000000000"
     export NUMBER_OF_VALIDATORS=200
-    export GENESIS_FORK_VERSION="0x10{{ ethereum_genesis_fork_version_suffix }}"
-    export ALTAIR_FORK_VERSION="0x20{{ ethereum_genesis_fork_version_suffix }}"
-    export BELLATRIX_FORK_VERSION="0x30{{ ethereum_genesis_fork_version_suffix }}"
-    export CAPELLA_FORK_VERSION="0x40{{ ethereum_genesis_fork_version_suffix }}"
     export DENEB_FORK_VERSION="0x50{{ ethereum_genesis_fork_version_suffix }}"
     export ELECTRA_FORK_VERSION="0x60{{ ethereum_genesis_fork_version_suffix }}"
-    export ELECTRA_FORK_EPOCH="5"
-    export WITHDRAWAL_TYPE="0x00"
-    export WITHDRAWAL_ADDRESS={{ ethereum_genesis_validator_bls_change_execution_address }}
-    export BEACON_STATIC_ENR=""
+    export ELECTRA_FORK_EPOCH="999999"
+    export EIP7594_FORK_VERSION="0x70{{ ethereum_genesis_fork_version_suffix }}"
+    export EIP7594_FORK_EPOCH="999999"
     export GENESIS_TIMESTAMP={{ ethereum_genesis_timestamp }}
     export GENESIS_DELAY={{ ethereum_genesis_timedelay }}
-    export SLOT_DURATION_IN_SECONDS=12
-    export MAX_CHURN=8
-    export EJECTION_BALANCE=16000000000
-    export ETH1_FOLLOW_DISTANCE=2048
-    export MIN_VALIDATOR_WITHDRAWABILITY_DELAY=256
-    export SHARD_COMMITTEE_PERIOD=256
+
+
 ethereum_genesis_validator_keys_output_dir: "{{ ansible_inventory_sources[0] | dirname }}/files/validator_keys"
 ethereum_genesis_validator_bls_change_execution_address: "{{ ethereum_node_cl_validator_fee_recipient }}"
 ethereum_genesis_validator_keyranges: >-
@@ -140,9 +127,9 @@ xatu_sentry_config_network_name_override: "{{ ethereum_network_name }}"
 ethereum_metrics_exporter_container_image: "{{ default_tooling_images.ethereum_metrics_exporter }}"
 
 # role: eth_testnet_config
-eth_testnet_config_dir: /data/ethereum-network-config
+eth_testnet_config_dir: /data/ethereum-network-config/metadata
 eth_testnet_config_local_dir_enabled: true
-eth_testnet_config_local_dir_src: "{{ ethereum_genesis_generator_output_dir }}/"
+eth_testnet_config_local_dir_src: "{{ ethereum_genesis_generator_output_dir }}/metadata/"
 
 # role: gen_basic_auth_nginx
 gen_basic_auth_nginx_name: "{{ secret_nginx_shared_basic_auth.name }}"
@@ -172,3 +159,39 @@ docker_nginx_proxy_container_volumes:
   - "{{ docker_nginx_proxy_datadir }}/certs:/etc/nginx/certs:ro"
   - html:/usr/share/nginx/html
   - "{{ docker_nginx_proxy_datadir }}/htpasswd:/etc/nginx/htpasswd:ro"
+
+
+# role: ethpandaops.general.vector
+vector_config: |
+  [sources.in]
+    type = "docker_logs"
+    exclude_containers = [
+      "{{ vector_container_name }}",
+      "ethereum-metrics-exporter",
+      "nginx-proxy",
+      "node_exporter",
+      "prometheus",
+      "snooper-",
+    ]
+
+  [sinks.out]
+    type = "loki"
+    inputs = ["in"]
+    out_of_order_action = "accept"
+    labels.forwarder = "vector"
+    labels.instance = "{{ inventory_hostname }}"
+    labels.network = "{{ ethereum_network_name }}"
+    labels.testnet = "{{ ethereum_network_name }}"
+    labels.ingress_user = "{{ secret_loki.username }}"
+    labels.container_name = "{{ '{{ container_name }}' }}"
+  {%- if ethereum_node_el is defined +%}
+    labels.ethereum_el = "{{ ethereum_node_el }}"
+  {%- endif +%}
+  {%- if ethereum_node_cl is defined +%}
+    labels.ethereum_cl = "{{ ethereum_node_cl }}"
+  {%- endif +%}
+    encoding.codec = "json"
+    endpoint = "{{ secret_loki.endpoint }}"
+    auth.strategy = "basic"
+    auth.user = "{{ secret_loki.username }}"
+    auth.password = "{{ secret_loki.password }}"

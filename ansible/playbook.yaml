@@ -19,6 +19,7 @@
     - role: geerlingguy.pip
       pip_install_packages:
         - name: docker
+          extra_args: --break-system-packages
       tags: [init-server, pip]
     - role: ethpandaops.general.docker_cleanup
       tags: [init-server, docker_cleanup]
@@ -38,6 +39,9 @@
       tags: [cl_bootnode]
     - role: ethpandaops.general.ethereum_testnet_config
       tags: [ethereum, eth_testnet_config, ethereum_testnet_config]
+    - role: ethpandaops.general.validator_keys
+      when: ethereum_node_cl_validator_enabled == true
+      tags: [ethereum, validator_keys]
     - role: ethpandaops.general.ethereum_node
       tags: [ethereum, ethereum_node]
     - role: ethpandaops.general.docker_nginx_proxy
@@ -71,6 +75,20 @@
                 0
               )
           }}
+    - name: Refresh inventory web
+      ansible.builtin.import_role:
+        name: ethpandaops.general.ethereum_inventory_web
+      tags: [eth_inventory_web, ethereum_inventory_web]
+      delegate_to: bootnode-1
+      run_once: true
+      vars:
+        eth_inventory_web_container_networks: "{{ docker_networks_shared }}" # noqa var-naming[no-role-prefix]
+        eth_inventory_web_container_env: # noqa var-naming[no-role-prefix]
+          VIRTUAL_HOST: "bootnode-1.{{ network_subdomain }}"
+          VIRTUAL_PORT: "80"
+          VIRTUAL_PATH: "/meta/api"
+          VIRTUAL_DEST: "/"
+          LETSENCRYPT_HOST: "bootnode-1.{{ network_subdomain }}"
 
 - hosts: bootnode
   become: true

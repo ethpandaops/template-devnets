@@ -1,5 +1,8 @@
 ansible_user: devops
 ansible_python_interpreter: /usr/bin/python3
+# Template name refers to the name of the devnet without number
+# Generally refer to the first word of the repository name
+# e.g. peerdas, or pectra
 devnet_name: template
 
 # IPv6 Specific configuration
@@ -17,11 +20,12 @@ global_ipv6_subnet_ranges:
 # role: ethpandaops.general.bootstrap
 bootstrap_user: root
 bootstrap_default_user_authorized_keys_github:
-  # - barnabasbusa
-  # - parithosh
-  # - samcm
-  # - savid
-  # - skylenet
+  - barnabasbusa
+  - parithosh
+  - samcm
+  - savid
+  - skylenet
+  - pk910
 
 # role: robertdebock.fail2ban
 fail2ban_loglevel: INFO
@@ -37,8 +41,8 @@ fail2ban_ignoreips:
 docker_network_name: shared
 docker_network_enable_ipv6: "{{ global_ipv6_enabled }}"
 docker_network_ipam_config: >-
-  {{ global_ipv6_enabled | ternary(
-    [ { 'subnet': ansible_default_ipv6.address | ansible.utils.ipsubnet(global_ipv6_subnet_ranges[hostvars[inventory_hostname]['cloud']]) } ]
+  {{ global_ipv6_enabled | default(false) | ternary(
+    [ { 'subnet': ansible_default_ipv6.address | default('::1') | ansible.utils.ipsubnet(global_ipv6_subnet_ranges[hostvars[inventory_hostname]['cloud']]) } ]
     , [])
   }}
 
@@ -51,8 +55,8 @@ docker_users:
 docker_daemon_options:
   "log-driver": "json-file"
   "log-opts":
-      "max-size": "250m"
-      "max-file": "2"
+      "max-size": "500m"
+      "max-file": "8"
 
 # role: ethpandaops.general.prometheus
 prometheus_container_networks: "{{ docker_networks_shared }}"

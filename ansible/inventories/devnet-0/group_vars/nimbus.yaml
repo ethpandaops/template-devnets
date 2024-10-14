@@ -1,9 +1,9 @@
 # role: ethpandaops.general.bootstrap
-bootstrap_default_user_authorized_keys_github_team_cl: []
-  # - zah
-  # - tersec
-  # - etan-status
-  # - arnetheduck
+bootstrap_default_user_authorized_keys_github_team_cl:
+  - zah
+  - tersec
+  - etan-status
+  - arnetheduck
 
 # role: validator_keys
 validator_keys_sync_files:
@@ -21,7 +21,7 @@ validator_bls_sync_files:
 # role: ethpandaops.general.ethereum_node
 ethereum_node_cl: nimbus
 
-# Checkpointsync 
+# Checkpointsync
 nimbus_checkpoint_autoremove_enabled: true
 
 # role: ethpandaops.general.nimbus

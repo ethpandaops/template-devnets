@@ -1,15 +1,15 @@
 # role: ethpandaops.general.bootstrap
-bootstrap_default_user_authorized_keys_github_team_el: []
-  # - MarekM25
-  # - kamilchodola
-  # - LukaszRozmej
-  # - marcindsobczak
-  # - asdacap
-  # - rubo
-  # - smartprogrammer93
-  # - g11tech
-  # - cbermudez97
-  # - flcl42
+bootstrap_default_user_authorized_keys_github_team_el:
+  - MarekM25
+  - kamilchodola
+  - LukaszRozmej
+  - marcindsobczak
+  - asdacap
+  - rubo
+  - smartprogrammer93
+  - cbermudez97
+  - flcl42
+  - stdevMac
 
 # role: ethpandaops.general.ethereum_node
 ethereum_node_el: nethermind
@@ -39,8 +39,9 @@ nethermind_container_command_extra_args:
   - --EthStats.Server=wss://{{ ethstats_url }}/api/
   - --log=DEBUG
   - --Seq.MinLevel=Info
-  - --Seq.ServerUrl=https://seq.nethermind.io
+  - --Seq.ServerUrl={{ nethermind_seq_server }}
   - --Seq.ApiKey={{ nethermind_seq_api_key }}
+  - --Metrics.PushGatewayUrl={{ nethermind_push_gateway }}
 nethermind_container_pull: true
 
 prometheus_config: |

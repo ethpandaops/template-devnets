@@ -14,7 +14,7 @@ This repository contains the infrastructure code used to setup ~all~ dev/testnet
 
 Status   | Network    | Links   | Ansible                                                      | Terraform | Kubernetes
 ------   | --------   | ----     |  -----                                                       | -------   | ------
- 🟢Template🔴 | [devnet-0](https://template.devnet.io/)   | [Network config](network-configs/devnet-0) / [Inventory](https://bootnode-1.srv.devnet-0.ethpandaops.io/meta/api/v1/inventory.json) / [Validator ranges](https://bootnode-1.srv.devnet-0.ethpandaops.io/meta/api/v1/validator-ranges.json)    | [🔗](ansible/inventories/devnet-0) | [🔗](terraform/devnet-0) | [🔗](kubernetes/devnet-0)
+ 🟢Template🔴 | [devnet-0](https://template.devnet.io/)   | [Network config](network-configs/devnet-0) / [Inventory](https://bootnode-1.devnet-0.ethpandaops.io/meta/api/v1/inventory.json) / [Validator ranges](https://bootnode-1.devnet-0.ethpandaops.io/meta/api/v1/validator-ranges.json)    | [🔗](ansible/inventories/devnet-0) | [🔗](terraform/devnet-0) | [🔗](kubernetes/devnet-0)
 
 # Development
 ## Version management for tools
@@ -90,7 +90,7 @@ lodestar-besu-1 ansible_host=167.99.34.241 cloud=digitalocean cloud_region=ams3 
 ```shell
 ansible-playbook -i inventories/devnet-0/inventory.ini playbook.yaml
 ```
-from the [ansible/](ansible/) directory to deploy the network. This will generate the genesis file, validators and deploy the network according to the configuration parameters specified in the [ansible/inventories/devnet-0/group_vars/all.yaml](ansible/inventories/devnet-0/group_vars/all.yaml) file.  
+from the [ansible/](ansible/) directory to deploy the network. This will generate the genesis file, validators and deploy the network according to the configuration parameters specified in the [ansible/inventories/devnet-0/group_vars/all.yaml](ansible/inventories/devnet-0/group_vars/all.yaml) file.
 
 Don't forget the following gotchas:
 - Change the `ethereum_genesis_chain_id` value in [ansible/inventories/devnet-0/group_vars/all.yaml](ansible/inventories/devnet-0/group_vars/all.yaml) to avoid clashing with an existing network
@@ -124,11 +124,11 @@ from the [ansible/](ansible/) directory to clean up the network-configs and vali
 * To get the IP addresses of the nodes, run `terraform output` from the [terraform/devnet-0/](terraform/devnet-0/) directory.
 * To get the validator ranges run
 ```shell
-curl -s https://bootnode-1.srv.devnet-0.ethpandaops.io/meta/api/v1/validator-ranges.json
+curl -s https://bootnode-1.devnet-0.ethpandaops.io/meta/api/v1/validator-ranges.json
 ```
 * To get which validator proposed a specific block run
 ```shell
-ethdo --connection=https://user:password@bn.lighthouse-nethermind-1.srv.devnet-0.ethpandaops.io block info --blockid 100 --json | jq -r .message.proposer_index | ./whose_validator.zsh
+ethdo --connection=https://user:password@bn.lighthouse-nethermind-1.devnet-0.ethpandaops.io block info --blockid 100 --json | jq -r .message.proposer_index | ./whose_validator.zsh
 ```
 from the [ansible/](ansible/) directory.
 * Getting execution layer client enodes
@@ -144,3 +144,21 @@ curl -s https://config.devnet-0.ethpandaops.io/api/v1/nodes/inventory | jq -r '.
 # Find all .sops.* and *.enc.* files and update their keys
 find . -type d -name "vendor" -prune -o \( -type f \( -name "*.sops.*" -o -name "*.enc.*" \) \) -exec sops updatekeys {} -y \;
 ```
+
+## Genesis allocation used:
+Here's a table of where the keys are used
+
+| Account Index | Component Used In | Private Key Used | Public Key Used | Comment                           |
+|---------------|-------------------|------------------|----------------|-----------------------------------|
+| 0             | tx_fuzz blobs     | ✅               |                | Spams blobs on the network        |
+| 1             | tx_fuzz_txs       | ✅               |                | Spams tx on the network           |
+| 2             | mev_flood_signing_key| ✅            |                | Spams mev-able txs on the network |
+| 3             | mev_flood_user_key| ✅               |                | Spams mev-able txs on the network |
+| 4             | faucet-1          | ✅               |                | Faucet 1                          |
+| 5             | faucet-2          | ✅               |                | Faucet 2                          |
+| 6             | mev_flood_private_key | ✅           |                | Spams mev-able txs on the network |
+| 7             | manual-deposits   |   ✅             |                | Used to make manual deposits      |
+| 8             | Marius is rich    |                  |                |                                   |
+| 9             | goomy             | ✅               |                | Spams blobs on the network        |
+| 10            | assertoor         | ✅               |                | Runs various test scenarios       |
+| 11-29         | available         |                  |                |                                   |

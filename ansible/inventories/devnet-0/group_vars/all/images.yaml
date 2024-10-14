@@ -34,4 +34,12 @@ default_tooling_images:
   blobscan_indexer: blossomlabs/blobscan-indexer:latest
   dora: ethpandaops/dora:master
   dugtrio: ethpandaops/dugtrio:latest
-  ethereum_genesis_generator: ethpandaops/ethereum-genesis-generator:3.0.2
+  ethereum_genesis_generator: ethpandaops/ethereum-genesis-generator:3.3.5
+  mev_boost: flashbots/mev-boost:latest
+  mev_relay: flashbots/mev-boost-relay:latest
+  mev_builder: flashbots/mev-builder:latest
+  tracoor: ethpandaops/tracoor:latest
+  ncli: status-im/nimbus-eth2:unstable
+  lcli: sigp/lighthouse:electra-devnet-1
+  zcli: electra
+  assertoor: ethpandaops/assertoor:latest

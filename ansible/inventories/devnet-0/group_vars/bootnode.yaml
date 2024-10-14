@@ -34,7 +34,6 @@ teku_container_command_extra_args:
   - --logging=info
   - --Xlog-include-p2p-warnings-enabled
   - --metrics-block-timing-tracking-enabled
-  # - --initial-state={{ checkpoint_sync_url }} # Need to remove genesis.ssz if using this
 
 # role: ethpandaops.general.geth
 geth_container_name: execution
@@ -48,10 +47,18 @@ geth_container_command_extra_args:
   - --http.vhosts=*
   - --networkid={{ ethereum_network_id }}
   - --syncmode=full
+  - --gcmode=archive
+  - --state.scheme=hash
   - --ethstats={{ inventory_hostname }}:{{ ethstats_secret }}@{{ ethstats_url }}
 geth_init_custom_network: true
 geth_init_custom_network_genesis_file: "{{ eth_testnet_config_dir }}/genesis.json"
 geth_container_pull: true
+
+geth_init_custom_network_container_command:
+  - --datadir=/data
+  - init
+  - --state.scheme=hash
+  - /genesis.json
 
 # role: ethpandaops.general.prometheus
 prometheus_remote_push_url: https://victoriametrics.ethdevops.io/insert/0/prometheus/api/v1/write
