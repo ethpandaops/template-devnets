@@ -7,6 +7,7 @@ asdf plugin add sops https://github.com/feniix/asdf-sops.git
 asdf plugin add terraform https://github.com/asdf-community/asdf-hashicorp.git
 asdf plugin-add helm https://github.com/Antiarchitect/asdf-helm.git
 asdf plugin-add python
+asdf plugin-add yq https://github.com/sudermanjr/asdf-yq.git
 
 asdf install
 
