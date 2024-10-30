@@ -50,5 +50,4 @@ teku_container_command_extra_args:
   - --rest-api-docs-enabled
 teku_validator_container_volumes:
   - "{{ teku_validator_datadir }}:/validator-data"
-  - "{{ eth_testnet_config_dir }}:/network-config:ro"
 teku_validator_datadir: /data/teku-validator
