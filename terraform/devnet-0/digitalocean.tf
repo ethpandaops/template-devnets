@@ -27,7 +27,7 @@ variable "digitalocean_regions" {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
-//                                        LOCALS                                      
+//                                        LOCALS
 ////////////////////////////////////////////////////////////////////////////////////////
 locals {
   base_cidr_block = var.base_cidr_block
@@ -49,7 +49,7 @@ locals {
         id         = "${vm_group.name}-${i + 1}"
         vms = {
           "${i + 1}" = {
-            tags   = "group_name:${vm_group.name},val_start:${vm_group.validator_start + (i * (vm_group.validator_end - vm_group.validator_start) / vm_group.count)},val_end:${min(vm_group.validator_start + ((i + 1) * (vm_group.validator_end - vm_group.validator_start) / vm_group.count), vm_group.validator_end)}"
+            tags   = "group_name:${vm_group.name},val_start:${vm_group.validator_start + ceil(i * (vm_group.validator_end - vm_group.validator_start) / vm_group.count)},val_end:${min(vm_group.validator_start + ceil((i + 1) * (vm_group.validator_end - vm_group.validator_start) / vm_group.count), vm_group.validator_end)}"
             region = element(var.digitalocean_regions, i % length(var.digitalocean_regions))
             size   = try(vm_group.size, local.digitalocean_default_size)
             ipv6   = try(vm_group.ipv6, true)
@@ -309,7 +309,7 @@ resource "local_file" "ansible_inventory" {
             ipv6            = try(server.ipv6_address, "none")
             group           = try(split(":", tolist(server.tags)[2])[1], "unknown")
             validator_start = try(split(":", tolist(server.tags)[4])[1], 0)
-            validator_end   = try(split(":", tolist(server.tags)[3])[1], 0) # if the tag is not a number it will be 0 - e.g no validator keys 
+            validator_end   = try(split(":", tolist(server.tags)[3])[1], 0) # if the tag is not a number it will be 0 - e.g no validator keys
             tags            = "${server.tags}"
             hostname        = "${split(".", key)[0]}"
             cloud           = "digitalocean"
