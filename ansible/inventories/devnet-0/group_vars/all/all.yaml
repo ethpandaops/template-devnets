@@ -91,12 +91,18 @@ bootstrap_default_user_authorized_keys_github_all:
   - savid
   - skylenet
   - pk910
+  - mattevans
 bootstrap_default_user_authorized_keys_github: >
   {{
     (bootstrap_default_user_authorized_keys_github_all | default([])) +
     (bootstrap_default_user_authorized_keys_github_team_el | default([])) +
     (bootstrap_default_user_authorized_keys_github_team_cl | default([]))
   }}
+
+node_exporter_container_image: "{{ default_tooling_images.node_exporter }}"
+prometheus_container_image: "{{ default_tooling_images.prometheus }}"
+vector_container_image: "{{ default_tooling_images.vector }}"
+json_rpc_snooper_container_image: "{{ default_tooling_images.snooper }}"
 
 # role: ethpandaops.general.ethereum_node
 ethereum_node_images_always_pull: true
