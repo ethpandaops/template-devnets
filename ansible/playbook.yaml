@@ -32,6 +32,18 @@
     - role: ethpandaops.general.vector
       tags: [init-server, vector]
 
+- hosts: hive
+  become: true
+  roles:
+    - role: gantsign.golang
+      golang_gopath: '/data/workspace-go'
+      golang_version: '1.21.13'
+      tags: [golang]
+    - role: ethpandaops.general.hive
+      tags: [hive]
+    - role: ethpandaops.general.docker_nginx_proxy
+      tags: [docker_nginx_proxy]
+
 - hosts: bootnode
   become: true
   roles:
