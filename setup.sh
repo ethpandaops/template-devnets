@@ -15,6 +15,7 @@ asdf plugin-add yq https://github.com/sudermanjr/asdf-yq.git || true
 asdf plugin add awscli || true
 
 asdf install
+asdf reshim
 
 # Install python tools
 pip install -r requirements.txt
