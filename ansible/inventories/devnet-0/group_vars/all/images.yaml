@@ -48,3 +48,4 @@ default_tooling_images:
   lcli: docker.ethquokkaops.io/dh/sigp/lighthouse:electra-devnet-1
   zcli: electra
   assertoor: docker.ethquokkaops.io/dh/ethpandaops/assertoor:latest
+  panda_pulse: docker.ethquokkaops.io/dh/ethpandaops/panda-pulse:latest
