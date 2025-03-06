@@ -147,7 +147,7 @@ Don't forget the following gotchas:
 - Make sure you add the github usernames to `bootstrap_default_user_authorized_keys_github_...`, otherwise ansible will fail on the bootstrap step
 
 ## Accessing the nodes
-After deploying the network with ansible, you can access the nodes via ssh-ing into the host adresses listed in `inventory.ini`. You will need to have your github username or ssh public key added to `bootstrap_default_user_authorized_keys` before the bootstrap step. 
+After deploying the network with ansible, you can access the nodes via ssh-ing into the host adresses listed in `inventory.ini` and the `ansible_user` defined in [ansible/inventories/devnet-0/group_vars/all/00-defaults.yaml](ansible/inventories/devnet-0/group_vars/all/00-defaults.yaml). You will need to have your github username or ssh public key added to `bootstrap_default_user_authorized_keys` before the bootstrap step. 
 
 ```bash
 ssh devops@167.99.34.241
