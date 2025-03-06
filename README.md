@@ -50,9 +50,9 @@ ansible-playbook -i inventories/devnet-0/inventory.ini cleanup_ethereum.yaml
 To create a new testnet using the infrastructure code, follow these steps:
 
 ## Validator Configuration
-1. Open the [main.tf](terraform/devnet-0/main.tf) file located in the terraform/devnet-0/ directory.
+1. Open the [node.tf](terraform/devnet-0/node.tf) file located in the terraform/devnet-0/ directory.
 
-2. Locate the sections that define the different nodes and their corresponding validator ranges, for this example this is `variable "digitalocean_vm_groups"`
+2. This file contains variables for each different nodes, containing node count, size, and validator ranges. 
 
 3. Adjust the validator indexes in the terraform/node.tf file based on your desired allocation of validators to nodes.
 
