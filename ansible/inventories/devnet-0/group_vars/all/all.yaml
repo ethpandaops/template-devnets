@@ -37,7 +37,7 @@ checkpoint_sync_url_kube: https://<path:/secrets/services/services.enc.yaml#ethe
 # role: ethpandaops.general.ethereum_genesis
 ethereum_genesis_generator_container_image: "{{ default_tooling_images.ethereum_genesis_generator }}"
 ethereum_genesis_generator_version: "{{ ethereum_genesis_generator_container_image.split(':')[-1] }}"
-ethereum_genesis_network_seed: "{{ ansible_inventory_sources[0] }}"
+ethereum_genesis_network_seed: "template-devnet-0"
 ethereum_genesis_chain_id: "70{{ 99999999 | random(start=10000000, seed=ethereum_genesis_network_seed) }}"
 ethereum_genesis_generator_output_dir: "../network-configs/{{ ethereum_network_name | replace('template-', '') }}"
 ethereum_genesis_timestamp: "{{ lookup('ansible.builtin.pipe', '{{ ethereum_genesis_timestamp_relative_cmd[ansible_system] }}') }}"
