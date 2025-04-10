@@ -20,3 +20,4 @@ collections:
     source: https://github.com/ethpandaops/ansible-collection-general.git,master
     type: git
   - name: kubernetes.core
+  - name: ansible.utils
