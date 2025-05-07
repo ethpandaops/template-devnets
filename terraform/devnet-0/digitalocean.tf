@@ -191,6 +191,16 @@ resource "digitalocean_firewall" "main" {
     port_range       = "30303"
     source_addresses = ["0.0.0.0/0", "::/0"]
   }
+  inbound_rule {
+    protocol         = "tcp"
+    port_range       = "42069"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }
+  inbound_rule {
+    protocol         = "udp"
+    port_range       = "42069"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }
 
   // Allow all outbound traffic
   outbound_rule {
