@@ -60,6 +60,22 @@ resource "hcloud_firewall" "machine_firewall" {
     source_ips  = ["0.0.0.0/0", "::/0"]
   }
 
+  rule {
+    description = "Allow execution torrent port TCP"
+    direction   = "in"
+    protocol    = "tcp"
+    port        = "42069"
+    source_ips  = ["0.0.0.0/0", "::/0"]
+  }
+
+  rule {
+    description = "Allow execution torrent port UDP"
+    direction   = "in"
+    protocol    = "udp"
+    port        = "42069"
+    source_ips  = ["0.0.0.0/0", "::/0"]
+  }
+
   # Allow all outbound traffic
   rule {
     description     = "Allow all outbound traffic TCP"
