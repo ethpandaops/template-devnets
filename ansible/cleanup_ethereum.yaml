@@ -58,6 +58,9 @@
             - "mev-boost"
             - "external-block-builder"
             - "xatu-sentry"
+            - "nginx-proxy"
+            - "nginx-proxy-gen"
+            - "nginx-proxy-acme"
         - name: Remove data dirs
           file:
             state: absent
@@ -89,3 +92,4 @@
             - /data/execution-auth.secret
             - /data/cl-bootnode
             - /data/xatu-sentry
+            - /opt/nginx-proxy
