@@ -57,6 +57,7 @@
             - "cl-bootnode"
             - "mev-boost"
             - "external-block-builder"
+            - "xatu-sentry"
         - name: Remove data dirs
           file:
             state: absent
@@ -87,3 +88,4 @@
             - /data/ethereum-network-config
             - /data/execution-auth.secret
             - /data/cl-bootnode
+            - /data/xatu-sentry
