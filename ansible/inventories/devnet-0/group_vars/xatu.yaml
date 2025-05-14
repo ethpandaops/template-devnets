@@ -24,6 +24,7 @@ xatu_sentry_config:
     beaconSubscriptions:
     - attestation
     - block
+    - block_gossip
     - chain_reorg
     - finalized_checkpoint
     - head
