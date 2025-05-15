@@ -7,7 +7,7 @@
 
 domain: ethpandaops.io
 network_subdomain: "{{ ethereum_network_name }}.{{ domain }}"
-network_server_subdomain: "srv.{{ ethereum_network_name }}.{{ domain }}"
+network_server_subdomain: "srv.{{ network_subdomain }}"
 server_fqdn: "{{ inventory_hostname }}.{{ network_server_subdomain }}"
 
 ethereum_network_id: >-
