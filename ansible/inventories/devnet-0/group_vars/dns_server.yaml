@@ -2,7 +2,7 @@
 # role: ethpandaops.general.dns_server
 dns_server_disable_systemd_resolved: true
 dns_server_zones:
-  - zone: "{{ network_subdomain }}"
+  - zone: "{{ network_server_subdomain }}"
     content: |
       $TTL 120
       @       IN SOA {{ server_fqdn }}. zonemaster.{{ domain }}. (

@@ -7,7 +7,8 @@
 
 domain: ethpandaops.io
 network_subdomain: "{{ ethereum_network_name }}.{{ domain }}"
-server_fqdn: "{{ inventory_hostname }}.srv.{{ network_subdomain }}"
+network_server_subdomain: "srv.{{ ethereum_network_name }}.{{ domain }}"
+server_fqdn: "{{ inventory_hostname }}.{{ network_server_subdomain }}"
 
 ethereum_network_id: >-
   {{ (lookup('file', eth_testnet_config_local_dir_src + '/genesis.json') | from_json).config.chainId }}
@@ -19,14 +20,14 @@ ethereum_network_deposit_contract_block: >-
 ethereum_node_rcp_hostname: "rpc.{{ server_fqdn }}"
 ethereum_node_beacon_hostname: "bn.{{ server_fqdn }}"
 
-ethstats_url: "ethstats.{{ ethereum_network_name }}.{{ domain }}"
+ethstats_url: "ethstats.{{ network_subdomain }}"
 ethstats_secret: "{{ secret_ethstats }}"
 
 ### Checkpoint sync specific for Ansible & Kubernetes
 checkpoint_sync_node: bootnode-1
 ethereum_node_cl_checkpoint_sync_enabled: false
-checkpoint_sync_url: https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@bn.{{ checkpoint_sync_node }}.{{ server_fqdn }}
-checkpoint_sync_url_kube: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.dencun-devnets.node_ingress.combined}>@bn.{{ checkpoint_sync_node }}.{{ server_fqdn }}
+checkpoint_sync_url: https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@bn.{{ checkpoint_sync_node }}.{{ network_server_subdomain }}
+checkpoint_sync_url_kube: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.dencun-devnets.node_ingress.combined}>@bn.{{ checkpoint_sync_node }}.{{ network_server_subdomain }}
 #  ██████╗░░█████╗░██╗░░░░░███████╗  ██╗░░░██╗░█████╗░██████╗░░██████╗
 #  ██╔══██╗██╔══██╗██║░░░░░██╔════╝  ██║░░░██║██╔══██╗██╔══██╗██╔════╝
 #  ██████╔╝██║░░██║██║░░░░░█████╗░░  ╚██╗░██╔╝███████║██████╔╝╚█████╗░
