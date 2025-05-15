@@ -168,6 +168,18 @@ resource "digitalocean_firewall" "main" {
     source_addresses = ["0.0.0.0/0", "::/0"]
   }
 
+  // DNS
+  inbound_rule {
+    protocol         = "tcp"
+    port_range       = "53"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }
+  inbound_rule {
+    protocol         = "udp"
+    port_range       = "53"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }
+
   // Consensus layer p2p port
   inbound_rule {
     protocol         = "tcp"
@@ -230,7 +242,7 @@ data "cloudflare_zone" "default" {
 
 resource "cloudflare_record" "server_record_v4" {
   for_each = {
-    for vm in local.digitalocean_vms : "${vm.id}" => vm
+    for vm in local.digitalocean_vms : "${vm.id}" => vm if vm.name != null && can(regex("bootnode", vm.name))
   }
   zone_id = data.cloudflare_zone.default.id
   name    = "${each.value.name}.${var.ethereum_network}"
@@ -242,7 +254,7 @@ resource "cloudflare_record" "server_record_v4" {
 
 resource "cloudflare_record" "server_record_v6" {
   for_each = {
-    for vm in local.digitalocean_vms : "${vm.id}" => vm if vm.ipv6
+    for vm in local.digitalocean_vms : "${vm.id}" => vm if vm.ipv6 && vm.name != null && can(regex("bootnode", vm.name))
   }
   zone_id = data.cloudflare_zone.default.id
   name    = "${each.value.name}.${var.ethereum_network}"
@@ -252,53 +264,18 @@ resource "cloudflare_record" "server_record_v6" {
   ttl     = 120
 }
 
-resource "cloudflare_record" "server_record_rpc_v4" {
+resource "cloudflare_record" "server_record_ns" {
   for_each = {
-    for vm in local.digitalocean_vms : "${vm.id}" => vm
+    for vm in local.digitalocean_vms : "${vm.id}" => vm if vm.name != null && can(regex("bootnode", vm.name))
   }
   zone_id = data.cloudflare_zone.default.id
-  name    = "rpc.${each.value.name}.${var.ethereum_network}"
-  type    = "A"
-  value   = digitalocean_droplet.main[each.value.id].ipv4_address
+  name    = "srv.${var.ethereum_network}"
+  type    = "NS"
+  value   = "${each.value.name}.${var.ethereum_network}.${data.cloudflare_zone.default.name}"
   proxied = false
   ttl     = 120
 }
 
-resource "cloudflare_record" "server_record_rpc_v6" {
-  for_each = {
-    for vm in local.digitalocean_vms : "${vm.id}" => vm if vm.ipv6
-  }
-  zone_id = data.cloudflare_zone.default.id
-  name    = "rpc.${each.value.name}.${var.ethereum_network}"
-  type    = "AAAA"
-  value   = digitalocean_droplet.main[each.value.id].ipv6_address
-  proxied = false
-  ttl     = 120
-}
-
-resource "cloudflare_record" "server_record_beacon_v4" {
-  for_each = {
-    for vm in local.digitalocean_vms : "${vm.id}" => vm
-  }
-  zone_id = data.cloudflare_zone.default.id
-  name    = "bn.${each.value.name}.${var.ethereum_network}"
-  type    = "A"
-  value   = digitalocean_droplet.main[each.value.id].ipv4_address
-  proxied = false
-  ttl     = 120
-}
-
-resource "cloudflare_record" "server_record_beacon_v6" {
-  for_each = {
-    for vm in local.digitalocean_vms : "${vm.id}" => vm if vm.ipv6
-  }
-  zone_id = data.cloudflare_zone.default.id
-  name    = "bn.${each.value.name}.${var.ethereum_network}"
-  type    = "AAAA"
-  value   = digitalocean_droplet.main[each.value.id].ipv6_address
-  proxied = false
-  ttl     = 120
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////

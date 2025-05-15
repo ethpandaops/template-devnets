@@ -1,0 +1,38 @@
+
+# role: ethpandaops.general.dns_server
+dns_server_disable_systemd_resolved: true
+dns_server_zones:
+  - zone: "{{ network_subdomain }}"
+    content: |
+      $TTL 120
+      @       IN SOA {{ server_fqdn }}. zonemaster.{{ domain }}. (
+              {{ ansible_date_time.date | regex_replace('-', '') }}01      ; Serial
+                      2H      ; Refresh
+                      1H      ; Retry
+                      1W      ; Expire
+                    5m )    ; NX (TTL Negativ Cache)
+              IN  NS     {{ server_fqdn }}.
+      
+      ; bootnodes
+      {% for host in groups['bootnode'] %}
+      {{ hostvars[host]['inventory_hostname'] }}      IN  A     {{ hostvars[host]['ansible_host'] }}
+      rpc.{{ hostvars[host]['inventory_hostname'] }}  IN  A     {{ hostvars[host]['ansible_host'] }}
+      bn.{{ hostvars[host]['inventory_hostname'] }}   IN  A     {{ hostvars[host]['ansible_host'] }}
+      {% if hostvars[host]['ipv6'] is defined %}
+      {{ hostvars[host]['inventory_hostname'] }}      IN  AAAA  {{ hostvars[host]['ipv6'] }}
+      rpc.{{ hostvars[host]['inventory_hostname'] }}  IN  AAAA  {{ hostvars[host]['ipv6'] }}
+      bn.{{ hostvars[host]['inventory_hostname'] }}   IN  AAAA  {{ hostvars[host]['ipv6'] }}
+      {% endif %}
+      {% endfor %}
+      
+      ; ethereum_nodes
+      {% for host in groups['ethereum_node'] %}
+      {{ hostvars[host]['inventory_hostname'] }}      IN  A     {{ hostvars[host]['ansible_host'] }}
+      rpc.{{ hostvars[host]['inventory_hostname'] }}  IN  A     {{ hostvars[host]['ansible_host'] }}
+      bn.{{ hostvars[host]['inventory_hostname'] }}   IN  A     {{ hostvars[host]['ansible_host'] }}
+      {% if hostvars[host]['ipv6'] is defined %}
+      {{ hostvars[host]['inventory_hostname'] }}      IN  AAAA  {{ hostvars[host]['ipv6'] }}
+      rpc.{{ hostvars[host]['inventory_hostname'] }}  IN  AAAA  {{ hostvars[host]['ipv6'] }}
+      bn.{{ hostvars[host]['inventory_hostname'] }}   IN  AAAA  {{ hostvars[host]['ipv6'] }}
+      {% endif %}
+      {% endfor %}

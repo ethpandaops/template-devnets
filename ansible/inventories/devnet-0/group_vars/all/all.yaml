@@ -7,7 +7,7 @@
 
 domain: ethpandaops.io
 network_subdomain: "{{ ethereum_network_name }}.{{ domain }}"
-server_fqdn: "{{ inventory_hostname }}.{{ network_subdomain }}"
+server_fqdn: "{{ inventory_hostname }}.srv.{{ network_subdomain }}"
 
 ethereum_network_id: >-
   {{ (lookup('file', eth_testnet_config_local_dir_src + '/genesis.json') | from_json).config.chainId }}
@@ -25,8 +25,8 @@ ethstats_secret: "{{ secret_ethstats }}"
 ### Checkpoint sync specific for Ansible & Kubernetes
 checkpoint_sync_node: bootnode-1
 ethereum_node_cl_checkpoint_sync_enabled: false
-checkpoint_sync_url: https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@bn.{{ checkpoint_sync_node }}.{{ ethereum_network_name }}.{{ domain }}
-checkpoint_sync_url_kube: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.dencun-devnets.node_ingress.combined}>@bn.{{ checkpoint_sync_node }}.{{ ethereum_network_name }}.{{ domain }}
+checkpoint_sync_url: https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@bn.{{ checkpoint_sync_node }}.{{ server_fqdn }}
+checkpoint_sync_url_kube: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.dencun-devnets.node_ingress.combined}>@bn.{{ checkpoint_sync_node }}.{{ server_fqdn }}
 #  ██████╗░░█████╗░██╗░░░░░███████╗  ██╗░░░██╗░█████╗░██████╗░░██████╗
 #  ██╔══██╗██╔══██╗██║░░░░░██╔════╝  ██║░░░██║██╔══██╗██╔══██╗██╔════╝
 #  ██████╔╝██║░░██║██║░░░░░█████╗░░  ╚██╗░██╔╝███████║██████╔╝╚█████╗░
@@ -128,7 +128,7 @@ ethereum_node_json_rpc_snooper_engine_name: "snooper-engine"
 
 # role: ethpandaops.general.xatu_sentry
 xatu_sentry_container_image: "{{ default_tooling_images.xatu_sentry }}"
-xatu_sentry_config_name: "{{ ethereum_network_name }}-{{ inventory_hostname }}"
+xatu_sentry_config_name: "{{  }}-{{ inventory_hostname }}"
 xatu_sentry_config_server_address: "{{ secret_xatu_sentry.server_address }}"
 xatu_sentry_config_server_auth_user: "{{ secret_xatu_sentry.user }}"
 xatu_sentry_config_server_auth_password: "{{ secret_xatu_sentry.password }}"
