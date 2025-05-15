@@ -129,7 +129,7 @@ ethereum_node_json_rpc_snooper_engine_name: "snooper-engine"
 
 # role: ethpandaops.general.xatu_sentry
 xatu_sentry_container_image: "{{ default_tooling_images.xatu_sentry }}"
-xatu_sentry_config_name: "{{  }}-{{ inventory_hostname }}"
+xatu_sentry_config_name: "{{ ethereum_network_name }}-{{ inventory_hostname }}"
 xatu_sentry_config_server_address: "{{ secret_xatu_sentry.server_address }}"
 xatu_sentry_config_server_auth_user: "{{ secret_xatu_sentry.user }}"
 xatu_sentry_config_server_auth_password: "{{ secret_xatu_sentry.password }}"
