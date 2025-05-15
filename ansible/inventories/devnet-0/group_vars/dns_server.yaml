@@ -6,11 +6,11 @@ dns_server_zones:
     content: |
       $TTL 120
       @       IN SOA {{ server_fqdn }}. zonemaster.{{ domain }}. (
-              {{ ansible_date_time.date | regex_replace('-', '') }}01      ; Serial
+              {{ dns_zone_serial }}      ; Serial
                       2H      ; Refresh
                       1H      ; Retry
                       1W      ; Expire
-                    5m )    ; NX (TTL Negativ Cache)
+                      5m )    ; NX (TTL Negativ Cache)
               IN  NS     {{ server_fqdn }}.
       
       ; bootnodes
