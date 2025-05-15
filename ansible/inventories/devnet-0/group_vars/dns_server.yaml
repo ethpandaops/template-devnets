@@ -14,7 +14,7 @@ dns_server_zones:
               IN  NS     {{ server_fqdn }}.
       
       ; bootnodes
-      {% for host in groups['bootnode'] %}
+      {% for host in groups['bootnode'] | sort %}
       {{ hostvars[host]['inventory_hostname'] }}      IN  A     {{ hostvars[host]['ansible_host'] }}
       rpc.{{ hostvars[host]['inventory_hostname'] }}  IN  A     {{ hostvars[host]['ansible_host'] }}
       bn.{{ hostvars[host]['inventory_hostname'] }}   IN  A     {{ hostvars[host]['ansible_host'] }}
@@ -26,7 +26,7 @@ dns_server_zones:
       {% endfor %}
       
       ; ethereum_nodes
-      {% for host in groups['ethereum_node'] %}
+      {% for host in groups['ethereum_node'] | sort %}
       {{ hostvars[host]['inventory_hostname'] }}      IN  A     {{ hostvars[host]['ansible_host'] }}
       rpc.{{ hostvars[host]['inventory_hostname'] }}  IN  A     {{ hostvars[host]['ansible_host'] }}
       bn.{{ hostvars[host]['inventory_hostname'] }}   IN  A     {{ hostvars[host]['ansible_host'] }}
