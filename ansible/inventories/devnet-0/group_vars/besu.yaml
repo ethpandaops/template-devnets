@@ -4,11 +4,13 @@ bootstrap_default_user_authorized_keys_github_team_el:
   - jflo
   - fab-10
   - matkt
-  - gezero
+  - Gabriel-Trintinalia
   - siladu
   - pinges
   - jframe
   - ahamlat
+  - macfarla
+  - daniellehrner
 
 # role: ethpandaops.general.ethereum_node
 ethereum_node_el: besu
