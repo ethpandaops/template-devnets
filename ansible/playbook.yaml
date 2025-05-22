@@ -8,6 +8,12 @@
     target: "all:!localhost"
   tags: [init-server, bootstrap]
 
+- hosts: dns_server
+  become: true
+  roles:
+    - role: ethpandaops.general.dns_server
+      tags: [dns_server]
+
 - hosts: all:!localhost
   serial: "{{ batch_count | default('100%') }}"
   become: true
