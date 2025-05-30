@@ -25,7 +25,10 @@ ethereum_node_cl: nimbus
 
 # Checkpointsync
 nimbus_checkpoint_autoremove_enabled: true
-
+nimbus_checkpoint_container_command_extra_args:
+  - --trusted-node-url={{ checkpoint_sync_url }}
+  - --network=/network-config
+  - --backfill=false
 # role: ethpandaops.general.nimbus
 nimbus_container_name: beacon
 nimbus_container_image: "{{ default_ethereum_client_images.nimbus }}"
