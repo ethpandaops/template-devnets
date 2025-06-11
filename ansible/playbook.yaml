@@ -70,23 +70,18 @@
     - role: ethpandaops.general.validator_keys
       when: ethereum_node_cl_validator_enabled == true
       tags: [ethereum, validator_keys]
-    - role: ethpandaops.general.ethereum_node
-      tags: [ethereum, ethereum_node]
     - role: ethpandaops.general.docker_nginx_proxy
       tags: [docker_nginx_proxy]
     - role: ethpandaops.general.generate_basic_auth_nginx
       tags: [docker_nginx_proxy]
-  post_tasks:
-    - name: Wait between runs
+
+- hosts: ethereum_node
+  become: true
+  strategy: free
+  roles:
+    - role: ethpandaops.general.ethereum_node
       tags: [ethereum, ethereum_node]
-      ansible.builtin.pause:
-        seconds: >-
-          {{
-            batch_count is defined | ternary(
-                (batch_wait_seconds | default(30)),
-                0
-              )
-          }}
+  post_tasks:
     - name: Refresh inventory web
       ansible.builtin.import_role:
         name: ethpandaops.general.ethereum_inventory_web
