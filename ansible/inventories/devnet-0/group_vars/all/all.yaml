@@ -166,6 +166,8 @@ docker_nginx_proxy_acme_companion_container_env:
 docker_nginx_proxy_container_networks: "{{ docker_networks_shared }}"
 docker_nginx_proxy_docker_gen_container_networks: "{{ docker_networks_shared }}"
 docker_nginx_proxy_acme_companion_container_networks: "{{ docker_networks_shared }}"
+docker_nginx_proxy_acme_monitor_container_networks: "{{ docker_networks_shared }}"
+docker_nginx_proxy_acme_monitor_enabled: true
 docker_nginx_proxy_datadir: /opt/nginx-proxy
 docker_nginx_proxy_container_volumes:
   - "{{ docker_nginx_proxy_datadir }}/conf:/etc/nginx/conf.d"
