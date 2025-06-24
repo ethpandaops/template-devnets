@@ -92,13 +92,13 @@ lodestar-besu-1 ansible_host=167.99.34.241 cloud=digitalocean cloud_region=ams3 
 ...
 ```
 
-6. Adjust the total number of validators in the [ansible/inventories/devnet-0/group_vars/all.yaml](ansible/inventories/devnet-0/group_vars/all.yaml) file (ethereum_genesis_generator_config_files.values.env.NUMBER_OF_VALIDATORS) to match with your total number of validators that you are running.. This will be used by the Ansible playbook to generate the validator keys and deposit data for the network.
+6. Adjust the total number of validators in the [ansible/inventories/devnet-0/group_vars/all/all.yaml](ansible/inventories/devnet-0/group_vars/all/all.yaml) file (ethereum_genesis_generator_config_files.values.env.NUMBER_OF_VALIDATORS) to match with your total number of validators that you are running.. This will be used by the Ansible playbook to generate the validator keys and deposit data for the network.
 
 ## Network Configuration
-1. [ansible/inventories/devnet-0/group_vars/all.yaml](ansible/inventories/devnet-0/group_vars/all.yaml) has all the network configuration parameters. Adjust the parameters according to your requirements. Most likely you will not need to adjust these, unless you would like to use a custom setup. The default configuration will work for most networks.
+1. [ansible/inventories/devnet-0/group_vars/all/all.yaml](ansible/inventories/devnet-0/group_vars/all/all.yaml) has all the network configuration parameters. Adjust the parameters according to your requirements. Most likely you will not need to adjust these, unless you would like to use a custom setup. The default configuration will work for most networks.
 
 ## Secret Configuration
-There are multiple secrets used throughout the ansible files, defined in [ansible/inventories/devnet-0/group_vars/all.sops.yaml](ansible/inventories/devnet-0/group_vars/all.sops.yaml). 
+There are multiple secrets used throughout the ansible files, defined in [ansible/inventories/devnet-0/group_vars/all/all.sops.yaml](ansible/inventories/devnet-0/group_vars/all/all.sops.yaml). 
 
 If you want to modify the secrets,
 
@@ -139,10 +139,10 @@ This will encrypt the elements in the yaml file and put it as ansible yaml file.
 ```shell
 ansible-playbook -i inventories/devnet-0/inventory.ini playbook.yaml
 ```
-from the [ansible/](ansible/) directory to deploy the network. This will generate the genesis file, validators and deploy the network according to the configuration parameters specified in the [ansible/inventories/devnet-0/group_vars/all.yaml](ansible/inventories/devnet-0/group_vars/all.yaml) file. The generated files are located at [network-configs/devnet-0/metadata](network-configs/devnet-0/metadata).
+from the [ansible/](ansible/) directory to deploy the network. This will generate the genesis file, validators and deploy the network according to the configuration parameters specified in the [ansible/inventories/devnet-0/group_vars/all/all.yaml](ansible/inventories/devnet-0/group_vars/all/all.yaml) file. The generated files are located at [network-configs/devnet-0/metadata](network-configs/devnet-0/metadata).
 
 Don't forget the following gotchas:
-- Change the `ethereum_genesis_chain_id` value in [ansible/inventories/devnet-0/group_vars/all.yaml](ansible/inventories/devnet-0/group_vars/all.yaml) to avoid clashing with an existing network
+- Change the `ethereum_genesis_chain_id` value in [ansible/inventories/devnet-0/group_vars/all/all.yaml](ansible/inventories/devnet-0/group_vars/all/all.yaml) to avoid clashing with an existing network
 - Ensure you have `docker` running on your local machine, this is essential for generating some post-testnet files
 - Make sure you add the github usernames to `bootstrap_default_user_authorized_keys_github_...`, otherwise ansible will fail on the bootstrap step
 
