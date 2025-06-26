@@ -81,7 +81,10 @@
   roles:
     - role: ethpandaops.general.ethereum_node
       tags: [ethereum, ethereum_node]
-  post_tasks:
+
+- hosts: ethereum_node
+  become: true
+  tasks:
     - name: Refresh inventory web
       ansible.builtin.import_role:
         name: ethpandaops.general.ethereum_inventory_web
