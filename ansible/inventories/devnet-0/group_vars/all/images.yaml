@@ -50,7 +50,7 @@ default_tooling_images:
   prometheus: docker.ethquokkaops.io/dh/prom/prometheus:v2.40.7
   node_exporter: docker.ethquokkaops.io/dh/prom/node-exporter:v1.5.0
   cl_bootnode: docker.ethquokkaops.io/dh/protolambda/eth2-bootnode:cleanup
-  json_rpc_snooper: docker.ethquokkaops.io/dh/ethpandaops/json-rpc-snoop:1.1.0
+  json_rpc_snooper: docker.ethquokkaops.io/dh/ethpandaops/rpc-snooper:latest
   nginx_proxy: docker.ethquokkaops.io/dh/nginx:alpine
   nginx_proxy_gen: docker.ethquokkaops.io/dh/nginxproxy/docker-gen
   nginx_proxy_acme: docker.ethquokkaops.io/dh/nginxproxy/acme-companion

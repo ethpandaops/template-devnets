@@ -123,8 +123,15 @@ ethereum_node_el_ports_metrics: 6060
 ethereum_node_skip_cleanup: true
 
 ethereum_node_json_rpc_snooper_engine_enabled: true
-ethereum_node_json_rpc_snooper_engine_port: 8561
 ethereum_node_json_rpc_snooper_engine_name: "snooper-engine"
+ethereum_node_json_rpc_snooper_engine_port: 8561
+ethereum_node_json_rpc_snooper_engine_public_port: 8961
+ethereum_node_json_rpc_snooper_engine_container_env:
+  SNOOPER_API_PORT: "{{ ethereum_node_json_rpc_snooper_engine_public_port }}"
+  SNOOPER_API_AUTH: "{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}"
+
+# role: ethpandaops.general.generate_kubernetes_config
+gen_kubernetes_config_dora_execution_snooper_port: 8961
 
 # role: ethpandaops.general.xatu_sentry
 xatu_sentry_container_image: "{{ default_tooling_images.xatu_sentry }}"
