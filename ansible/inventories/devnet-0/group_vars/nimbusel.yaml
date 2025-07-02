@@ -22,8 +22,8 @@ nimbusel_container_volumes:
 nimbusel_container_command_extra_args:
   - --custom-network=/network-config/genesis.json
   - --bootstrap-node={{ ethereum_el_bootnodes | join(',') }}
-  - --rpc-api=eth,debug
-  - --ws-api=eth,debug
+  - --rpc-api=admin,eth,debug
+  - --ws-api=admin,eth,debug
 
 prometheus_config: |
   global:
