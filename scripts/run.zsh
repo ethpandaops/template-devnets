@@ -43,6 +43,7 @@ print_usage() {
   echo "  fork_choice                       Get the fork choice of the network"
   echo "  send_blob n                       Send "n" number of blob(s) to the network [default 1]"
   echo "  deposit s e [type]                Deposit to the network from validator index start to end - optional withdrawal type (0x00, 0x01, 0x02)"
+  echo "  topup validator_index eth_amount  Top-up an existing validator with additional ETH (Pectra upgrade feature)"
   echo "  exit s e                          Exit from the network from validator index start to end - mandatory argument"
   echo "  set_withdrawal_addr s e address   Set the withdrawal credentials for validator index start (mandatory) to end (optional) and Ethereum address"
   echo "  full_withdrawal s e               Withdraw from the network from validator index start to end - mandatory argument"
@@ -480,6 +481,78 @@ for arg in "${command[@]}"; do
           echo "Exiting without depositing to the network"
           exit;
         fi
+      fi
+      ;;
+    "topup")
+      # Top-up an existing validator with additional ETH (Pectra upgrade feature)
+      if [[ $# -ne 3 ]]; then
+        echo "Top-up calls for exactly 2 arguments!"
+        echo "  Usage: ${0} topup validator_index eth_amount"
+        echo "  Example: ${0} topup 5 35"
+        exit;
+      else
+        # Check if cast is installed
+        if ! command -v cast &> /dev/null; then
+          echo "Error: 'cast' command not found. Please install Foundry."
+          echo "Install with: curl -L https://foundry.paradigm.xyz | bash && foundryup"
+          exit 1
+        fi
+        validator_index=${command[2]}
+        eth_amount=${command[3]}
+
+        # Validate inputs
+        if ! [[ "$validator_index" =~ ^[0-9]+$ ]]; then
+          echo "Error: Validator index must be a positive integer."
+          exit 1
+        fi
+        if ! [[ "$eth_amount" =~ ^[0-9]+(\.[0-9]+)?$ ]] || (( $(echo "$eth_amount < 1" | bc -l) )); then
+          echo "Error: ETH amount must be >= 1."
+          exit 1
+        fi
+
+        # Get validator info
+        validator_info=$(curl -s "$bn_endpoint/eth/v1/beacon/states/head/validators/$validator_index")
+        if [[ $(echo "$validator_info" | jq -r '.data') == "null" ]]; then
+          echo "Error: Validator $validator_index not found."
+          exit 1
+        fi
+
+        validator_pubkey=$(echo "$validator_info" | jq -r '.data.validator.pubkey')
+        withdrawal_credentials=$(echo "$validator_info" | jq -r '.data.validator.withdrawal_credentials')
+        deposit_contract_address=$(curl -s $bn_endpoint/eth/v1/config/spec | jq -r '.data.DEPOSIT_CONTRACT_ADDRESS')
+
+        # Convert ETH to wei for the transaction
+        deposit_amount_wei=$(echo "$eth_amount * 1000000000000000000" | bc)
+
+        # Prepare transaction arguments
+        deposit_path="m/44'/60'/0'/0/7"
+        privatekey=$(ethereal hd keys --path="$deposit_path" --seed="$sops_mnemonic" | awk '/Private key/{print $NF}')
+        publickey=$(ethereal hd keys --path="$deposit_path" --seed="$sops_mnemonic" | awk '/Ethereum address/{print $NF}')
+
+        echo "Top-up Summary:"
+        echo "  Validator: $validator_index ($validator_pubkey)"
+        echo "  Amount: $eth_amount ETH"
+        echo "  Deposit Contract: $deposit_contract_address"
+        echo ""
+        echo "Continue? (y/n)"
+        read -r response
+
+
+          # Simple topup using ethereal's dedicated command with no safety checks
+          ethereal validator topup \
+            --from="$publickey" \
+            --validator="$validator_pubkey" \
+            --topup-amount="${eth_amount}eth" \
+            --privatekey="$privatekey" \
+            --connection="$rpc_endpoint" \
+            --consensus-connection="$bn_endpoint" \
+            --no-safety-checks \
+            --timeout=60s
+        else
+          echo "Top-up cancelled."
+        fi
+
+        exit;
       fi
       ;;
     "exit")
