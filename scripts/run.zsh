@@ -42,7 +42,8 @@ print_usage() {
   echo "  get_inventory                     Get the inventory of the network"
   echo "  fork_choice                       Get the fork choice of the network"
   echo "  send_blob n                       Send "n" number of blob(s) to the network [default 1]"
-  echo "  deposit s e                       Deposit to the network from validator index start to end - mandatory argument"
+  echo "  deposit s e [type]                Deposit to the network from validator index start to end - optional withdrawal type (0x00, 0x01, 0x02)"
+  echo "  topup validator_index eth_amount  Top-up an existing validator with additional ETH (Pectra upgrade feature)"
   echo "  exit s e                          Exit from the network from validator index start to end - mandatory argument"
   echo "  set_withdrawal_addr s e address   Set the withdrawal credentials for validator index start (mandatory) to end (optional) and Ethereum address"
   echo "  full_withdrawal s e               Withdraw from the network from validator index start to end - mandatory argument"
@@ -348,20 +349,115 @@ for arg in "${command[@]}"; do
       fi
       ;;
     "deposit")
-      if [[ $# -ne 3 ]]; then
-        echo "Deposit calls for exactly 2 arguments!"
-        echo "  Usage: ${0} deposit startIndex endIndex"
-        echo "  Example: ${0} deposit 0 10"
+      if [[ $# -lt 3 || $# -gt 6 ]]; then
+        echo "Deposit calls for 3 to 6 arguments!"
+        echo "  Usage: ${0} deposit startIndex endIndex [withdrawalType] [withdrawalAddress] [depositAmount]"
+        echo ""
+        echo "  Withdrawal types:"
+        echo "    0x00 (default) - BLS withdrawal credentials"
+        echo "    0x01          - Execution address withdrawal"
+        echo "    0x02          - Custom execution address with amount"
+        echo ""
+        echo "  Examples:"
+        echo "    ${0} deposit 0 10                                    # Default (0x00) - BLS withdrawal credentials"
+        echo "    ${0} deposit 0 10 0x01                               # Execution address withdrawal (prompts for address)"
+        echo "    ${0} deposit 0 10 0x01 0x742d35Cc...                 # Execution address withdrawal with address"
+        echo "    ${0} deposit 0 10 0x02                               # Custom execution address with amount (prompts for both)"
+        echo "    ${0} deposit 0 10 0x02 0x742d35Cc...                 # Custom execution address with amount (prompts for amount)"
+        echo "    ${0} deposit 0 10 0x02 0x742d35Cc... 35              # Custom execution address with amount (35 ETH)"
         exit;
       else
+        # Set default withdrawal type to 0x00 if not provided
+        withdrawal_type=${command[4]:-"0x00"}
+
+        # Handle different withdrawal types
+        withdrawal_address=""
+        deposit_amount="32000000000"
+
+        case $withdrawal_type in
+          "0x00")
+            echo "Using default withdrawal credentials type: 0x00"
+            ;;
+          "0x01")
+            echo "Using withdrawal credentials type: 0x01"
+            # Check if withdrawal address is provided as argument
+            if [[ -n "${command[5]}" ]]; then
+              withdrawal_address="${command[5]}"
+              echo "Using provided withdrawal address: $withdrawal_address"
+            else
+              echo "Please enter the withdrawal address:"
+              read -r withdrawal_address
+            fi
+            if [[ ! $withdrawal_address =~ ^0x[a-fA-F0-9]{40}$ ]]; then
+              echo "Invalid withdrawal address format. Must be a valid Ethereum address."
+              exit 1
+            fi
+            ;;
+          "0x02")
+            echo "Using withdrawal credentials type: 0x02"
+            # Check if withdrawal address is provided as argument
+            if [[ -n "${command[5]}" ]]; then
+              withdrawal_address="${command[5]}"
+              echo "Using provided withdrawal address: $withdrawal_address"
+            else
+              echo "Please enter the withdrawal address:"
+              read -r withdrawal_address
+            fi
+            if [[ ! $withdrawal_address =~ ^0x[a-fA-F0-9]{40}$ ]]; then
+              echo "Invalid withdrawal address format. Must be a valid Ethereum address."
+              exit 1
+            fi
+            # Check if deposit amount is provided as argument
+            if [[ -n "${command[6]}" ]]; then
+              deposit_amount_eth="${command[6]}"
+              echo "Using provided deposit amount: $deposit_amount_eth ETH"
+            else
+              echo "Please enter the deposit amount in ETH (minimum 32 ETH):"
+              read -r deposit_amount_eth
+            fi
+            if [[ $deposit_amount_eth -lt 32 ]]; then
+              echo "Deposit amount must be at least 32 ETH."
+              exit 1
+            fi
+            # Convert ETH to gwei (1 ETH = 1,000,000,000 gwei)
+            deposit_amount=$((deposit_amount_eth * 1000000000))
+            ;;
+          *)
+            echo "Invalid withdrawal type: $withdrawal_type"
+            echo "Supported types: 0x00, 0x01, 0x02"
+            exit 1
+            ;;
+        esac
+
         deposit_path="m/44'/60'/0'/0/7"
         privatekey=$(ethereal hd keys --path="$deposit_path" --seed="$sops_mnemonic" | awk '/Private key/{print $NF}')
         publickey=$(ethereal hd keys --path="$deposit_path" --seed="$sops_mnemonic" | awk '/Ethereum address/{print $NF}')
         fork_version=$(curl -s $bn_endpoint/eth/v1/beacon/genesis | jq -r '.data.genesis_fork_version')
         deposit_contract_address=$(curl -s $bn_endpoint/eth/v1/config/spec | jq -r '.data.DEPOSIT_CONTRACT_ADDRESS')
-        eth2-val-tools deposit-data --source-min=${command[2]} --source-max=${command[3]} --amount=32000000000 --fork-version=$fork_version --withdrawals-mnemonic="$sops_mnemonic" --validators-mnemonic="$sops_mnemonic" > deposits_$prefix-$network-${command[2]}_${command[3]}.txt
+
+        # Build eth2-val-tools command based on withdrawal type
+        if [[ $withdrawal_type == "0x00" ]]; then
+          eth2-val-tools deposit-data --source-min=${command[2]} --source-max=${command[3]} --amount=$deposit_amount --fork-version=$fork_version --withdrawals-mnemonic="$sops_mnemonic" --validators-mnemonic="$sops_mnemonic" --withdrawal-credentials-type=$withdrawal_type > deposits_$prefix-$network-${command[2]}_${command[3]}.txt
+        else
+          eth2-val-tools deposit-data --source-min=${command[2]} --source-max=${command[3]} --amount=$deposit_amount --fork-version=$fork_version --withdrawals-mnemonic="$sops_mnemonic" --validators-mnemonic="$sops_mnemonic" --withdrawal-credentials-type=$withdrawal_type --withdrawal-address=$withdrawal_address > deposits_$prefix-$network-${command[2]}_${command[3]}.txt
+        fi
+
+        # Calculate total validators and total deposit amount
+        total_validators=$((${command[3]} - ${command[2]}))
+        total_deposit_gwei=$((total_validators * deposit_amount))
+        total_deposit_eth=$((total_deposit_gwei / 1000000000))
+
         # ask if you want to deposit to the network
-        echo "Are you sure you want to make a deposit to the network for validators ${command[2]} to ${command[3]}? (y/n)"
+        echo "Are you sure you want to make a deposit to the network (${prefix}-${network})?"
+        echo "  Validators: ${command[2]} to $((${command[3]} - 1)) ($total_validators validators)"
+        echo "  Withdrawal type: $withdrawal_type"
+        if [[ $withdrawal_type != "0x00" ]]; then
+          echo "  Withdrawal address: $withdrawal_address"
+        fi
+        echo "  Deposit per validator: $((deposit_amount / 1000000000)) ETH"
+        echo "  Total deposit: $total_deposit_eth ETH"
+        echo ""
+        echo "Continue? (y/n)"
         read -r response
         if [[ $response == "y" ]]; then
           while read x; do
@@ -373,9 +469,10 @@ for arg in "${command[@]}"; do
               --address="$deposit_contract_address" \
               --connection=$rpc_endpoint \
               --data="$x" \
-              --value="32000000000" \
+              --value="$deposit_amount" \
               --from="$publickey" \
-              --privatekey="$privatekey"
+              --privatekey="$privatekey" \
+              --allow-excessive-deposit
             echo "Sent deposit for validator $account_name $pubkey"
             sleep 5
           done < deposits_$prefix-$network-${command[2]}_${command[3]}.txt
@@ -384,6 +481,78 @@ for arg in "${command[@]}"; do
           echo "Exiting without depositing to the network"
           exit;
         fi
+      fi
+      ;;
+    "topup")
+      # Top-up an existing validator with additional ETH (Pectra upgrade feature)
+      if [[ $# -ne 3 ]]; then
+        echo "Top-up calls for exactly 2 arguments!"
+        echo "  Usage: ${0} topup validator_index eth_amount"
+        echo "  Example: ${0} topup 5 35"
+        exit;
+      else
+        # Check if cast is installed
+        if ! command -v cast &> /dev/null; then
+          echo "Error: 'cast' command not found. Please install Foundry."
+          echo "Install with: curl -L https://foundry.paradigm.xyz | bash && foundryup"
+          exit 1
+        fi
+        validator_index=${command[2]}
+        eth_amount=${command[3]}
+
+        # Validate inputs
+        if ! [[ "$validator_index" =~ ^[0-9]+$ ]]; then
+          echo "Error: Validator index must be a positive integer."
+          exit 1
+        fi
+        if ! [[ "$eth_amount" =~ ^[0-9]+(\.[0-9]+)?$ ]] || (( $(echo "$eth_amount < 1" | bc -l) )); then
+          echo "Error: ETH amount must be >= 1."
+          exit 1
+        fi
+
+        # Get validator info
+        validator_info=$(curl -s "$bn_endpoint/eth/v1/beacon/states/head/validators/$validator_index")
+        if [[ $(echo "$validator_info" | jq -r '.data') == "null" ]]; then
+          echo "Error: Validator $validator_index not found."
+          exit 1
+        fi
+
+        validator_pubkey=$(echo "$validator_info" | jq -r '.data.validator.pubkey')
+        withdrawal_credentials=$(echo "$validator_info" | jq -r '.data.validator.withdrawal_credentials')
+        deposit_contract_address=$(curl -s $bn_endpoint/eth/v1/config/spec | jq -r '.data.DEPOSIT_CONTRACT_ADDRESS')
+
+        # Convert ETH to wei for the transaction
+        deposit_amount_wei=$(echo "$eth_amount * 1000000000000000000" | bc)
+
+        # Prepare transaction arguments
+        deposit_path="m/44'/60'/0'/0/7"
+        privatekey=$(ethereal hd keys --path="$deposit_path" --seed="$sops_mnemonic" | awk '/Private key/{print $NF}')
+        publickey=$(ethereal hd keys --path="$deposit_path" --seed="$sops_mnemonic" | awk '/Ethereum address/{print $NF}')
+
+        echo "Top-up Summary:"
+        echo "  Validator: $validator_index ($validator_pubkey)"
+        echo "  Amount: $eth_amount ETH"
+        echo "  Deposit Contract: $deposit_contract_address"
+        echo ""
+        echo "Continue? (y/n)"
+        read -r response
+
+
+          # Simple topup using ethereal's dedicated command with no safety checks
+          ethereal validator topup \
+            --from="$publickey" \
+            --validator="$validator_pubkey" \
+            --topup-amount="${eth_amount}eth" \
+            --privatekey="$privatekey" \
+            --connection="$rpc_endpoint" \
+            --consensus-connection="$bn_endpoint" \
+            --no-safety-checks \
+            --timeout=60s
+        else
+          echo "Top-up cancelled."
+        fi
+
+        exit;
       fi
       ;;
     "exit")
@@ -404,12 +573,12 @@ for arg in "${command[@]}"; do
             echo "offline-preparation.json already exists, remove it to prepare a new one"
           fi
           echo "[" > exit.json
-          for i in $(seq ${command[2]} ${command[3]})
+          for i in $(seq ${command[2]} $((command[3] - 1)))
           do
             echo "Exiting validator $i"
             ethdo validator exit --offline --mnemonic="$sops_mnemonic" --path="m/12381/3600/$i/0/0"
             cat exit-operations.json >> exit.json
-            if [[ $i -ne ${command[3]} ]]; then
+            if [[ $i -ne $((command[3] - 1)) ]]; then
               echo "," >> exit.json
             fi
 
@@ -417,7 +586,7 @@ for arg in "${command[@]}"; do
           echo "]" >> exit.json
           mv exit.json exit-operations.json
           ethdo validator exit --connection=$bn_endpoint --timeout=300s
-          echo "validator exit submitted for validators ${command[2]} to ${command[3]}"
+          echo "validator exit submitted for validators ${command[2]} to $((command[3] - 1))"
           exit;
         else
           echo "Exiting validator ${command[2]}"
