@@ -556,21 +556,75 @@ for arg in "${command[@]}"; do
             echo "Processing validator $validator_index ($i/${#VALIDATOR_ARRAY})..."
             echo "Command: ethereal validator topup --from=\"$publickey\" --validator=\"$validator_pubkey\" --topup-amount=\"${eth_amount}eth\" --no-safety-checks"
             
-            # Submit topup for this validator
-            ethereal validator topup \
-              --from="$publickey" \
-              --validator="$validator_pubkey" \
-              --topup-amount="${eth_amount}eth" \
-              --privatekey="$privatekey" \
-              --connection="$rpc_endpoint" \
-              --consensus-connection="$bn_endpoint" \
-              --no-safety-checks \
-              --timeout=60s
+            # Submit topup for this validator with retry logic
+            topup_success=false
+            for retry in {1..3}; do
+              echo "Attempt $retry/3..."
+              topup_output=$(ethereal validator topup \
+                --from="$publickey" \
+                --validator="$validator_pubkey" \
+                --topup-amount="${eth_amount}eth" \
+                --privatekey="$privatekey" \
+                --connection="$rpc_endpoint" \
+                --consensus-connection="$bn_endpoint" \
+                --no-safety-checks \
+                --timeout=60s 2>&1)
+              
+              if [[ $? -eq 0 ]]; then
+                topup_success=true
+                break
+              else
+                echo "Attempt $retry failed. Error: $topup_output"
+                if [[ $retry -lt 3 ]]; then
+                  echo "Retrying in 5 seconds..."
+                  sleep 5
+                fi
+              fi
+            done
             
-            if [[ $? -eq 0 ]]; then
-              echo "✓ Validator $validator_index top-up successful!"
+            if [[ "$topup_success" == "true" ]]; then
+              # Extract transaction hash from output
+              tx_hash=$(echo "$topup_output" | grep -oE '0x[a-fA-F0-9]{64}' | head -1)
+              if [[ -n "$tx_hash" ]]; then
+                echo "Transaction hash: $tx_hash"
+                echo "Waiting for transaction confirmation..."
+                
+                # Wait for transaction to be mined
+                for attempt in {1..30}; do
+                  receipt_response=$(curl -s --header 'Content-Type: application/json' --data-raw "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getTransactionReceipt\", \"params\":[\"$tx_hash\"], \"id\":0}" $rpc_endpoint)
+                  
+                  # Debug: show raw response if it's not valid JSON
+                  if ! echo "$receipt_response" | jq . >/dev/null 2>&1; then
+                    echo "Invalid JSON response: $receipt_response"
+                    echo "Retrying..."
+                    sleep 2
+                    continue
+                  fi
+                  
+                  receipt_result=$(echo "$receipt_response" | jq -r '.result // empty')
+                  if [[ -n "$receipt_result" && "$receipt_result" != "null" ]]; then
+                    tx_status=$(echo "$receipt_result" | jq -r '.status // empty')
+                    if [[ "$tx_status" == "0x1" ]]; then
+                      echo "✓ Validator $validator_index top-up successful! (confirmed)"
+                      break
+                    else
+                      echo "✗ Validator $validator_index top-up failed! (transaction reverted)"
+                      break
+                    fi
+                  fi
+                  echo "Waiting for confirmation... (attempt $attempt/30)"
+                  sleep 2
+                done
+                
+                if [[ $attempt -eq 30 ]]; then
+                  echo "⚠ Transaction confirmation timeout for validator $validator_index"
+                fi
+              else
+                echo "✓ Validator $validator_index top-up successful! (no tx hash found)"
+              fi
             else
               echo "✗ Validator $validator_index top-up failed!"
+              echo "Error output: $topup_output"
             fi
             echo ""
             
