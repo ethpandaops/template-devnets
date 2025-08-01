@@ -2,12 +2,12 @@
 //                            TERRAFORM PROVIDERS & BACKEND
 ////////////////////////////////////////////////////////////////////////////////////////
 provider "hcloud" {
-  token = var.devnet_hcloud_token
+  token = var.fusaka_hcloud_token
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 //                                        VARIABLES
 ////////////////////////////////////////////////////////////////////////////////////////
-variable "devnet_hcloud_token" {
+variable "fusaka_hcloud_token" {
   type        = string
   description = "Hetzner Cloud API Token"
   sensitive   = true
@@ -55,7 +55,7 @@ locals {
           "${i + 1}" = {
             labels = "group_name:${vm_group.name},val_start:${vm_group.validator_start + (i * (vm_group.validator_end -
               vm_group.validator_start) / vm_group.count)},val_end:${min(vm_group.validator_start + ((i + 1) * (vm_group.validator_end -
-            vm_group.validator_start) / vm_group.count), vm_group.validator_end)}"
+            vm_group.validator_start) / vm_group.count), vm_group.validator_end)},supernode:False"
             location     = try(vm_group.location, local.hcloud_default_location)
             size         = try(vm_group.size, local.hcloud_default_server_type)
             ansible_vars = try(vm_group.ansible_vars, null)
@@ -250,6 +250,7 @@ resource "local_file" "ansible_inventory" {
             group           = server.labels.group_name
             validator_start = server.labels.val_start
             validator_end   = server.labels.val_end
+            supernode       = server.labels.supernode
             tags            = server.labels
             hostname        = split(".", key)[0]
             cloud           = "hetzner"
