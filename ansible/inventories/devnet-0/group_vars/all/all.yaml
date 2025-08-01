@@ -40,7 +40,7 @@ ethereum_genesis_network_seed: "template-devnet-0"
 ethereum_genesis_chain_id: "70{{ 99999999 | random(start=10000000, seed=ethereum_genesis_network_seed) }}"
 ethereum_genesis_fork_version_suffix: "{{ 999999 | random(start=100000, seed=ethereum_genesis_network_seed) }}"
 ethereum_genesis_generator_output_dir: "../network-configs/{{ ethereum_network_name | replace('template-', '') }}"
-ethereum_genesis_timestamp: "1753280940"
+ethereum_genesis_timestamp: "{{ lookup('ansible.builtin.pipe', '{{ ethereum_genesis_timestamp_relative_cmd[ansible_system] }}') }}"
 ethereum_genesis_timedelay: 60
 ethereum_genesis_timestamp_relative_cmd:
   Linux: "date +%s -d '+45 minutes'"
@@ -53,7 +53,7 @@ ethereum_genesis_generator_config_files:
   values.env: |-
     export CHAIN_ID="{{ ethereum_genesis_chain_id }}"
     export EL_AND_CL_MNEMONIC="{{ ethereum_genesis_mnemonic }}"
-    export NUMBER_OF_VALIDATORS=816
+    export NUMBER_OF_VALIDATORS=200
     export GENESIS_FORK_VERSION="0x10{{ ethereum_genesis_fork_version_suffix }}"
     export ALTAIR_FORK_VERSION="0x20{{ ethereum_genesis_fork_version_suffix }}"
     export BELLATRIX_FORK_VERSION="0x30{{ ethereum_genesis_fork_version_suffix }}"
