@@ -23,6 +23,7 @@ prometheus_config: |
       testnet: "{{ ethereum_network_name }}"
       execution_client: "{{ ethereum_node_el }}"
       consensus_client: "{{ ethereum_node_cl }}"
+      supernode: "{{ ethereum_node_cl_supernode_enabled | bool | default(false) }}"
   remote_write:
     - queue_config:
         batch_send_deadline: 5s

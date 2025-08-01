@@ -19,14 +19,13 @@ ethereum_network_deposit_contract_block: >-
 ethereum_node_rcp_hostname: "rpc.{{ server_fqdn }}"
 ethereum_node_beacon_hostname: "bn.{{ server_fqdn }}"
 
-ethstats_url: "ethstats.{{ ethereum_network_name }}.{{ domain }}"
-ethstats_secret: "{{ secret_ethstats }}"
-
 ### Checkpoint sync specific for Ansible & Kubernetes
 checkpoint_sync_node: bootnode-1
 ethereum_node_cl_checkpoint_sync_enabled: false
-checkpoint_sync_url: https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@bn.{{ checkpoint_sync_node }}.{{ ethereum_network_name }}.{{ domain }}
-checkpoint_sync_url_kube: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.dencun-devnets.node_ingress.combined}>@bn.{{ checkpoint_sync_node }}.{{ ethereum_network_name }}.{{ domain }}
+
+checkpoint_sync_url: https://checkpoint-sync.{{ ethereum_network_name }}.{{ domain }}
+#checkpoint_sync_url: https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@bn.{{ checkpoint_sync_node }}.{{ ethereum_network_name }}.{{ domain }}
+checkpoint_sync_url_kube: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.template-devnets.node_ingress.combined}>@bn.{{ checkpoint_sync_node }}.{{ ethereum_network_name }}.{{ domain }}
 #  ██████╗░░█████╗░██╗░░░░░███████╗  ██╗░░░██╗░█████╗░██████╗░░██████╗
 #  ██╔══██╗██╔══██╗██║░░░░░██╔════╝  ██║░░░██║██╔══██╗██╔══██╗██╔════╝
 #  ██████╔╝██║░░██║██║░░░░░█████╗░░  ╚██╗░██╔╝███████║██████╔╝╚█████╗░
@@ -39,6 +38,7 @@ ethereum_genesis_generator_container_image: "{{ default_tooling_images.ethereum_
 ethereum_genesis_generator_version: "{{ ethereum_genesis_generator_container_image.split(':')[-1] }}"
 ethereum_genesis_network_seed: "template-devnet-0"
 ethereum_genesis_chain_id: "70{{ 99999999 | random(start=10000000, seed=ethereum_genesis_network_seed) }}"
+ethereum_genesis_fork_version_suffix: "{{ 999999 | random(start=100000, seed=ethereum_genesis_network_seed) }}"
 ethereum_genesis_generator_output_dir: "../network-configs/{{ ethereum_network_name | replace('template-', '') }}"
 ethereum_genesis_timestamp: "{{ lookup('ansible.builtin.pipe', '{{ ethereum_genesis_timestamp_relative_cmd[ansible_system] }}') }}"
 ethereum_genesis_timedelay: 60
@@ -60,11 +60,10 @@ ethereum_genesis_generator_config_files:
     export CAPELLA_FORK_VERSION="0x40{{ ethereum_genesis_fork_version_suffix }}"
     export DENEB_FORK_VERSION="0x50{{ ethereum_genesis_fork_version_suffix }}"
     export ELECTRA_FORK_VERSION="0x60{{ ethereum_genesis_fork_version_suffix }}"
-    export ELECTRA_FORK_EPOCH="999999"
-    export EIP7594_FORK_VERSION="0x70{{ ethereum_genesis_fork_version_suffix }}"
-    export EIP7594_FORK_EPOCH="999999"
+    export FULU_FORK_VERSION="0x70{{ ethereum_genesis_fork_version_suffix }}"
     export GENESIS_TIMESTAMP={{ ethereum_genesis_timestamp }}
     export GENESIS_DELAY={{ ethereum_genesis_timedelay }}
+    export WITHDRAWAL_TYPE=0x02
 
 
 ethereum_genesis_validator_keys_output_dir: "{{ ansible_inventory_sources[0] | dirname }}/files/validator_keys"
@@ -92,6 +91,7 @@ bootstrap_default_user_authorized_keys_github_all:
   - skylenet
   - pk910
   - mattevans
+
 bootstrap_default_user_authorized_keys_github: >
   {{
     (bootstrap_default_user_authorized_keys_github_all | default([])) +
@@ -107,7 +107,7 @@ json_rpc_snooper_container_image: "{{ default_tooling_images.json_rpc_snooper }}
 # role: ethpandaops.general.ethereum_node
 ethereum_node_images_always_pull: true
 ethereum_node_metrics_exporter_enabled: true
-ethereum_node_xatu_sentry_enabled: false
+ethereum_node_xatu_sentry_enabled: true
 ethereum_node_cl_validator_enabled: "{{ validator_start is defined and validator_end is defined }}"
 ethereum_node_cl_validator_fee_recipient: "0xf97e180c050e5Ab072211Ad2C213Eb5AEE4DF134"
 ethereum_node_cl_ports_p2p_tcp: 9000
@@ -120,14 +120,23 @@ ethereum_node_el_ports_http_rpc: 8545
 ethereum_node_el_ports_ws_rpc: 8546
 ethereum_node_el_ports_engine: 8551
 ethereum_node_el_ports_metrics: 6060
+ethereum_node_ipv6_enabled: true
 ethereum_node_skip_cleanup: true
-
+ethereum_node_docker_watchtower_enabled: true
+ethereum_node_docker_watchtower_containers_list:
+  - execution
+  - beacon
+  - validator
+  - xatu-sentry
+  - external-block-builder
+docker_watchtower_container_additional_args:
+  - --interval=900
 ethereum_node_json_rpc_snooper_engine_enabled: true
 ethereum_node_json_rpc_snooper_engine_name: "snooper-engine"
 ethereum_node_json_rpc_snooper_engine_port: 8561
 ethereum_node_json_rpc_snooper_engine_public_port: 8961
 ethereum_node_json_rpc_snooper_engine_container_env:
-  SNOOPER_API_PORT: "{{ ethereum_node_json_rpc_snooper_engine_public_port }}"
+  SNOOPER_API_PORT: "{{ ethereum_node_json_rpc_snooper_engine_public_port | quote }}"
   SNOOPER_API_AUTH: "{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}"
 
 # role: ethpandaops.general.generate_kubernetes_config
@@ -182,7 +191,6 @@ docker_nginx_proxy_container_volumes:
   - "{{ docker_nginx_proxy_datadir }}/certs:/etc/nginx/certs:ro"
   - html:/usr/share/nginx/html
   - "{{ docker_nginx_proxy_datadir }}/htpasswd:/etc/nginx/htpasswd:ro"
-
 
 # role: ethpandaops.general.vector
 vector_config: |

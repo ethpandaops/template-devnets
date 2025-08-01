@@ -31,7 +31,7 @@ terraform {
     skip_s3_checksum            = true
     region                      = "us-east-1"
     bucket                      = "merge-testnets"
-    key                         = "infrastructure/devnet-0/hetzner-terraform.tfstate"
+    key                         = "infrastructure/template-devnet-0/hetzner-terraform.tfstate"
   }
 }
 
@@ -58,7 +58,7 @@ variable "ethereum_network" {
 }
 
 variable "base_cidr_block" {
-  default = "10.76.0.0/16"
+  default = "10.207.0.0/16"
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 //                                        LOCALS
@@ -70,42 +70,36 @@ locals {
     var.lighthouse_nethermind,
     var.lighthouse_erigon,
     var.lighthouse_besu,
-    var.lighthouse_ethereumjs,
     var.lighthouse_reth,
     var.lighthouse_nimbusel,
     var.prysm_geth,
     var.prysm_nethermind,
     var.prysm_erigon,
     var.prysm_besu,
-    var.prysm_ethereumjs,
     var.prysm_reth,
     var.prysm_nimbusel,
     var.lodestar_geth,
     var.lodestar_nethermind,
     var.lodestar_erigon,
     var.lodestar_besu,
-    var.lodestar_ethereumjs,
     var.lodestar_reth,
     var.lodestar_nimbusel,
     var.nimbus_geth,
     var.nimbus_nethermind,
     var.nimbus_erigon,
     var.nimbus_besu,
-    var.nimbus_ethereumjs,
     var.nimbus_reth,
     var.nimbus_nimbusel,
     var.teku_geth,
     var.teku_nethermind,
     var.teku_erigon,
     var.teku_besu,
-    var.teku_ethereumjs,
     var.teku_reth,
     var.teku_nimbusel,
     var.grandine_geth,
     var.grandine_nethermind,
     var.grandine_erigon,
     var.grandine_besu,
-    var.grandine_ethereumjs,
     var.grandine_reth,
     var.grandine_nimbusel,
   ]

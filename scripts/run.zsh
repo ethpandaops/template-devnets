@@ -503,24 +503,24 @@ for arg in "${command[@]}"; do
 
         # Parse validator indices (handle both single index and comma-separated list)
         VALIDATOR_ARRAY=(${(s:,:)validator_indices})
-        
+
         # Validate all validator indices and get their info
         declare -a validator_pubkeys
-        
+
         for validator_index in "${VALIDATOR_ARRAY[@]}"; do
           # Validate that each index is a number
           if ! [[ "$validator_index" =~ ^[0-9]+$ ]]; then
             echo "Error: Validator index '$validator_index' must be a positive integer."
             exit 1
           fi
-          
+
           # Get validator info
           validator_info=$(curl -s "$bn_endpoint/eth/v1/beacon/states/head/validators/$validator_index")
           if [[ $(echo "$validator_info" | jq -r '.data') == "null" ]]; then
             echo "Error: Validator $validator_index not found."
             exit 1
           fi
-          
+
           validator_pubkey=$(echo "$validator_info" | jq -r '.data.validator.pubkey')
           validator_pubkeys+=("$validator_pubkey")
         done
@@ -547,15 +547,15 @@ for arg in "${command[@]}"; do
         if [[ $response == "y" ]]; then
           echo "Submitting top-ups using ethereal..."
           echo ""
-          
+
           # Process each validator
           for ((i=1; i<=${#VALIDATOR_ARRAY}; i++)); do
             validator_index="${VALIDATOR_ARRAY[$i]}"
             validator_pubkey="${validator_pubkeys[$i]}"
-            
+
             echo "Processing validator $validator_index ($i/${#VALIDATOR_ARRAY})..."
             echo "Command: ethereal validator topup --from=\"$publickey\" --validator=\"$validator_pubkey\" --topup-amount=\"${eth_amount}eth\" --no-safety-checks"
-            
+
             # Submit topup for this validator with retry logic
             topup_success=false
             for retry in {1..3}; do
@@ -569,7 +569,7 @@ for arg in "${command[@]}"; do
                 --consensus-connection="$bn_endpoint" \
                 --no-safety-checks \
                 --timeout=60s 2>&1)
-              
+
               if [[ $? -eq 0 ]]; then
                 topup_success=true
                 break
@@ -581,18 +581,18 @@ for arg in "${command[@]}"; do
                 fi
               fi
             done
-            
+
             if [[ "$topup_success" == "true" ]]; then
               # Extract transaction hash from output
               tx_hash=$(echo "$topup_output" | grep -oE '0x[a-fA-F0-9]{64}' | head -1)
               if [[ -n "$tx_hash" ]]; then
                 echo "Transaction hash: $tx_hash"
                 echo "Waiting for transaction confirmation..."
-                
+
                 # Wait for transaction to be mined
                 for attempt in {1..30}; do
                   receipt_response=$(curl -s --header 'Content-Type: application/json' --data-raw "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getTransactionReceipt\", \"params\":[\"$tx_hash\"], \"id\":0}" $rpc_endpoint)
-                  
+
                   # Debug: show raw response if it's not valid JSON
                   if ! echo "$receipt_response" | jq . >/dev/null 2>&1; then
                     echo "Invalid JSON response: $receipt_response"
@@ -600,7 +600,7 @@ for arg in "${command[@]}"; do
                     sleep 2
                     continue
                   fi
-                  
+
                   receipt_result=$(echo "$receipt_response" | jq -r '.result // empty')
                   if [[ -n "$receipt_result" && "$receipt_result" != "null" ]]; then
                     tx_status=$(echo "$receipt_result" | jq -r '.status // empty')
@@ -615,7 +615,7 @@ for arg in "${command[@]}"; do
                   echo "Waiting for confirmation... (attempt $attempt/30)"
                   sleep 2
                 done
-                
+
                 if [[ $attempt -eq 30 ]]; then
                   echo "⚠ Transaction confirmation timeout for validator $validator_index"
                 fi
@@ -627,14 +627,14 @@ for arg in "${command[@]}"; do
               echo "Error output: $topup_output"
             fi
             echo ""
-            
+
             # Small delay between transactions
             if [[ $i -lt ${#VALIDATOR_ARRAY} ]]; then
               echo "Waiting 2 seconds before next transaction..."
               sleep 2
             fi
           done
-          
+
           echo "Top-up process completed for ${#VALIDATOR_ARRAY} validator(s)."
         else
           echo "Top-up cancelled."

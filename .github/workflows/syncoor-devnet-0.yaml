@@ -1,0 +1,160 @@
+name: Syncoor - Devnet 0
+
+on:
+  schedule:
+    - cron: '30 2 * * *'  # Daily at 02:30 UTC
+  workflow_dispatch:
+    inputs:
+      el-client:
+        description: 'Comma-separated list of execution layer clients (geth,besu,nethermind,erigon,reth)'
+        required: false
+        default: '"geth","reth","nethermind","besu","erigon"'
+        type: string
+      cl-client:
+        description: 'Comma-separated list of consensus layer clients (lighthouse,teku,prysm,nimbus,lodestar,grandine)'
+        required: false
+        default: '"lighthouse","teku","prysm","nimbus","lodestar","grandine"'
+        type: string
+      run-timeout:
+        description: 'Timeout for the sync test'
+        required: false
+        default: '3h'
+        type: string
+      el-image:
+        description: 'Execution layer client images as JSON (e.g., {"geth": "ethereum/client-go:latest", "besu": "hyperledger/besu:latest"})'
+        required: false
+        default: '{}'
+        type: string
+      cl-image:
+        description: 'Consensus layer client images as JSON (e.g., {"lighthouse": "sigp/lighthouse:latest", "teku": "consensys/teku:latest"})'
+        required: false
+        default: '{}'
+        type: string
+
+env:
+  INSTALL_RCLONE_VERSION: v1.68.2
+  S3_BUCKET: ethpandaops-syncoor-data
+
+jobs:
+  sync:
+    # Timeouts from h to minutes:
+    # - 4h -> 240m
+    # - 6h -> 360m
+    # - 8h -> 480m
+    # - 12h -> 720m
+    # - 24h -> 1440m
+    # - 48h -> 2880m
+    # - 72h -> 4320m
+    timeout-minutes: 240 # 4h
+    # Self-hosted runner sizes:
+    # - ccx13: 2 cores, 8GB, 80GB disk
+    # - ccx23: 4 cores, 16GB, 160GB disk
+    # - ccx33: 8 cores, 32GB, 240GB disk
+    # - ccx43: 16 cores, 64GB, 360GB disk
+    runs-on: self-hosted-ghr-size-ccx33-x64
+    #concurrency:
+    #  group: >-
+    #    ${{ matrix.network }}-${{ matrix.el-client }}-${{ matrix.cl-client }}
+    strategy:
+      fail-fast: false
+      matrix:
+        network: ["template-devnet-0"]
+        el-client: >-
+          ${{
+            fromJSON(format('[{0}]', inputs.el-client || '
+              "besu",
+              "erigon",
+              "geth",
+              "nethermind",
+              "reth"
+          '))}}
+        cl-client: >-
+          ${{
+            fromJSON(format('[{0}]', inputs.cl-client || '
+              "lighthouse",
+              "teku",
+              "prysm",
+              "nimbus",
+              "lodestar",
+              "grandine"
+          '))}}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+    - uses: ethpandaops/hive-github-action/helpers/self-hosted-runner-dependencies@a9ec89442df18ee579d3179b76c47f5f93954307 # v0.4.0
+      if: runner.environment != 'github-hosted'
+
+    - name: Install Kurtosis CLI
+      run: |
+        echo "deb [trusted=yes] https://apt.fury.io/kurtosis-tech/ /" | sudo tee /etc/apt/sources.list.d/kurtosis.list
+        sudo apt update
+        sudo apt install kurtosis-cli
+
+    - name: Parse client images
+      id: parse-images
+      run: |
+        # Parse EL images
+        EL_IMAGES='${{ inputs.el-image }}'
+        if [ "$EL_IMAGES" != '{}' ] && [ -n "$EL_IMAGES" ]; then
+          EL_CLIENT="${{ matrix.el-client }}"
+          EL_IMAGE=$(echo "$EL_IMAGES" | jq -r --arg client "$EL_CLIENT" '.[$client] // ""')
+          echo "el-image=$EL_IMAGE" >> $GITHUB_OUTPUT
+        else
+          echo "el-image=" >> $GITHUB_OUTPUT
+        fi
+
+        # Parse CL images
+        CL_IMAGES='${{ inputs.cl-image }}'
+        if [ "$CL_IMAGES" != '{}' ] && [ -n "$CL_IMAGES" ]; then
+          CL_CLIENT="${{ matrix.cl-client }}"
+          CL_IMAGE=$(echo "$CL_IMAGES" | jq -r --arg client "$CL_CLIENT" '.[$client] // ""')
+          echo "cl-image=$CL_IMAGE" >> $GITHUB_OUTPUT
+        else
+          echo "cl-image=" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Run Syncoor Test
+      uses: ethpandaops/syncoor@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        server: https://syncoor-api.template-devnet-0.ethpandaops.io
+        server-auth: ${{ secrets.SYNCOOR_SERVER_AUTH }}
+        log-force-colors: true
+        client-logs: true
+        network: ${{ matrix.network }}
+        el-client: ${{ matrix.el-client }}
+        cl-client: ${{ matrix.cl-client }}
+        el-image: ${{ steps.parse-images.outputs.el-image }}
+        cl-image: ${{ steps.parse-images.outputs.cl-image }}
+        el-extra-args: >-
+          ${{
+            (matrix.el-client == 'reth') && '--full' ||
+            (matrix.el-client == 'erigon') && '--prune.mode=full' ||
+            ''
+          }}
+        check-interval: 30s
+        run-timeout: ${{ inputs.run-timeout || '60m' }}
+        log-level: info
+        report-dir: ./test-reports
+        s3-upload: true
+        s3-bucket: ${{ env.S3_BUCKET }}
+        s3-path: devnets/${{ matrix.network }}
+        rclone-config: ${{ secrets.SYNCOOR_RCLONE_CONFIG }}
+        rclone-version: ${{ env.INSTALL_RCLONE_VERSION }}
+
+    - name: Update test results index
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          await github.rest.actions.createWorkflowDispatch({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            workflow_id: 'syncoor-generate-index.yaml',
+            ref: context.ref,
+            inputs: {
+              's3-path': 'devnets/${{ matrix.network }}'
+            }
+          });
