@@ -76,6 +76,15 @@ resource "hcloud_firewall" "machine_firewall" {
     source_ips  = ["0.0.0.0/0", "::/0"]
   }
 
+  // Engine rpc-snooper api
+  rule {
+    description = "Allow engine snooper api port TCP"
+    direction   = "in"
+    protocol    = "tcp"
+    port        = "8961"
+    source_ips  = ["0.0.0.0/0", "::/0"]
+  }
+
   # Allow all outbound traffic
   rule {
     description     = "Allow all outbound traffic TCP"
