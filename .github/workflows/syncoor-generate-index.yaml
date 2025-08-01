@@ -1,0 +1,40 @@
+name: Syncoor - Generate Index
+
+on:
+  workflow_dispatch:
+    inputs:
+      s3-bucket:
+        description: 'S3 bucket to use'
+        required: false
+        default: 'ethpandaops-syncoor-data'
+        type: string
+      s3-path:
+        description: 'Path to the reports in S3 bucket'
+        required: false
+        default: 'test-reports'
+        type: string
+
+env:
+  INSTALL_RCLONE_VERSION: v1.68.2
+
+jobs:
+  generate-index:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: "generate-index"
+      cancel-in-progress: true
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+    - name: Run Index Generator
+      uses: ethpandaops/syncoor@master
+      with:
+        run-tests: false
+        s3-upload: true
+        s3-bucket: ${{ inputs.s3-bucket }}
+        s3-path: ${{ inputs.s3-path }}
+        s3-index-generate: true
+        rclone-config: ${{ secrets.SYNCOOR_RCLONE_CONFIG }}
+        rclone-version: ${{ env.INSTALL_RCLONE_VERSION }}

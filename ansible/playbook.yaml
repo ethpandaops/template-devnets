@@ -32,18 +32,6 @@
     - role: ethpandaops.general.vector
       tags: [init-server, vector]
 
-- hosts: hive
-  become: true
-  roles:
-    - role: gantsign.golang
-      golang_gopath: '/data/workspace-go'
-      golang_version: '1.21.13'
-      tags: [init-server, golang]
-    - role: ethpandaops.general.hive
-      tags: [hive]
-    - role: ethpandaops.general.docker_nginx_proxy
-      tags: [docker_nginx_proxy]
-
 - hosts: bootnode
   become: true
   roles:
@@ -81,6 +69,22 @@
   roles:
     - role: ethpandaops.general.ethereum_node
       tags: [ethereum, ethereum_node]
+    - role: ethpandaops.general.traffic_control
+      when: ethereum_node_cl_supernode_enabled == False
+      vars:
+        traffic_control_rules:
+          - interface: eth0
+            rate_download: 100mbit
+            rate_upload: 50mbit
+      tags: [traffic_control]
+    - role: ethpandaops.general.traffic_control
+      when: ethereum_node_cl_supernode_enabled == True
+      vars:
+        traffic_control_rules:
+          - interface: eth0
+            rate_download: 1000mbit
+            rate_upload: 1000mbit
+      tags: [traffic_control]
 
 - hosts: ethereum_node
   become: true
@@ -100,17 +104,23 @@
           VIRTUAL_DEST: "/"
           LETSENCRYPT_HOST: "bootnode-1.{{ network_subdomain }}"
 
+- hosts: mev_relay
+  become: true
+  roles:
+    - role: ethpandaops.general.mev_relay
+      tags: [mev_relay]
+
+- hosts: tx_fuzz_txs
+  become: true
+  roles:
+    - role: ethpandaops.general.tx_fuzz
+      tags: [tx_fuzz, tx_fuzz_txs]
+
 - hosts: bootnode
   become: true
   roles:
     - role: ethpandaops.general.ethereum_inventory_web
       tags: [eth_inventory_web, ethereum_inventory_web]
-
-- hosts: dora
-  become: true
-  roles:
-    - role: ethpandaops.general.dora
-      tags: [dora]
 
 - hosts: localhost
   roles:

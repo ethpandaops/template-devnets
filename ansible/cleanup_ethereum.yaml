@@ -58,6 +58,12 @@
             - "mev-boost"
             - "external-block-builder"
             - "xatu-sentry"
+            - "mev-relay-api"
+            - "mev-relay-housekeeper"
+            - "mev-relay-website"
+            - "mev-relay-redis"
+            - "mev-relay-database"
+
         - name: Remove data dirs
           file:
             state: absent
@@ -89,3 +95,5 @@
             - /data/execution-auth.secret
             - /data/cl-bootnode
             - /data/xatu-sentry
+            # MEV
+            - /data/mev_relay
