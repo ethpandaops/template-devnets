@@ -20,7 +20,7 @@ nimbusel_container_volumes:
   - "{{ nimbusel_auth_jwt_path }}:/execution-auth.jwt:ro"
   - "{{ eth_testnet_config_dir }}:/network-config:ro"
 nimbusel_container_command_extra_args:
-  - --custom-network=/network-config/genesis.json
+  - --network=/network-config/genesis.json
   - --bootstrap-node={{ ethereum_el_bootnodes | join(',') }}
   - --rpc-api=admin,eth,debug
   - --ws-api=admin,eth,debug
