@@ -159,7 +159,7 @@ data "cloudflare_zone" "default" {
 
 resource "cloudflare_record" "server_record" {
   for_each = {
-    for vm in local.hcloud_vms : "${vm.id}" => vm if coalesce(vm.ipv4_enabled, true) == true && vm.name != null && can(regex("bootnode", vm.name))
+    for vm in local.hcloud_vms : "${vm.id}" => vm if coalesce(vm.ipv4_enabled, true) == true && can(regex("bootnode", vm.name))
   }
   zone_id = data.cloudflare_zone.default.id
   name    = "${each.value.name}.${var.ethereum_network}"
@@ -171,7 +171,7 @@ resource "cloudflare_record" "server_record" {
 
 resource "cloudflare_record" "server_record6" {
   for_each = {
-    for vm in local.hcloud_vms : "${vm.id}" => vm if coalesce(vm.ipv6_enabled, true) == true && vm.name != null && can(regex("bootnode", vm.name))
+    for vm in local.hcloud_vms : "${vm.id}" => vm if coalesce(vm.ipv6_enabled, true) == true && can(regex("bootnode", vm.name))
   }
   zone_id = data.cloudflare_zone.default.id
   name    = "${each.value.name}.${var.ethereum_network}"
@@ -183,7 +183,7 @@ resource "cloudflare_record" "server_record6" {
 
 resource "cloudflare_record" "server_record_ns" {
   for_each = {
-    for vm in local.hcloud_vms : "${vm.id}" => vm if vm.name != null && can(regex("bootnode", vm.name))
+    for vm in local.hcloud_vms : "${vm.id}" => vm if can(regex("bootnode", vm.name))
   }
   zone_id = data.cloudflare_zone.default.id
   name    = "srv.${var.ethereum_network}"
