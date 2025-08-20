@@ -168,18 +168,6 @@ resource "digitalocean_firewall" "main" {
     source_addresses = ["0.0.0.0/0", "::/0"]
   }
 
-  // DNS
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = "53"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-  inbound_rule {
-    protocol         = "udp"
-    port_range       = "53"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-
   // Consensus layer p2p port
   inbound_rule {
     protocol         = "tcp"
@@ -218,6 +206,45 @@ resource "digitalocean_firewall" "main" {
   inbound_rule {
     protocol         = "tcp"
     port_range       = "8961"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }
+
+  // Allow all outbound traffic
+  outbound_rule {
+    protocol              = "tcp"
+    port_range            = "1-65535"
+    destination_addresses = ["0.0.0.0/0", "::/0"]
+  }
+  outbound_rule {
+    protocol              = "udp"
+    port_range            = "1-65535"
+    destination_addresses = ["0.0.0.0/0", "::/0"]
+  }
+  outbound_rule {
+    protocol              = "icmp"
+    destination_addresses = ["0.0.0.0/0", "::/0"]
+  }
+  depends_on = [digitalocean_project_resources.droplets]
+}
+
+resource "digitalocean_firewall" "bootnode" {
+  name        = "${var.ethereum_network}-nodes-bootnode"
+  // Tags are used to select which droplets should
+  // be assigned to this firewall.
+  tags = [
+    "EthNetwork:${var.ethereum_network}",
+    "group_name:bootnode"
+  ]
+
+  // DNS
+  inbound_rule {
+    protocol         = "tcp"
+    port_range       = "53"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }
+  inbound_rule {
+    protocol         = "udp"
+    port_range       = "53"
     source_addresses = ["0.0.0.0/0", "::/0"]
   }
 

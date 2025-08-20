@@ -6,8 +6,10 @@ prefix="testing"
 sops_name=$(sops --decrypt ../ansible/inventories/$network/group_vars/all/all.sops.yaml | yq -r '.secret_nginx_shared_basic_auth.name')
 sops_password=$(sops --decrypt ../ansible/inventories/$network/group_vars/all/all.sops.yaml | yq -r '.secret_nginx_shared_basic_auth.password')
 sops_mnemonic=$(sops --decrypt ../ansible/inventories/$network/group_vars/all/all.sops.yaml | yq -r '.secret_genesis_mnemonic')
-bn_endpoint="${BEACON_ENDPOINT:-https://$sops_name:$sops_password@bn.$node.$prefix-$network.$domain}"
-rpc_endpoint="${RPC_ENDPOINT:-https://$sops_name:$sops_password@rpc.$node.$prefix-$network.$domain}"
+rpc_prefix=$(yq -r '.ethereum_node_rcp_prefix' ../ansible/inventories/$network/group_vars/all/all.yaml)
+beacon_prefix=$(yq -r '.ethereum_node_rcp_prefix' ../ansible/inventories/$network/group_vars/all/all.yaml)
+bn_endpoint="${BEACON_ENDPOINT:-https://$sops_name:$sops_password@$beacon_prefix$node.$prefix-$network.$domain}"
+rpc_endpoint="${RPC_ENDPOINT:-https://$sops_name:$sops_password@$rpc_prefix$node.$prefix-$network.$domain}"
 bootnode_endpoint="${BOOTNODE_ENDPOINT:-https://bootnode-1.$prefix-$network.$domain}"
 
 # Helper function to display available options
