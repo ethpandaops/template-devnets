@@ -34,11 +34,11 @@ blobber_container_ports:
   - "{{ blobber_p2p_port + 5 }}:{{ blobber_p2p_port }}/udp"
   - "127.0.0.1:{{ blobber_api_listen_port }}:{{ blobber_api_listen_port }}"
 
-#  - "--cl=https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@{{ ethereum_node_beacon_prefix }}lighthouse-geth-1.{{ network_subdomain }}"
-#  - "--cl=https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@{{ ethereum_node_beacon_prefix }}lighthouse-besu-1.{{ network_subdomain }}"
-#  - "--cl=https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@{{ ethereum_node_beacon_prefix }}lighthouse-erigon-1.{{ network_subdomain }}"
-#  - "--cl=https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@{{ ethereum_node_beacon_prefix }}lighthouse-nethermind-1.{{ network_subdomain }}"
-#  - "--cl=https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@{{ ethereum_node_beacon_prefix }}lighthouse-reth-1.{{ network_subdomain }}"
+#  - "--cl=https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@{{ ethereum_node_beacon_prefix }}lighthouse-geth-1.{{ network_server_subdomain }}"
+#  - "--cl=https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@{{ ethereum_node_beacon_prefix }}lighthouse-besu-1.{{ network_server_subdomain }}"
+#  - "--cl=https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@{{ ethereum_node_beacon_prefix }}lighthouse-erigon-1.{{ network_server_subdomain }}"
+#  - "--cl=https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@{{ ethereum_node_beacon_prefix }}lighthouse-nethermind-1.{{ network_server_subdomain }}"
+#  - "--cl=https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@{{ ethereum_node_beacon_prefix }}lighthouse-reth-1.{{ network_server_subdomain }}"
 blobber_container_command:
   - "--cl={{ blobber_beacon_api }}"
   - "--beacon-port-start={{ blobber_p2p_port }}"
