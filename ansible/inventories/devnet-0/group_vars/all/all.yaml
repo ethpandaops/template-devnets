@@ -196,6 +196,10 @@ docker_nginx_proxy_container_volumes:
   - "{{ docker_nginx_proxy_datadir }}/certs:/etc/nginx/certs:ro"
   - html:/usr/share/nginx/html
   - "{{ docker_nginx_proxy_datadir }}/htpasswd:/etc/nginx/htpasswd:ro"
+docker_nginx_proxy_cert_loader_container_image: {{ default_tooling_images.nginx_proxy_cert_loader }}
+docker_nginx_proxy_cert_linker_container_image: {{ default_tooling_images.nginx_proxy_cert_linker }}
+docker_nginx_proxy_cert_loader_container_networks: "{{ docker_networks_shared }}"
+docker_nginx_proxy_cert_linker_container_networks: "{{ docker_networks_shared }}"
 docker_nginx_proxy_wildcard_cert: "{{ network_server_subdomain }}"
 docker_nginx_proxy_wildcard_cert_url: "http://cert.{{ network_server_subdomain }}/{{ network_server_subdomain }}-latest.tar.enc"
 docker_nginx_proxy_wildcard_cert_psk: "{{ secret_cert_encryption_psk }}"

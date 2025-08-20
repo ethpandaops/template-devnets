@@ -56,6 +56,8 @@ default_tooling_images:
   nginx_proxy: docker.ethquokkaops.io/dh/nginx:alpine
   nginx_proxy_gen: docker.ethquokkaops.io/dh/nginxproxy/docker-gen
   nginx_proxy_acme: docker.ethquokkaops.io/dh/nginxproxy/acme-companion
+  nginx_proxy_cert_loader: docker.ethquokkaops.io/dh/ethpandaops/debian-docker:latest
+  nginx_proxy_cert_linker: docker.ethquokkaops.io/dh/nginxproxy/docker-gen
   vector: docker.ethquokkaops.io/dh/timberio/vector:0.46.1-alpine
   spamoor: docker.ethquokkaops.io/dh/ethpandaops/spamoor:master-latest
   blobber: docker.ethquokkaops.io/dh/ethpandaops/blobber:latest
