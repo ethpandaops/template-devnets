@@ -73,3 +73,4 @@ wildcard_cert_issuer_container_env:
   VIRTUAL_PORT: "8080"
   HTTPS_METHOD: "nohttps"
 wildcard_cert_issuer_container_networks: "{{ docker_networks_shared }}"
+wildcard_cert_issuer_rfc2136_server: "172.17.0.1" # dns container runs on host network
