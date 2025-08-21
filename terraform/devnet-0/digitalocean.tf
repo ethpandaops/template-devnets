@@ -49,7 +49,7 @@ locals {
         id         = "${vm_group.name}-${i + 1}"
         vms = {
           "${i + 1}" = {
-            tags   = "group_name:${vm_group.name},val_start:${vm_group.validator_start + (i * (vm_group.validator_end - vm_group.validator_start) / vm_group.count)},val_end:${min(vm_group.validator_start + ((i + 1) * (vm_group.validator_end - vm_group.validator_start) / vm_group.count), vm_group.validator_end)},supernode:${i % 2 == 0 ? "True" : "False"}"
+            tags   = "group_name:${vm_group.name},val_start:${vm_group.validator_start + (i * (vm_group.validator_end - vm_group.validator_start) / vm_group.count)},val_end:${min(vm_group.validator_start + ((i + 1) * (vm_group.validator_end - vm_group.validator_start) / vm_group.count), vm_group.validator_end)},supernode:${i % 2 == 0 ? "True" : "False"}${vm_group.name == "bootnode" ? ",bootnode:${var.ethereum_network}" : ""}"
             region = try(vm_group.region, var.digitalocean_regions[i % length(var.digitalocean_regions)])
             size   = try(vm_group.size, i % 2 == 0 ? "s-8vcpu-32gb-640gb-intel" : "s-8vcpu-16gb")
             ipv6   = try(vm_group.ipv6, true)
@@ -227,6 +227,44 @@ resource "digitalocean_firewall" "main" {
   depends_on = [digitalocean_project_resources.droplets]
 }
 
+resource "digitalocean_firewall" "bootnode" {
+  name = "${var.ethereum_network}-nodes-bootnode"
+  // Tags are used to select which droplets should
+  // be assigned to this firewall.
+  tags = [
+    "bootnode:${var.ethereum_network}"
+  ]
+
+  // DNS
+  inbound_rule {
+    protocol         = "tcp"
+    port_range       = "53"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }
+  inbound_rule {
+    protocol         = "udp"
+    port_range       = "53"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }
+
+  // Allow all outbound traffic
+  outbound_rule {
+    protocol              = "tcp"
+    port_range            = "1-65535"
+    destination_addresses = ["0.0.0.0/0", "::/0"]
+  }
+  outbound_rule {
+    protocol              = "udp"
+    port_range            = "1-65535"
+    destination_addresses = ["0.0.0.0/0", "::/0"]
+  }
+  outbound_rule {
+    protocol              = "icmp"
+    destination_addresses = ["0.0.0.0/0", "::/0"]
+  }
+  depends_on = [digitalocean_project_resources.droplets]
+}
+
 resource "digitalocean_firewall" "mev_relay" {
   name        = "${var.ethereum_network}-nodes-mev-relay"
   droplet_ids = [digitalocean_droplet.main["mev-relay-1"].id]
@@ -266,7 +304,7 @@ data "cloudflare_zone" "default" {
 
 resource "cloudflare_record" "server_record_v4" {
   for_each = {
-    for vm in local.digitalocean_vms : "${vm.id}" => vm
+    for vm in local.digitalocean_vms : "${vm.id}" => vm if can(regex("bootnode", vm.name))
   }
   zone_id = data.cloudflare_zone.default.id
   name    = "${each.value.name}.${var.ethereum_network}"
@@ -278,7 +316,7 @@ resource "cloudflare_record" "server_record_v4" {
 
 resource "cloudflare_record" "server_record_v6" {
   for_each = {
-    for vm in local.digitalocean_vms : "${vm.id}" => vm if vm.ipv6
+    for vm in local.digitalocean_vms : "${vm.id}" => vm if vm.ipv6 && can(regex("bootnode", vm.name))
   }
   zone_id = data.cloudflare_zone.default.id
   name    = "${each.value.name}.${var.ethereum_network}"
@@ -288,53 +326,18 @@ resource "cloudflare_record" "server_record_v6" {
   ttl     = 120
 }
 
-resource "cloudflare_record" "server_record_rpc_v4" {
+resource "cloudflare_record" "server_record_ns" {
   for_each = {
-    for vm in local.digitalocean_vms : "${vm.id}" => vm
+    for vm in local.digitalocean_vms : "${vm.id}" => vm if can(regex("bootnode", vm.name))
   }
   zone_id = data.cloudflare_zone.default.id
-  name    = "rpc.${each.value.name}.${var.ethereum_network}"
-  type    = "A"
-  value   = digitalocean_droplet.main[each.value.id].ipv4_address
+  name    = "srv.${var.ethereum_network}"
+  type    = "NS"
+  value   = "${each.value.name}.${var.ethereum_network}.${data.cloudflare_zone.default.name}"
   proxied = false
   ttl     = 120
 }
 
-resource "cloudflare_record" "server_record_rpc_v6" {
-  for_each = {
-    for vm in local.digitalocean_vms : "${vm.id}" => vm if vm.ipv6
-  }
-  zone_id = data.cloudflare_zone.default.id
-  name    = "rpc.${each.value.name}.${var.ethereum_network}"
-  type    = "AAAA"
-  value   = digitalocean_droplet.main[each.value.id].ipv6_address
-  proxied = false
-  ttl     = 120
-}
-
-resource "cloudflare_record" "server_record_beacon_v4" {
-  for_each = {
-    for vm in local.digitalocean_vms : "${vm.id}" => vm
-  }
-  zone_id = data.cloudflare_zone.default.id
-  name    = "bn.${each.value.name}.${var.ethereum_network}"
-  type    = "A"
-  value   = digitalocean_droplet.main[each.value.id].ipv4_address
-  proxied = false
-  ttl     = 120
-}
-
-resource "cloudflare_record" "server_record_beacon_v6" {
-  for_each = {
-    for vm in local.digitalocean_vms : "${vm.id}" => vm if vm.ipv6
-  }
-  zone_id = data.cloudflare_zone.default.id
-  name    = "bn.${each.value.name}.${var.ethereum_network}"
-  type    = "AAAA"
-  value   = digitalocean_droplet.main[each.value.id].ipv6_address
-  proxied = false
-  ttl     = 120
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -353,10 +356,10 @@ resource "local_file" "ansible_inventory" {
           for key, server in digitalocean_droplet.main : "do.${key}" => {
             ip              = "${server.ipv4_address}"
             ipv6            = try(server.ipv6_address, "none")
-            group           = try(split(":", tolist(server.tags)[2])[1], "unknown")
-            validator_start = try(split(":", tolist(server.tags)[5])[1], 0)
-            validator_end   = try(split(":", tolist(server.tags)[4])[1], 0) # if the tag is not a number it will be 0 - e.g no validator keys
-            supernode       = try(title(split(":", tolist(server.tags)[3])[1]), "True")
+            group           = try([for tag in tolist(server.tags) : split(":", tag)[1] if can(regex("^group_name:", tag))][0], "unknown")
+            validator_start = try([for tag in tolist(server.tags) : split(":", tag)[1] if can(regex("^val_start:", tag))][0], 0)
+            validator_end   = try([for tag in tolist(server.tags) : split(":", tag)[1] if can(regex("^val_end:", tag))][0], 0)
+            supernode       = try(title([for tag in tolist(server.tags) : split(":", tag)[1] if can(regex("^supernode:", tag))][0]), "undefined")
             tags            = "${server.tags}"
             hostname        = "${split(".", key)[0]}"
             cloud           = "digitalocean"

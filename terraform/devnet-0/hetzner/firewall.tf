@@ -9,6 +9,7 @@ resource "hcloud_firewall" "machine_firewall" {
     port        = "22"
     source_ips  = ["0.0.0.0/0", "::/0"]
   }
+
   # Nginx / Web
   rule {
     description = "Allow HTTP"
@@ -110,3 +111,51 @@ resource "hcloud_firewall" "machine_firewall" {
   }
 }
 
+
+resource "hcloud_firewall" "bootnode_firewall" {
+  name = "${var.ethereum_network}-bootnode-firewall"
+
+  apply_to {
+    label_selector = "bootnode=${var.ethereum_network}"
+  }
+
+  # DNS
+  rule {
+    description = "Allow DNS UDP"
+    direction   = "in"
+    protocol    = "udp"
+    port        = "53"
+    source_ips  = ["0.0.0.0/0", "::/0"]
+  }
+  rule {
+    description = "Allow DNS TCP"
+    direction   = "in"
+    protocol    = "tcp"
+    port        = "53"
+    source_ips  = ["0.0.0.0/0", "::/0"]
+  }
+
+  # Allow all outbound traffic
+  rule {
+    description     = "Allow all outbound traffic TCP"
+    direction       = "out"
+    protocol        = "tcp"
+    port            = "1-65535"
+    destination_ips = ["0.0.0.0/0", "::/0"]
+  }
+
+  rule {
+    description     = "Allow all outbound traffic UDP"
+    direction       = "out"
+    protocol        = "udp"
+    port            = "1-65535"
+    destination_ips = ["0.0.0.0/0", "::/0"]
+  }
+
+  rule {
+    description     = "Allow all outbound traffic ICMP"
+    direction       = "out"
+    protocol        = "icmp"
+    destination_ips = ["0.0.0.0/0", "::/0"]
+  }
+}

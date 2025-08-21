@@ -1,0 +1,75 @@
+# role: ethpandaops.general.dns_server
+dns_server_disable_systemd_resolved: true
+dns_server_is_master: "{{ inventory_hostname == 'bootnode-1' }}"
+dns_server_acme_zone: "{{ network_server_subdomain }}"
+
+# One or more master IPs (for slaves to pull from / accept NOTIFY from)
+dns_server_master: "{{ ([hostvars['bootnode-1'].ansible_host]
+                         if (groups.get('bootnode') is defined and 'bootnode-1' in groups['bootnode'])
+                         else []) | list }}"
+
+# All slave IPs (for master's also-notify / allow-transfer)
+dns_server_slave: "{{ (groups.get('bootnode', []) | difference(['bootnode-1']))
+                      | map('extract', hostvars, 'ansible_host')
+                      | list }}"
+
+dns_server_zones:
+  - zone: "{{ network_server_subdomain }}"
+    content: |
+      $TTL 120
+      @       IN SOA {{ server_fqdn }}. zonemaster.{{ domain }}. (
+              00000000000000  ; Serial
+                      2H      ; Refresh
+                      1H      ; Retry
+                      1W      ; Expire
+                      5m )    ; NX (TTL Negativ Cache)
+              IN  NS     {{ server_fqdn }}.
+      {# extra NS for each secondary, if their FQDNs are known #}
+      {% for h in groups['bootnode'] | sort if h != 'bootnode-1' %}
+      {% if hostvars[h].server_fqdn is defined %}
+              IN  NS     {{ hostvars[h].server_fqdn }}.
+      {% endif %}
+      {% endfor %}
+
+      ; certificates
+      cert    IN  A      {{ hostvars['bootnode-1']['ansible_host'] }}
+
+      ; bootnodes
+      {% for host in groups['bootnode'] | sort %}
+      {{ hostvars[host]['inventory_hostname'] }}                                   IN  A     {{ hostvars[host]['ansible_host'] }}
+      {{ ethereum_node_rpc_prefix }}{{ hostvars[host]['inventory_hostname'] }}     IN  A     {{ hostvars[host]['ansible_host'] }}
+      {{ ethereum_node_beacon_prefix }}{{ hostvars[host]['inventory_hostname'] }}  IN  A     {{ hostvars[host]['ansible_host'] }}
+      {% if hostvars[host]['ipv6'] is defined %}
+      {{ hostvars[host]['inventory_hostname'] }}                                   IN  AAAA  {{ hostvars[host]['ipv6'] }}
+      {{ ethereum_node_rpc_prefix }}{{ hostvars[host]['inventory_hostname'] }}     IN  AAAA  {{ hostvars[host]['ipv6'] }}
+      {{ ethereum_node_beacon_prefix }}{{ hostvars[host]['inventory_hostname'] }}  IN  AAAA  {{ hostvars[host]['ipv6'] }}
+      {% endif %}
+      {% endfor %}
+
+      ; ethereum_nodes
+      {% for host in groups['ethereum_node'] | sort %}
+      {{ hostvars[host]['inventory_hostname'] }}                                   IN  A     {{ hostvars[host]['ansible_host'] }}
+      {{ ethereum_node_rpc_prefix }}{{ hostvars[host]['inventory_hostname'] }}     IN  A     {{ hostvars[host]['ansible_host'] }}
+      {{ ethereum_node_beacon_prefix }}{{ hostvars[host]['inventory_hostname'] }}  IN  A     {{ hostvars[host]['ansible_host'] }}
+      {% if hostvars[host]['ipv6'] is defined %}
+      {{ hostvars[host]['inventory_hostname'] }}                                   IN  AAAA  {{ hostvars[host]['ipv6'] }}
+      {{ ethereum_node_rpc_prefix }}{{ hostvars[host]['inventory_hostname'] }}     IN  AAAA  {{ hostvars[host]['ipv6'] }}
+      {{ ethereum_node_beacon_prefix }}{{ hostvars[host]['inventory_hostname'] }}  IN  AAAA  {{ hostvars[host]['ipv6'] }}
+      {% endif %}
+      {% endfor %}
+
+# role: ethpandaops.general.wildcard_cert_issuer
+wildcard_cert_issuer_enabled: "{{ inventory_hostname == 'bootnode-1' }}"
+wildcard_cert_issuer_base_domain: "{{ network_server_subdomain }}"
+wildcard_cert_issuer_acme_directory: "https://acme.zerossl.com/v2/DV90"
+wildcard_cert_issuer_acme_eab_kid: "{{ secret_zerossl.ACME_EAB_KID }}"
+wildcard_cert_issuer_acme_eab_hmac_key: "{{ secret_zerossl.ACME_EAB_HMAC_KEY }}"
+wildcard_cert_issuer_psk: "{{ secret_cert_encryption_psk }}"
+wildcard_cert_issuer_email: "ssl@ethpandaops.io"
+wildcard_cert_issuer_publish_port: 8080
+wildcard_cert_issuer_container_env:
+  VIRTUAL_HOST: "cert.{{ network_server_subdomain }}"
+  VIRTUAL_PORT: "8080"
+  HTTPS_METHOD: "nohttps"
+wildcard_cert_issuer_container_networks: "{{ docker_networks_shared }}"
+wildcard_cert_issuer_rfc2136_server: "172.17.0.1" # dns container runs on host network

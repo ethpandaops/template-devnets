@@ -13,6 +13,6 @@ mev_boost_container_env:
 mev_boost_container_command:
   - -addr=0.0.0.0:{{ mev_boost_server_port }}
   - -relay-check
-  - -relays=http://0xa55c1285d84ba83a5ad26420cd5ad3091e49c55a813eee651cd467db38a8c8e63192f47955e9376f6b42f6d190571cb5@mev-relay-1.{{ network_subdomain }}:9062
+  - -relays=http://0xa55c1285d84ba83a5ad26420cd5ad3091e49c55a813eee651cd467db38a8c8e63192f47955e9376f6b42f6d190571cb5@mev-relay-1.{{ network_server_subdomain }}:9062
 
 ethereum_node_mev_boost_enabled: true
