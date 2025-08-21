@@ -27,6 +27,7 @@ validator_bls_sync_files:
 # role: ethpandaops.general.ethereum_node
 ethereum_node_cl: prysm
 prysm_container_tty: true
+prysm_pprof_enabled: true
 prysm_validator_container_tty: true
 # role: ethpandaops.general.prysm
 prysm_container_name: beacon

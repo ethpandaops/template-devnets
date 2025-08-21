@@ -171,12 +171,12 @@ resource "digitalocean_firewall" "main" {
   // Consensus layer p2p port
   inbound_rule {
     protocol         = "tcp"
-    port_range       = "9000-9001"
+    port_range       = "9000-9002"
     source_addresses = ["0.0.0.0/0", "::/0"]
   }
   inbound_rule {
     protocol         = "udp"
-    port_range       = "9000-9001"
+    port_range       = "9000-9002"
     source_addresses = ["0.0.0.0/0", "::/0"]
   }
 

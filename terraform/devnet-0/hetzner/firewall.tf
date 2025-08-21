@@ -32,7 +32,7 @@ resource "hcloud_firewall" "machine_firewall" {
     description = "Allow consensus p2p port TCP"
     direction   = "in"
     protocol    = "tcp"
-    port        = "9000-9001"
+    port        = "9000-9002"
     source_ips  = ["0.0.0.0/0", "::/0"]
   }
 
@@ -40,7 +40,7 @@ resource "hcloud_firewall" "machine_firewall" {
     description = "Allow consensus p2p port UDP"
     direction   = "in"
     protocol    = "udp"
-    port        = "9000-9001"
+    port        = "9000-9002"
     source_ips  = ["0.0.0.0/0", "::/0"]
   }
 
