@@ -359,7 +359,7 @@ resource "local_file" "ansible_inventory" {
             group           = try([for tag in tolist(server.tags) : split(":", tag)[1] if can(regex("^group_name:", tag))][0], "unknown")
             validator_start = try([for tag in tolist(server.tags) : split(":", tag)[1] if can(regex("^val_start:", tag))][0], 0)
             validator_end   = try([for tag in tolist(server.tags) : split(":", tag)[1] if can(regex("^val_end:", tag))][0], 0)
-            supernode       = try(title([for tag in tolist(server.tags) : split(":", tag)[1] if can(regex("^supernode:", tag))][0]), "True")
+            supernode       = try(title([for tag in tolist(server.tags) : split(":", tag)[1] if can(regex("^supernode:", tag))][0]), "undefined")
             tags            = "${server.tags}"
             hostname        = "${split(".", key)[0]}"
             cloud           = "digitalocean"
