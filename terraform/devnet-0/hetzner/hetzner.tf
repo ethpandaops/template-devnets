@@ -55,7 +55,8 @@ locals {
           "${i + 1}" = {
             labels = "group_name:${vm_group.name},val_start:${vm_group.validator_start + (i * (vm_group.validator_end -
               vm_group.validator_start) / vm_group.count)},val_end:${min(vm_group.validator_start + ((i + 1) * (vm_group.validator_end -
-            vm_group.validator_start) / vm_group.count), vm_group.validator_end)},supernode:False"
+            vm_group.validator_start) / vm_group.count), vm_group.validator_end)},supernode:False${vm_group.name == "bootnode" ? 
+            ",bootnode:${var.ethereum_network}" : ""}"
             location     = try(vm_group.location, local.hcloud_default_location)
             size         = try(vm_group.size, local.hcloud_default_server_type)
             ansible_vars = try(vm_group.ansible_vars, null)
