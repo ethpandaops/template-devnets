@@ -228,7 +228,7 @@ resource "digitalocean_firewall" "main" {
 }
 
 resource "digitalocean_firewall" "bootnode" {
-  name        = "${var.ethereum_network}-nodes-bootnode"
+  name = "${var.ethereum_network}-nodes-bootnode"
   // Tags are used to select which droplets should
   // be assigned to this firewall.
   tags = [
