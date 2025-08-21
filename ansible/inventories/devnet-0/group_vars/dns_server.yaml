@@ -1,12 +1,11 @@
-
 # role: ethpandaops.general.dns_server
 dns_server_disable_systemd_resolved: true
 dns_server_is_master: "{{ inventory_hostname == 'bootnode-1' }}"
 dns_server_acme_zone: "{{ network_server_subdomain }}"
 
 # One or more master IPs (for slaves to pull from / accept NOTIFY from)
-dns_server_master: "{{ ([hostvars['bootnode-1'].ansible_host] 
-                         if (groups.get('bootnode') is defined and 'bootnode-1' in groups['bootnode']) 
+dns_server_master: "{{ ([hostvars['bootnode-1'].ansible_host]
+                         if (groups.get('bootnode') is defined and 'bootnode-1' in groups['bootnode'])
                          else []) | list }}"
 
 # All slave IPs (for master's also-notify / allow-transfer)
@@ -34,7 +33,7 @@ dns_server_zones:
 
       ; certificates
       cert    IN  A      {{ hostvars['bootnode-1']['ansible_host'] }}
-      
+
       ; bootnodes
       {% for host in groups['bootnode'] | sort %}
       {{ hostvars[host]['inventory_hostname'] }}                                   IN  A     {{ hostvars[host]['ansible_host'] }}
@@ -46,7 +45,7 @@ dns_server_zones:
       {{ ethereum_node_beacon_prefix }}{{ hostvars[host]['inventory_hostname'] }}  IN  AAAA  {{ hostvars[host]['ipv6'] }}
       {% endif %}
       {% endfor %}
-      
+
       ; ethereum_nodes
       {% for host in groups['ethereum_node'] | sort %}
       {{ hostvars[host]['inventory_hostname'] }}                                   IN  A     {{ hostvars[host]['ansible_host'] }}
