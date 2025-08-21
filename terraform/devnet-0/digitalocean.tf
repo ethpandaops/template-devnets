@@ -49,7 +49,7 @@ locals {
         id         = "${vm_group.name}-${i + 1}"
         vms = {
           "${i + 1}" = {
-            tags   = "group_name:${vm_group.name},val_start:${vm_group.validator_start + (i * (vm_group.validator_end - vm_group.validator_start) / vm_group.count)},val_end:${min(vm_group.validator_start + ((i + 1) * (vm_group.validator_end - vm_group.validator_start) / vm_group.count), vm_group.validator_end)},supernode:${i % 2 == 0 ? "True" : "False"}"
+            tags   = "group_name:${vm_group.name},val_start:${vm_group.validator_start + (i * (vm_group.validator_end - vm_group.validator_start) / vm_group.count)},val_end:${min(vm_group.validator_start + ((i + 1) * (vm_group.validator_end - vm_group.validator_start) / vm_group.count), vm_group.validator_end)},supernode:${i % 2 == 0 ? "True" : "False"}${vm_group.name == "bootnode" ? ",bootnode:${var.ethereum_network}" : ""}"
             region = try(vm_group.region, var.digitalocean_regions[i % length(var.digitalocean_regions)])
             size   = try(vm_group.size, i % 2 == 0 ? "s-8vcpu-32gb-640gb-intel" : "s-8vcpu-16gb")
             ipv6   = try(vm_group.ipv6, true)
@@ -232,8 +232,7 @@ resource "digitalocean_firewall" "bootnode" {
   // Tags are used to select which droplets should
   // be assigned to this firewall.
   tags = [
-    "EthNetwork:${var.ethereum_network}",
-    "group_name:bootnode"
+    "bootnode:${var.ethereum_network}"
   ]
 
   // DNS
@@ -357,10 +356,10 @@ resource "local_file" "ansible_inventory" {
           for key, server in digitalocean_droplet.main : "do.${key}" => {
             ip              = "${server.ipv4_address}"
             ipv6            = try(server.ipv6_address, "none")
-            group           = try(split(":", tolist(server.tags)[2])[1], "unknown")
-            validator_start = try(split(":", tolist(server.tags)[5])[1], 0)
-            validator_end   = try(split(":", tolist(server.tags)[4])[1], 0) # if the tag is not a number it will be 0 - e.g no validator keys
-            supernode       = try(title(split(":", tolist(server.tags)[3])[1]), "True")
+            group           = try([for tag in tolist(server.tags) : split(":", tag)[1] if can(regex("^group_name:", tag))][0], "unknown")
+            validator_start = try([for tag in tolist(server.tags) : split(":", tag)[1] if can(regex("^val_start:", tag))][0], 0)
+            validator_end   = try([for tag in tolist(server.tags) : split(":", tag)[1] if can(regex("^val_end:", tag))][0], 0)
+            supernode       = try(title([for tag in tolist(server.tags) : split(":", tag)[1] if can(regex("^supernode:", tag))][0]), "True")
             tags            = "${server.tags}"
             hostname        = "${split(".", key)[0]}"
             cloud           = "digitalocean"
