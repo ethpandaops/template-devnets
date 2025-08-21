@@ -17,9 +17,9 @@ ethereum_network_deposit_contract: >-
 ethereum_network_deposit_contract_block: >-
   {{ lookup('file', eth_testnet_config_local_dir_src + '/deposit_contract_block.txt') }}
 
-ethereum_node_rcp_prefix: "rpc-"   # prefix for rpc URLs
+ethereum_node_rpc_prefix: "rpc-"   # prefix for rpc URLs
 ethereum_node_beacon_prefix: "bn-" # prefix for beacon URLs
-ethereum_node_rcp_hostname: "{{ ethereum_node_rcp_prefix }}{{ server_fqdn }}"
+ethereum_node_rcp_hostname: "{{ ethereum_node_rpc_prefix }}{{ server_fqdn }}"
 ethereum_node_beacon_hostname: "{{ ethereum_node_beacon_prefix }}{{ server_fqdn }}"
 
 ### Checkpoint sync specific for Ansible & Kubernetes
