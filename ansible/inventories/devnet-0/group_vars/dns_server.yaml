@@ -64,9 +64,9 @@ wildcard_cert_issuer_base_domain: "{{ network_server_subdomain }}"
 wildcard_cert_issuer_acme_directory: "https://acme.zerossl.com/v2/DV90"
 wildcard_cert_issuer_acme_eab_kid: "{{ secret_zerossl.ACME_EAB_KID }}"
 wildcard_cert_issuer_acme_eab_hmac_key: "{{ secret_zerossl.ACME_EAB_HMAC_KEY }}"
-wildcard_cert_issuer_psk: "{{ secret_cert_encryption_psk }}"
 wildcard_cert_issuer_email: "ssl@ethpandaops.io"
 wildcard_cert_issuer_publish_port: 8080
+wildcard_cert_issuer_publish_psk: "{{ secret_cert_encryption_psk }}"
 wildcard_cert_issuer_container_env:
   VIRTUAL_HOST: "cert.{{ network_server_subdomain }}"
   VIRTUAL_PORT: "8080"
