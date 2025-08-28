@@ -23,6 +23,7 @@
             name: "{{ item }}"
             state: absent
             timeout: 5
+            force_kill: true
           loop:
             # Execution layer clients
             - "besu"
