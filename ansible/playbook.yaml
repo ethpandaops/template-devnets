@@ -73,7 +73,6 @@
 
 - hosts: ethereum_node
   become: true
-  strategy: free
   roles:
     - role: ethpandaops.general.ethereum_node
       tags: [ethereum, ethereum_node]
