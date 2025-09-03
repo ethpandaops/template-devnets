@@ -14,7 +14,7 @@ default_ethereum_client_images:
   ethereumjs: docker.ethquokkaops.io/dh/ethpandaops/ethereumjs:master
   nethermind: docker.ethquokkaops.io/dh/nethermindeth/nethermind:master
   reth: docker.ethquokkaops.io/dh/ethpandaops/reth:main
-  nimbusel: docker.ethquokkaops.io/dh/ethpandaops/nimbus-eth1:fusaka-devnet-3
+  nimbusel: docker.ethquokkaops.io/dh/ethpandaops/nimbus-eth1:master
 
 # mev boost
   mev_boost: docker.ethquokkaops.io/dh/ethpandaops/mev-boost:bharath-123-fusaka-devnet-3
