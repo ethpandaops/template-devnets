@@ -53,11 +53,8 @@ locals {
         id         = "${vm_group.name}-${i + 1}-arm"
         vms = {
           "${i + 1}" = {
-            labels = "group_name:${vm_group.name},val_start:${vm_group.validator_start + (i * (vm_group.validator_end -
-              vm_group.validator_start) / vm_group.count)},val_end:${min(vm_group.validator_start + ((i + 1) * (vm_group.validator_end -
-              vm_group.validator_start) / vm_group.count), vm_group.validator_end)},supernode:False${vm_group.name == "bootnode" ?
-            ",bootnode:${var.ethereum_network}" : ""}"
-            location     = try(vm_group.location, local.hcloud_default_location)
+            labels = "group_name:${vm_group.name},val_start:${vm_group.validator_start + (i * (vm_group.validator_end - vm_group.validator_start) / vm_group.count)},val_end:${min(vm_group.validator_start + ((i + 1) * (vm_group.validator_end - vm_group.validator_start) / vm_group.count), vm_group.validator_end)},supernode:${can(regex("(super|bootnode)", vm_group.name)) ? "True" : "False"}"
+            location     = try(vm_group.location, var.hetzner_regions[i % length(var.hetzner_regions)])
             size         = try(vm_group.size, local.hcloud_default_server_type)
             ansible_vars = try(vm_group.ansible_vars, null)
             ipv4_enabled = try(vm_group.ipv4_enabled, true)

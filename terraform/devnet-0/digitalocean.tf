@@ -11,6 +11,16 @@ variable "digitalocean_ssh_key_name" {
   default = "shared-devops-eth2"
 }
 
+variable "supernode_size" {
+  type    = string
+  default = "s-8vcpu-32gb-640gb-intel"
+}
+
+variable "fullnode_size" {
+  type    = string
+  default = "s-8vcpu-16gb"
+}
+
 variable "digitalocean_regions" {
   default = [
     "nyc1",
@@ -43,26 +53,26 @@ locals {
 locals {
   digitalocean_vm_groups = flatten([
     for vm_group in local.vm_groups :
-    [
+    vm_group.count > 0 ? [
       for i in range(0, vm_group.count) : {
         group_name = "${vm_group.name}"
         id         = "${vm_group.name}-${i + 1}"
         vms = {
           "${i + 1}" = {
-            tags   = "group_name:${vm_group.name},val_start:${vm_group.validator_start + (i * (vm_group.validator_end - vm_group.validator_start) / vm_group.count)},val_end:${min(vm_group.validator_start + ((i + 1) * (vm_group.validator_end - vm_group.validator_start) / vm_group.count), vm_group.validator_end)},supernode:${i % 2 == 0 ? "True" : "False"}${vm_group.name == "bootnode" ? ",bootnode:${var.ethereum_network}" : ""}"
+            tags = "group_name:${vm_group.name},val_start:${vm_group.validator_start + (i * (vm_group.validator_end - vm_group.validator_start) / vm_group.count)},val_end:${min(vm_group.validator_start + ((i + 1) * (vm_group.validator_end - vm_group.validator_start) / vm_group.count), vm_group.validator_end)},supernode:${can(regex("(super|bootnode)", vm_group.name)) ? "True" : "False"}"
             region = try(vm_group.region, var.digitalocean_regions[i % length(var.digitalocean_regions)])
-            size   = try(vm_group.size, i % 2 == 0 ? "s-8vcpu-32gb-640gb-intel" : "s-8vcpu-16gb")
-            ipv6   = try(vm_group.ipv6, true)
+            size = try(vm_group.size, can(regex("(super|bootnode)", vm_group.name)) ? var.supernode_size : var.fullnode_size)
+            ipv6 = try(vm_group.ipv6, true)
           }
         }
       }
-    ]
+    ] : []
   ])
 }
 
 locals {
   digitalocean_default_region = "ams3"
-  digitalocean_default_size   = "s-8vcpu-16gb"
+  digitalocean_default_size   = var.fullnode_size
   digitalocean_default_image  = "debian-12-x64"
   digitalocean_global_tags = [
     "Owner:Devops",
