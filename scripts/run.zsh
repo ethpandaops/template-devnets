@@ -658,21 +658,27 @@ for arg in "${command[@]}"; do
       else
         if [[ -n "${command[3]}" ]]; then
           echo "Exiting validators from ${command[2]} to ${command[3]}"
-          if [[ ! -f offline-preparation.json ]]; then
-            ethdo validator exit --prepare-offline --connection=$bn_endpoint --timeout=300s
-          else
-            echo "offline-preparation.json already exists, remove it to prepare a new one"
-          fi
+          # Always regenerate offline-preparation.json for fresh chain state
+          rm -f offline-preparation.json
+          ethdo validator exit --prepare-offline --connection=$bn_endpoint --timeout=300s
           echo "[" > exit.json
+          first_entry=true
           for i in $(seq ${command[2]} $((command[3] - 1)))
           do
-            echo "Exiting validator $i"
-            ethdo validator exit --offline --mnemonic="$sops_mnemonic" --path="m/12381/3600/$i/0/0"
-            cat exit-operations.json >> exit.json
-            if [[ $i -ne $((command[3] - 1)) ]]; then
-              echo "," >> exit.json
+            echo "Processing validator $i"
+            # Try to generate exit operation, continue if validator is already exiting
+            if ethdo validator exit --offline --mnemonic="$sops_mnemonic" --path="m/12381/3600/$i/0/0" 2>/dev/null; then
+              echo "Exit operation generated for validator $i"
+              # Add comma if not first entry
+              if [[ "$first_entry" != "true" ]]; then
+                echo "," >> exit.json
+              fi
+              # Append just the JSON content without array brackets
+              cat exit-operations.json >> exit.json
+              first_entry=false
+            else
+              echo "Skipping validator $i (may be already exiting or not active)"
             fi
-
           done
           echo "]" >> exit.json
           mv exit.json exit-operations.json

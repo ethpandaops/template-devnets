@@ -24,7 +24,6 @@ erigon_container_command_extra_args:
   - --networkid={{ ethereum_network_id }}
   - --db.size.limit=500GB
   - --bootnodes={{ ethereum_el_bootnodes | join(',') }}
-  - --ethstats={{ inventory_hostname }}:{{ ethstats_secret }}@{{ ethstats_url }}
 erigon_init_custom_network: true
 erigon_init_custom_network_genesis_file: "{{ eth_testnet_config_dir }}/genesis.json"
 
