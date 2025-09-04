@@ -11,12 +11,12 @@ variable "digitalocean_ssh_key_name" {
   default = "shared-devops-eth2"
 }
 
-variable "supernode_size" {
+variable "digitalocean_supernode_size" {
   type    = string
   default = "s-8vcpu-32gb-640gb-intel"
 }
 
-variable "fullnode_size" {
+variable "digitalocean_fullnode_size" {
   type    = string
   default = "s-8vcpu-16gb"
 }
@@ -59,9 +59,16 @@ locals {
         id         = "${vm_group.name}-${i + 1}"
         vms = {
           "${i + 1}" = {
-            tags = "group_name:${vm_group.name},val_start:${vm_group.validator_start + (i * (vm_group.validator_end - vm_group.validator_start) / vm_group.count)},val_end:${min(vm_group.validator_start + ((i + 1) * (vm_group.validator_end - vm_group.validator_start) / vm_group.count), vm_group.validator_end)},supernode:${can(regex("(super|bootnode)", vm_group.name)) ? "True" : "False"}"
+            tags = join(",", compact([
+              "group_name:${vm_group.name}",
+              "val_start:${vm_group.validator_start + (i * (vm_group.validator_end - vm_group.validator_start) / vm_group.count)}",
+              "val_end:${min(vm_group.validator_start + ((i + 1) * (vm_group.validator_end - vm_group.validator_start) / vm_group.count), vm_group.validator_end)}",
+              "supernode:${try(vm_group.supernode, can(regex("(super|bootnode)", vm_group.name))) ? "True" : "False"}",
+              can(regex("bootnode", vm_group.name)) ? "bootnode:${var.ethereum_network}" : null,
+              can(regex("mev-relay", vm_group.name)) ? "mev-relay:${var.ethereum_network}" : null
+            ]))
             region = try(vm_group.region, var.digitalocean_regions[i % length(var.digitalocean_regions)])
-            size = try(vm_group.size, can(regex("(super|bootnode)", vm_group.name)) ? var.supernode_size : var.fullnode_size)
+            size = try(vm_group.size, can(regex("(super|bootnode)", vm_group.name)) ? var.digitalocean_supernode_size : var.digitalocean_fullnode_size)
             ipv6 = try(vm_group.ipv6, true)
           }
         }
@@ -72,7 +79,7 @@ locals {
 
 locals {
   digitalocean_default_region = "ams3"
-  digitalocean_default_size   = var.fullnode_size
+  digitalocean_default_size   = var.digitalocean_fullnode_size
   digitalocean_default_image  = "debian-12-x64"
   digitalocean_global_tags = [
     "Owner:Devops",

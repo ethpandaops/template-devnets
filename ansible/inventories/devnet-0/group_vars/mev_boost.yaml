@@ -1,4 +1,4 @@
-mev_boost_container_image: "{{ default_ethereum_client_images.mev_boost }}"
+mev_boost_container_image: "{{ default_tooling_images.mev_boost }}"
 
 mev_boost_container_env:
   GENESIS_FORK_VERSION: "0x10{{ ethereum_genesis_fork_version_suffix }}"

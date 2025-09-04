@@ -346,8 +346,8 @@ variable "lighthouse_geth_full" {
   default = {
     name            = "lighthouse-geth-full"
     count           = 1
-    validator_start = 0
-    validator_end   = 100
+    validator_start = 100
+    validator_end   = 200
   }
 }
 

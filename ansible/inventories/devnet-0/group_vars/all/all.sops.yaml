@@ -27,14 +27,16 @@ goomy_private_key: ENC[AES256_GCM,data:cpKpCZPZOZ/oA4zSFJaIutD/H5SUOHLBS/qyKL+5Z
 nethermind_seq_api_key: ENC[AES256_GCM,data:C6dHJX02l+m0zVYH691GUyKZgRs=,iv:tNCA6W6hJm1PybTE2piAhfUjDKCqQWeN2FQfgiayJC0=,tag:VZiwt+DgR+nfWXdzZjGnxw==,type:str]
 nethermind_seq_server: ENC[AES256_GCM,data:wEIM2pUqK+I3rf42maFTr05r8cOJWjnpPQ==,iv:2Iu5nQAjRmxqkOF2Pueup+Kiwd34sfTxWY8aFv0pea0=,tag:VrfL6pUITsKJPgSue/XXJw==,type:str]
 nethermind_push_gateway: ENC[AES256_GCM,data:ScReyCHKHx2/8Yo3epSAsb3MykmlIrGkUegaV5+21aboPCgU+VbUOBfvqaTWpcQN3OjXH+euQj1bHL1etGk1qvjzm2sp/P9oqbHRU827nbejkk5SKEeC4q79U7QyQTbUJ1Z9paX1sYZysMDUf2LUb9r/wHhB7bknQYKnHBAg0Li7qw5T5o1yatJoDqfahe4R1Q==,iv:WuQDvBvS2zjEB805HYkq5TQ/H8baF23vyMP9JbdqCao=,tag:jTOnfh2+ZmWIXQBzIpIVCQ==,type:str]
+tysm_secret_key: ENC[AES256_GCM,data:9QyZhqPWj0DeSf5hxA==,iv:D8VPWbnSd0oHC8rzeilYh87X0RPhdhFiiRuikFdeFs0=,tag:ABCVuwrbxhdrRl8OyPAKBw==,type:str]
+tempo_grpc_url: ENC[AES256_GCM,data:/FBnRA8hlzI4L6l4BppEmtCf3kTuuqMumTjH+5I0tVAHw177D4cY+G6Wyd8FcKvc5gNdue2FiIocq4zHDXaF0Ntw562vHjfu6ZEYA3lUEC1bSC1j8+0v3DkDDOBJmg==,iv:sQ7f9vB7nQ19yES3LCvsmsffmHMXPIW6w2Sx5SJjJ+w=,tag:/O/t35fLjSZ5z7sd1qJPJQ==,type:str]
 sops:
     kms: []
     gcp_kms: []
     azure_kv: []
     hc_vault: []
     age: []
-    lastmodified: "2025-08-20T00:57:07Z"
-    mac: ENC[AES256_GCM,data:JQoMrxNIqry0PsBI8BvM1+SjPTq5m+YpBaHujwcRhL6LnEDUYfoxi5AO05x2PZGW+7H6dDLfOrDit4Qzx+7wKWHnI7uztxz3E22dA+S0vzHnu9B5mq6pFY2yYZ6b2TFQ5gJPBQhQiA+inUMAvHByv6jHO+mb7YeWufVVndKz+AU=,iv:7nMKEY9Vz6pjCJXgCEq6Lj8HxTKjWRAUcgia5BuNEz0=,tag:/028w1z1T/dFy/lXu8dg5g==,type:str]
+    lastmodified: "2025-09-04T13:38:13Z"
+    mac: ENC[AES256_GCM,data:RKJGDjhXrxoDgyzWYEbfyFZ6OplyLmBbtZ/JTb4A/jn6G34yUKCKGh/bV9Z6l6EvsFva2CBieBZoXAqWcLdxtULCa6DREDKquSbpmw9o/G6siNHR32t5Re0uRzormHx5XYZBXcS3bb24tajQz41VBvGmlTWAtZkfBqa6yYjn5zY=,iv:AfXg2qkw6C0cHjLo5tDdApXEUvi3v44peEOIKAxTYtk=,tag:KqFaL1g8zUbO8RL6DFPbtA==,type:str]
     pgp:
         - created_at: "2024-11-21T11:00:22Z"
           enc: |-

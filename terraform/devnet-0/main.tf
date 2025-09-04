@@ -54,7 +54,7 @@ variable "ethereum_network" {
 }
 
 variable "base_cidr_block" {
-  default = "10.207.0.0/16"
+  default = "10.2.0.0/16"
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 //                                        LOCALS

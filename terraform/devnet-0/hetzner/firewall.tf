@@ -134,37 +134,13 @@ resource "hcloud_firewall" "bootnode_firewall" {
     port        = "53"
     source_ips  = ["0.0.0.0/0", "::/0"]
   }
-
-  # Allow all outbound traffic
-  rule {
-    description     = "Allow all outbound traffic TCP"
-    direction       = "out"
-    protocol        = "tcp"
-    port            = "1-65535"
-    destination_ips = ["0.0.0.0/0", "::/0"]
-  }
-
-  rule {
-    description     = "Allow all outbound traffic UDP"
-    direction       = "out"
-    protocol        = "udp"
-    port            = "1-65535"
-    destination_ips = ["0.0.0.0/0", "::/0"]
-  }
-
-  rule {
-    description     = "Allow all outbound traffic ICMP"
-    direction       = "out"
-    protocol        = "icmp"
-    destination_ips = ["0.0.0.0/0", "::/0"]
-  }
 }
 
 resource "hcloud_firewall" "mev_relay_firewall" {
   name = "${var.ethereum_network}-mev-relay-firewall"
 
   apply_to {
-    label_selector = "mev-relay=${var.ethereum_network}"
+    label_selector = "mev=${var.ethereum_network}"
   }
 
   rule {
@@ -173,36 +149,5 @@ resource "hcloud_firewall" "mev_relay_firewall" {
     protocol    = "tcp"
     port        = "9060-9062"
     source_ips  = ["0.0.0.0/0", "::/0"]
-  }
-  rule {
-    description = "Allow MEV Relay ports"
-    direction   = "in"
-    protocol    = "tcp"
-    port        = "8645"
-    source_ips  = ["0.0.0.0/0", "::/0"]
-  }
-
-  # Allow all outbound traffic
-  rule {
-    description     = "Allow all outbound traffic TCP"
-    direction       = "out"
-    protocol        = "tcp"
-    port            = "1-65535"
-    destination_ips = ["0.0.0.0/0", "::/0"]
-  }
-
-  rule {
-    description     = "Allow all outbound traffic UDP"
-    direction       = "out"
-    protocol        = "udp"
-    port            = "1-65535"
-    destination_ips = ["0.0.0.0/0", "::/0"]
-  }
-
-  rule {
-    description     = "Allow all outbound traffic ICMP"
-    direction       = "out"
-    protocol        = "icmp"
-    destination_ips = ["0.0.0.0/0", "::/0"]
   }
 }
