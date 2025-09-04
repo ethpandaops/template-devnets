@@ -156,6 +156,52 @@ xatu_sentry_config_network_name_override: "{{ ethereum_network_name }}"
 
 # role: ethpandaops.general.ethereum_metrics_exporter
 ethereum_metrics_exporter_container_image: "{{ default_tooling_images.ethereum_metrics_exporter }}"
+ethereum_metrics_exporter_container_user: root
+ethereum_metrics_exporter_container_volumes:
+  - "{{ ethereum_metrics_exporter_dir_config }}:/config:ro"
+  - /var/run/docker.sock:/var/run/docker.sock:ro
+  - /data:/data:ro
+ethereum_metrics_exporter_config: |
+  consensus:
+    enabled: true
+    url: "{{ ethereum_metrics_exporter_cl_endpoint }}"
+    name: "consensus-client"
+  execution:
+    enabled: true
+    url: "{{ ethereum_metrics_exporter_el_endpoint }}"
+    name: "execution-client"
+    modules:
+      - "eth"
+      - "net"
+      - "web3"
+      - "txpool"
+  docker:
+    enabled: true
+    endpoint: "unix:///var/run/docker.sock"
+    interval: "10s"
+    containers:
+      - name: "execution"
+        type: "execution"
+        filesystem:
+          enabled: true
+        volumes:
+          - name: "*"
+            monitor: true
+          - path: "/execution-auth.jwt"
+            monitor: false
+          - path: "/network-config"
+            monitor: false
+      - name: "beacon"
+        type: "consensus"
+        filesystem:
+          enabled: true
+        volumes:
+          - name: "*"
+            monitor: true
+          - path: "/execution-auth.jwt"
+            monitor: false
+          - path: "/network-config"
+            monitor: false
 
 # role: eth_testnet_config
 eth_testnet_config_dir: /data/ethereum-network-config/metadata
