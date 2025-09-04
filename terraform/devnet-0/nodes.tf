@@ -342,54 +342,54 @@ variable "grandine_nimbusel_super" {
 
 # Fullnodes
 # Lighthouse
-variable "lighthouse_geth_full" {
+variable "lighthouse_geth" {
   default = {
-    name            = "lighthouse-geth-full"
+    name            = "lighthouse-geth"
     count           = 1
     validator_start = 0
     validator_end   = 100
   }
 }
 
-variable "lighthouse_besu_full" {
+variable "lighthouse_besu" {
   default = {
-    name            = "lighthouse-besu-full"
+    name            = "lighthouse-besu"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "lighthouse_nethermind_full" {
+variable "lighthouse_nethermind" {
   default = {
-    name            = "lighthouse-nethermind-full"
+    name            = "lighthouse-nethermind"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "lighthouse_erigon_full" {
+variable "lighthouse_erigon" {
   default = {
-    name            = "lighthouse-erigon-full"
+    name            = "lighthouse-erigon"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "lighthouse_reth_full" {
+variable "lighthouse_reth" {
   default = {
-    name            = "lighthouse-reth-full"
+    name            = "lighthouse-reth"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "lighthouse_nimbusel_full" {
+variable "lighthouse_nimbusel" {
   default = {
-    name            = "lighthouse-nimbusel-full"
+    name            = "lighthouse-nimbusel"
     count           = 0
     validator_start = 0
     validator_end   = 0
@@ -397,54 +397,54 @@ variable "lighthouse_nimbusel_full" {
 }
 
 # Prysm
-variable "prysm_geth_full" {
+variable "prysm_geth" {
   default = {
-    name            = "prysm-geth-full"
+    name            = "prysm-geth"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "prysm_besu_full" {
+variable "prysm_besu" {
   default = {
-    name            = "prysm-besu-full"
+    name            = "prysm-besu"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "prysm_nethermind_full" {
+variable "prysm_nethermind" {
   default = {
-    name            = "prysm-nethermind-full"
+    name            = "prysm-nethermind"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "prysm_erigon_full" {
+variable "prysm_erigon" {
   default = {
-    name            = "prysm-erigon-full"
+    name            = "prysm-erigon"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "prysm_reth_full" {
+variable "prysm_reth" {
   default = {
-    name            = "prysm-reth-full"
+    name            = "prysm-reth"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "prysm_nimbusel_full" {
+variable "prysm_nimbusel" {
   default = {
-    name            = "prysm-nimbusel-full"
+    name            = "prysm-nimbusel"
     count           = 0
     validator_start = 0
     validator_end   = 0
@@ -452,54 +452,54 @@ variable "prysm_nimbusel_full" {
 }
 
 # Lodestar
-variable "lodestar_geth_full" {
+variable "lodestar_geth" {
   default = {
-    name            = "lodestar-geth-full"
+    name            = "lodestar-geth"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "lodestar_nethermind_full" {
+variable "lodestar_nethermind" {
   default = {
-    name            = "lodestar-nethermind-full"
+    name            = "lodestar-nethermind"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "lodestar_besu_full" {
+variable "lodestar_besu" {
   default = {
-    name            = "lodestar-besu-full"
+    name            = "lodestar-besu"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "lodestar_erigon_full" {
+variable "lodestar_erigon" {
   default = {
-    name            = "lodestar-erigon-full"
+    name            = "lodestar-erigon"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "lodestar_reth_full" {
+variable "lodestar_reth" {
   default = {
-    name            = "lodestar-reth-full"
+    name            = "lodestar-reth"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "lodestar_nimbusel_full" {
+variable "lodestar_nimbusel" {
   default = {
-    name            = "lodestar-nimbusel-full"
+    name            = "lodestar-nimbusel"
     count           = 0
     validator_start = 0
     validator_end   = 0
@@ -507,54 +507,54 @@ variable "lodestar_nimbusel_full" {
 }
 
 # Nimbus
-variable "nimbus_geth_full" {
+variable "nimbus_geth" {
   default = {
-    name            = "nimbus-geth-full"
+    name            = "nimbus-geth"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "nimbus_besu_full" {
+variable "nimbus_besu" {
   default = {
-    name            = "nimbus-besu-full"
+    name            = "nimbus-besu"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "nimbus_nethermind_full" {
+variable "nimbus_nethermind" {
   default = {
-    name            = "nimbus-nethermind-full"
+    name            = "nimbus-nethermind"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "nimbus_erigon_full" {
+variable "nimbus_erigon" {
   default = {
-    name            = "nimbus-erigon-full"
+    name            = "nimbus-erigon"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "nimbus_reth_full" {
+variable "nimbus_reth" {
   default = {
-    name            = "nimbus-reth-full"
+    name            = "nimbus-reth"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "nimbus_nimbusel_full" {
+variable "nimbus_nimbusel" {
   default = {
-    name            = "nimbus-nimbusel-full"
+    name            = "nimbus-nimbusel"
     count           = 0
     validator_start = 0
     validator_end   = 0
@@ -562,54 +562,54 @@ variable "nimbus_nimbusel_full" {
 }
 
 # Teku
-variable "teku_geth_full" {
+variable "teku_geth" {
   default = {
-    name            = "teku-geth-full"
+    name            = "teku-geth"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "teku_besu_full" {
+variable "teku_besu" {
   default = {
-    name            = "teku-besu-full"
+    name            = "teku-besu"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "teku_nethermind_full" {
+variable "teku_nethermind" {
   default = {
-    name            = "teku-nethermind-full"
+    name            = "teku-nethermind"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "teku_erigon_full" {
+variable "teku_erigon" {
   default = {
-    name            = "teku-erigon-full"
+    name            = "teku-erigon"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "teku_reth_full" {
+variable "teku_reth" {
   default = {
-    name            = "teku-reth-full"
+    name            = "teku-reth"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "teku_nimbusel_full" {
+variable "teku_nimbusel" {
   default = {
-    name            = "teku-nimbusel-full"
+    name            = "teku-nimbusel"
     count           = 0
     validator_start = 0
     validator_end   = 0
@@ -617,54 +617,54 @@ variable "teku_nimbusel_full" {
 }
 
 # Grandine
-variable "grandine_geth_full" {
+variable "grandine_geth" {
   default = {
-    name            = "grandine-geth-full"
+    name            = "grandine-geth"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "grandine_besu_full" {
+variable "grandine_besu" {
   default = {
-    name            = "grandine-besu-full"
+    name            = "grandine-besu"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "grandine_nethermind_full" {
+variable "grandine_nethermind" {
   default = {
-    name            = "grandine-nethermind-full"
+    name            = "grandine-nethermind"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "grandine_erigon_full" {
+variable "grandine_erigon" {
   default = {
-    name            = "grandine-erigon-full"
+    name            = "grandine-erigon"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "grandine_reth_full" {
+variable "grandine_reth" {
   default = {
-    name            = "grandine-reth-full"
+    name            = "grandine-reth"
     count           = 0
     validator_start = 0
     validator_end   = 0
   }
 }
 
-variable "grandine_nimbusel_full" {
+variable "grandine_nimbusel" {
   default = {
-    name            = "grandine-nimbusel-full"
+    name            = "grandine-nimbusel"
     count           = 0
     validator_start = 0
     validator_end   = 0
