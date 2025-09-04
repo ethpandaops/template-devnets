@@ -11,7 +11,7 @@ variable "bootnode" {
 variable "mev_relay" {
   default = {
     name            = "mev-relay"
-    count           = 0
+    count           = 1
     validator_start = 0
     validator_end   = 0
     size            = "ccx53"
@@ -25,8 +25,8 @@ variable "lighthouse_geth_super" {
   default = {
     name            = "lighthouse-geth-super"
     count           = 1
-    validator_start = 0
-    validator_end   = 100
+    validator_start = 200
+    validator_end   = 300
   }
 }
 
@@ -357,8 +357,8 @@ variable "lighthouse_geth_full" {
   default = {
     name            = "lighthouse-geth-full"
     count           = 1
-    validator_start = 0
-    validator_end   = 100
+    validator_start = 300
+    validator_end   = 400
   }
 }
 
