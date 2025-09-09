@@ -135,6 +135,7 @@ ethereum_node_docker_watchtower_containers_list:
   - external-block-builder
 docker_watchtower_container_additional_args:
   - --interval=900
+  - --stop-timeout=300s
   - --include-restarting
 ethereum_node_json_rpc_snooper_engine_enabled: true
 ethereum_node_json_rpc_snooper_engine_name: "snooper-engine"
