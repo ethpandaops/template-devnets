@@ -60,8 +60,10 @@ ${x}
 consensus_node
 execution_node
 
+%{ if contains(keys(groups), "bootnode") ~}
 [dns_server:children]
 bootnode
+%{ endif ~}
 
 [mev_boost:children]
 consensus_node
