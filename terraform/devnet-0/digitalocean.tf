@@ -11,6 +11,16 @@ variable "digitalocean_ssh_key_name" {
   default = "shared-devops-eth2"
 }
 
+variable "digitalocean_supernode_size" {
+  type    = string
+  default = "s-8vcpu-32gb-640gb-intel"
+}
+
+variable "digitalocean_fullnode_size" {
+  type    = string
+  default = "s-8vcpu-16gb"
+}
+
 variable "digitalocean_regions" {
   default = [
     "nyc1",
@@ -43,26 +53,33 @@ locals {
 locals {
   digitalocean_vm_groups = flatten([
     for vm_group in local.vm_groups :
-    [
+    vm_group.count > 0 ? [
       for i in range(0, vm_group.count) : {
         group_name = "${vm_group.name}"
         id         = "${vm_group.name}-${i + 1}"
         vms = {
           "${i + 1}" = {
-            tags   = "group_name:${vm_group.name},val_start:${vm_group.validator_start + (i * (vm_group.validator_end - vm_group.validator_start) / vm_group.count)},val_end:${min(vm_group.validator_start + ((i + 1) * (vm_group.validator_end - vm_group.validator_start) / vm_group.count), vm_group.validator_end)},supernode:${i % 2 == 0 ? "True" : "False"}${vm_group.name == "bootnode" ? ",bootnode:${var.ethereum_network}" : ""}"
+            tags = join(",", compact([
+              "group_name:${vm_group.name}",
+              "val_start:${vm_group.validator_start + (i * (vm_group.validator_end - vm_group.validator_start) / vm_group.count)}",
+              "val_end:${min(vm_group.validator_start + ((i + 1) * (vm_group.validator_end - vm_group.validator_start) / vm_group.count), vm_group.validator_end)}",
+              "supernode:${try(vm_group.supernode, can(regex("(super|bootnode)", vm_group.name))) ? "True" : "False"}",
+              can(regex("bootnode", vm_group.name)) ? "bootnode:${var.ethereum_network}" : null,
+              can(regex("mev-relay", vm_group.name)) ? "mev-relay:${var.ethereum_network}" : null
+            ]))
             region = try(vm_group.region, var.digitalocean_regions[i % length(var.digitalocean_regions)])
-            size   = try(vm_group.size, i % 2 == 0 ? "s-8vcpu-32gb-640gb-intel" : "s-8vcpu-16gb")
-            ipv6   = try(vm_group.ipv6, true)
+            size = try(vm_group.size, can(regex("(super|bootnode)", vm_group.name)) ? var.digitalocean_supernode_size : var.digitalocean_fullnode_size)
+            ipv6 = try(vm_group.ipv6, true)
           }
         }
       }
-    ]
+    ] : []
   ])
 }
 
 locals {
   digitalocean_default_region = "ams3"
-  digitalocean_default_size   = "s-8vcpu-16gb"
+  digitalocean_default_size   = var.digitalocean_fullnode_size
   digitalocean_default_image  = "debian-12-x64"
   digitalocean_global_tags = [
     "Owner:Devops",
@@ -138,204 +155,6 @@ resource "digitalocean_project_resources" "droplets" {
   for_each  = digitalocean_droplet.main
   project   = data.digitalocean_project.main.id
   resources = [each.value.urn]
-}
-
-resource "digitalocean_firewall" "main" {
-  name = "${var.ethereum_network}-nodes"
-  // Tags are used to select which droplets should
-  // be assigned to this firewall.
-  tags = [
-    "EthNetwork:${var.ethereum_network}"
-  ]
-
-  // SSH
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = "22"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-
-  // Nginx / Web
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = "80"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = "443"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-
-  // Consensus layer p2p port
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = "9000-9002"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-  inbound_rule {
-    protocol         = "udp"
-    port_range       = "9000-9002"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-
-  // Execution layer p2p Port
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = "30303"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-  inbound_rule {
-    protocol         = "udp"
-    port_range       = "30303"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = "42069"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-  inbound_rule {
-    protocol         = "udp"
-    port_range       = "42069"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-
-  // Engine rpc-snooper api
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = "8961"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-
-  // Allow all outbound traffic
-  outbound_rule {
-    protocol              = "tcp"
-    port_range            = "1-65535"
-    destination_addresses = ["0.0.0.0/0", "::/0"]
-  }
-  outbound_rule {
-    protocol              = "udp"
-    port_range            = "1-65535"
-    destination_addresses = ["0.0.0.0/0", "::/0"]
-  }
-  outbound_rule {
-    protocol              = "icmp"
-    destination_addresses = ["0.0.0.0/0", "::/0"]
-  }
-  depends_on = [digitalocean_project_resources.droplets]
-}
-
-resource "digitalocean_firewall" "bootnode" {
-  name = "${var.ethereum_network}-nodes-bootnode"
-  // Tags are used to select which droplets should
-  // be assigned to this firewall.
-  tags = [
-    "bootnode:${var.ethereum_network}"
-  ]
-
-  // DNS
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = "53"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-  inbound_rule {
-    protocol         = "udp"
-    port_range       = "53"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-
-  // Allow all outbound traffic
-  outbound_rule {
-    protocol              = "tcp"
-    port_range            = "1-65535"
-    destination_addresses = ["0.0.0.0/0", "::/0"]
-  }
-  outbound_rule {
-    protocol              = "udp"
-    port_range            = "1-65535"
-    destination_addresses = ["0.0.0.0/0", "::/0"]
-  }
-  outbound_rule {
-    protocol              = "icmp"
-    destination_addresses = ["0.0.0.0/0", "::/0"]
-  }
-  depends_on = [digitalocean_project_resources.droplets]
-}
-
-resource "digitalocean_firewall" "mev_relay" {
-  name        = "${var.ethereum_network}-nodes-mev-relay"
-  droplet_ids = [digitalocean_droplet.main["mev-relay-1"].id]
-
-  // mev-relay ports
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = "9060-9062"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-
-  // Allow all outbound traffic
-  outbound_rule {
-    protocol              = "tcp"
-    port_range            = "1-65535"
-    destination_addresses = ["0.0.0.0/0", "::/0"]
-  }
-  outbound_rule {
-    protocol              = "udp"
-    port_range            = "1-65535"
-    destination_addresses = ["0.0.0.0/0", "::/0"]
-  }
-  outbound_rule {
-    protocol              = "icmp"
-    destination_addresses = ["0.0.0.0/0", "::/0"]
-  }
-  depends_on = [digitalocean_project_resources.droplets]
-}
-
-////////////////////////////////////////////////////////////////////////////////////////
-//                                   DNS NAMES
-////////////////////////////////////////////////////////////////////////////////////////
-
-data "cloudflare_zone" "default" {
-  name = "ethpandaops.io"
-}
-
-resource "cloudflare_record" "server_record_v4" {
-  for_each = {
-    for vm in local.digitalocean_vms : "${vm.id}" => vm if can(regex("bootnode", vm.name))
-  }
-  zone_id = data.cloudflare_zone.default.id
-  name    = "${each.value.name}.${var.ethereum_network}"
-  type    = "A"
-  value   = digitalocean_droplet.main[each.value.id].ipv4_address
-  proxied = false
-  ttl     = 120
-}
-
-resource "cloudflare_record" "server_record_v6" {
-  for_each = {
-    for vm in local.digitalocean_vms : "${vm.id}" => vm if vm.ipv6 && can(regex("bootnode", vm.name))
-  }
-  zone_id = data.cloudflare_zone.default.id
-  name    = "${each.value.name}.${var.ethereum_network}"
-  type    = "AAAA"
-  value   = digitalocean_droplet.main[each.value.id].ipv6_address
-  proxied = false
-  ttl     = 120
-}
-
-resource "cloudflare_record" "server_record_ns" {
-  for_each = {
-    for vm in local.digitalocean_vms : "${vm.id}" => vm if can(regex("bootnode", vm.name))
-  }
-  zone_id = data.cloudflare_zone.default.id
-  name    = "srv.${var.ethereum_network}"
-  type    = "NS"
-  value   = "${each.value.name}.${var.ethereum_network}.${data.cloudflare_zone.default.name}"
-  proxied = false
-  ttl     = 120
 }
 
 

@@ -18,6 +18,15 @@ variable "hcloud_ssh_key_fingerprint" {
   default = "d6:76:2d:9c:5b:33:80:ff:0f:09:a2:10:9b:58:7e:dc"
 }
 
+variable "hetzner_supernode_size" {
+  type    = string
+  default = "cax41"
+}
+variable "hetzner_fullnode_size" {
+  type    = string
+  default = "cax31"
+}
+
 variable "hetzner_regions" {
   default = [
     "nbg1",
@@ -53,12 +62,16 @@ locals {
         id         = "${vm_group.name}-${i + 1}-arm"
         vms = {
           "${i + 1}" = {
-            labels = "group_name:${vm_group.name},val_start:${vm_group.validator_start + (i * (vm_group.validator_end -
-              vm_group.validator_start) / vm_group.count)},val_end:${min(vm_group.validator_start + ((i + 1) * (vm_group.validator_end -
-              vm_group.validator_start) / vm_group.count), vm_group.validator_end)},supernode:False${vm_group.name == "bootnode" ?
-            ",bootnode:${var.ethereum_network}" : ""}"
-            location     = try(vm_group.location, local.hcloud_default_location)
-            size         = try(vm_group.size, local.hcloud_default_server_type)
+            labels = join(",", compact([
+              "group_name:${vm_group.name}",
+              "val_start:${vm_group.validator_start + (i * (vm_group.validator_end - vm_group.validator_start) / vm_group.count)}",
+              "val_end:${min(vm_group.validator_start + ((i + 1) * (vm_group.validator_end - vm_group.validator_start) / vm_group.count), vm_group.validator_end)}",
+              "supernode:${try(vm_group.supernode, can(regex("(super|bootnode)", vm_group.name))) ? "True" : "False"}",
+              can(regex("bootnode", vm_group.name)) ? "bootnode:${var.ethereum_network}" : null,
+              can(regex("mev-relay", vm_group.name)) ? "mev:${var.ethereum_network}" : null
+            ]))
+            location     = try(vm_group.location, var.hetzner_regions[i % length(var.hetzner_regions)])
+            size         = try(vm_group.size, can(regex("(super|bootnode)", vm_group.name)) ? var.hetzner_supernode_size : var.hetzner_fullnode_size)
             ansible_vars = try(vm_group.ansible_vars, null)
             ipv4_enabled = try(vm_group.ipv4_enabled, true)
             ipv6_enabled = try(vm_group.ipv6_enabled, true)
@@ -72,7 +85,7 @@ locals {
 locals {
   hcloud_default_location    = "nbg1"
   hcloud_default_image       = "debian-12"
-  hcloud_default_server_type = "cax31"
+  hcloud_default_server_type = var.hetzner_fullnode_size
   hcloud_global_labels = [
     "Owner:Devops",
     "EthNetwork:${var.ethereum_network}"
@@ -148,50 +161,6 @@ resource "hcloud_server_network" "main" {
   server_id  = hcloud_server.main[each.key].id
   network_id = hcloud_network.main[each.value.location].id
 
-}
-
-////////////////////////////////////////////////////////////////////////////////////////
-//                                   DNS NAMES
-////////////////////////////////////////////////////////////////////////////////////////
-
-data "cloudflare_zone" "default" {
-  name = "ethpandaops.io"
-}
-
-resource "cloudflare_record" "server_record" {
-  for_each = {
-    for vm in local.hcloud_vms : "${vm.id}" => vm if coalesce(vm.ipv4_enabled, true) == true && can(regex("bootnode", vm.name))
-  }
-  zone_id = data.cloudflare_zone.default.id
-  name    = "${each.value.name}.${var.ethereum_network}"
-  type    = "A"
-  value   = hcloud_server.main[each.value.id].ipv4_address
-  proxied = false
-  ttl     = 120
-}
-
-resource "cloudflare_record" "server_record6" {
-  for_each = {
-    for vm in local.hcloud_vms : "${vm.id}" => vm if coalesce(vm.ipv6_enabled, true) == true && can(regex("bootnode", vm.name))
-  }
-  zone_id = data.cloudflare_zone.default.id
-  name    = "${each.value.name}.${var.ethereum_network}"
-  type    = "AAAA"
-  value   = hcloud_server.main[each.value.id].ipv6_address
-  proxied = false
-  ttl     = 120
-}
-
-resource "cloudflare_record" "server_record_ns" {
-  for_each = {
-    for vm in local.hcloud_vms : "${vm.id}" => vm if can(regex("bootnode", vm.name))
-  }
-  zone_id = data.cloudflare_zone.default.id
-  name    = "srv.${var.ethereum_network}"
-  type    = "NS"
-  value   = "${each.value.name}.${var.ethereum_network}.${data.cloudflare_zone.default.name}"
-  proxied = false
-  ttl     = 120
 }
 
 
