@@ -147,6 +147,7 @@ ethereum_node_json_rpc_snooper_engine_container_env:
 
 # role: ethpandaops.general.generate_kubernetes_config
 gen_kubernetes_config_dora_execution_snooper_port: 8961
+gen_kubernetes_config_dora_api_secret: "{{ secret_dora_api_key }}"
 
 # role: ethpandaops.general.xatu_sentry
 xatu_sentry_container_image: "{{ default_tooling_images.xatu_sentry }}"
