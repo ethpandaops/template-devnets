@@ -63,7 +63,7 @@ locals {
               "group_name:${vm_group.name}",
               "val_start:${vm_group.validator_start + (i * (vm_group.validator_end - vm_group.validator_start) / vm_group.count)}",
               "val_end:${min(vm_group.validator_start + ((i + 1) * (vm_group.validator_end - vm_group.validator_start) / vm_group.count), vm_group.validator_end)}",
-              "supernode:${try(vm_group.supernode, can(regex("(super|bootnode)", vm_group.name))) ? "True" : "False"}",
+              "supernode:${try(vm_group.supernode, can(regex("(super|bootnode|mev)", vm_group.name))) ? "True" : "False"}",
               can(regex("bootnode", vm_group.name)) ? "bootnode:${var.ethereum_network}" : null,
               can(regex("mev-relay", vm_group.name)) ? "mev-relay:${var.ethereum_network}" : null
             ]))
