@@ -27,6 +27,7 @@ bootstrap_default_user_authorized_keys_github:
   - skylenet
   - pk910
   - mattevans
+  - qu0b
 
 # role: robertdebock.fail2ban
 fail2ban_loglevel: INFO
