@@ -96,6 +96,7 @@ bootstrap_default_user_authorized_keys_github_all:
   - skylenet
   - pk910
   - mattevans
+  - qu0b
 
 bootstrap_default_user_authorized_keys_github: >
   {{
