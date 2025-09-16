@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 variable "digitalocean_project_name" {
   type    = string
-  default = "Template"
+  default = "StefanDevnet"
 }
 
 variable "digitalocean_ssh_key_name" {
@@ -13,12 +13,12 @@ variable "digitalocean_ssh_key_name" {
 
 variable "digitalocean_supernode_size" {
   type    = string
-  default = "s-8vcpu-32gb-640gb-intel"
+  default = "s-2vcpu-8gb-amd"
 }
 
 variable "digitalocean_fullnode_size" {
   type    = string
-  default = "s-8vcpu-16gb"
+  default = "s-2vcpu-8gb-amd"
 }
 
 variable "digitalocean_regions" {
