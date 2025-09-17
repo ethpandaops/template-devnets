@@ -1,5 +1,4 @@
 #!/bin/bash -xe
-<<<<<<< HEAD
 
 # Check if asdf is installed
 if ! command -v asdf &> /dev/null; then
@@ -40,8 +39,6 @@ if ! command -v asdf &> /dev/null; then
         exit 1
     fi
 fi
-=======
->>>>>>> master
 
 # Uninstall previous asdf plugins that shouldn't be managed anymore under asdf
 asdf uninstall ansible || true
