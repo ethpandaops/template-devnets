@@ -21,7 +21,18 @@ Status   | Network    | Links   | Ansible                                       
 
 We're using [asdf](https://github.com/asdf-vm/asdf) to make sure that we all use the same versions across tools. Our repositories should contain versions defined in .tools-versions.
 
-You can then use [`./setup.sh`](./asdf-setup.sh) to install all dependencies.
+For Python dependencies, we use [uv](https://github.com/astral-sh/uv) - a fast Python package manager that creates and manages virtual environments.
+
+You can then use [`./setup.sh`](./setup.sh) to install all dependencies. This script will:
+1. Install all asdf-managed tools
+2. Check for uv installation (and optionally install it)
+3. Create a Python virtual environment at `.venv`
+4. Install all Python dependencies from `pyproject.toml`
+
+After running the setup script, activate the virtual environment with:
+```shell
+source .venv/bin/activate
+```
 
 ## Terraform
 From [`./terraform/devnet-0/`](./terraform/devnet-0/)
