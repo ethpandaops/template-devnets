@@ -1,0 +1,26 @@
+# Ansible managed. Don't change this file manually. Template info: /vendor/collections/ansible_collections/ethpandaops/general/roles/generate_kubernetes_config/templates/dora-endpoints-el.yaml.j2
+# Execution layer endpoints
+
+- url: http://geth-prysm-001:8545
+  name: rpc-prysm-geth-001
+  authGroup: pandaops
+  archive: true
+  priority: 1
+- url: https://rpc-bootnode-1.srv.stefan-devnet-1.ethpandaops.io
+  name: bootnode-1
+  authGroup: pandaops
+  priority: -1
+  archive: false
+  engineSnooperUrl: http://rpc-bootnode-1.srv.stefan-devnet-1.ethpandaops.io:8961
+- url: https://rpc-lighthouse-geth-full-1.srv.stefan-devnet-1.ethpandaops.io
+  name: lighthouse-geth-full-1
+  authGroup: pandaops
+  priority: -1
+  archive: false
+  engineSnooperUrl: http://rpc-lighthouse-geth-full-1.srv.stefan-devnet-1.ethpandaops.io:8961
+- url: https://rpc-lighthouse-geth-super-1.srv.stefan-devnet-1.ethpandaops.io
+  name: lighthouse-geth-super-1
+  authGroup: pandaops
+  priority: -1
+  archive: false
+  engineSnooperUrl: http://rpc-lighthouse-geth-super-1.srv.stefan-devnet-1.ethpandaops.io:8961

@@ -1,0 +1,6 @@
+dependencies:
+- name: xatu-relay-monitor
+  repository: https://ethpandaops.github.io/ethereum-helm-charts
+  version: 0.0.1
+digest: sha256:3a30c5dbb3a84bc202712e820c048632babb9a2cad339772571eb7574c06d3d2
+generated: "2025-09-22T14:02:52.444222279+02:00"

@@ -1,0 +1,64 @@
+# Ansible managed. Don't change this file manually. Template info: /vendor/collections/ansible_collections/ethpandaops/general/roles/generate_kubernetes_config/templates/assertoor.yaml.j2
+
+assertoor:
+  fullnameOverride: assertoor
+
+  image:
+    repository: docker.ethquokkaops.io/dh/ethpandaops/assertoor
+    tag: master-latest
+    pullPolicy: Always
+  resources:
+    requests:
+      cpu: 500m
+      memory: 500Mi
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+
+  ingress:
+    enabled: true
+    className: ingress-nginx-public
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-production
+    hosts:
+      - host: assertoor.stefan-devnet-1.ethpandaops.io
+        paths:
+          - path: /
+            pathType: Prefix
+
+  ingressAdmin:
+    enabled: true
+    className: ingress-nginx-public
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-production
+    hosts:
+      - host: assertoor-admin.stefan-devnet-1.ethpandaops.io
+        paths:
+          - path: /
+            pathType: Prefix
+
+  persistence:
+    enabled: true
+
+  endpoints:
+    - name:  bootnode-1
+      executionUrl: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.stefan-devnets.node_ingress.combined}>@rpc-bootnode-1.srv.stefan-devnet-1.ethpandaops.io
+      consensusUrl: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.stefan-devnets.node_ingress.combined}>@bn-bootnode-1.srv.stefan-devnet-1.ethpandaops.io
+    - name:  lighthouse-geth-full-1
+      executionUrl: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.stefan-devnets.node_ingress.combined}>@rpc-lighthouse-geth-full-1.srv.stefan-devnet-1.ethpandaops.io
+      consensusUrl: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.stefan-devnets.node_ingress.combined}>@bn-lighthouse-geth-full-1.srv.stefan-devnet-1.ethpandaops.io
+    - name:  lighthouse-geth-super-1
+      executionUrl: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.stefan-devnets.node_ingress.combined}>@rpc-lighthouse-geth-super-1.srv.stefan-devnet-1.ethpandaops.io
+      consensusUrl: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.stefan-devnets.node_ingress.combined}>@bn-lighthouse-geth-super-1.srv.stefan-devnet-1.ethpandaops.io
+
+  validatorNamesInventory: https://config.stefan-devnet-1.ethpandaops.io/api/v1/nodes/validator-ranges
+  globalVariables:
+    walletPrivkey: "<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.stefan-devnets.assertoor_private_key}>"
+    clientPairNames:
+      - bootnode-1
+      - lighthouse-geth-full-1
+      - lighthouse-geth-super-1
+    validatorPairNames:
+      - lighthouse-geth-full-1
+
+  assertoorTests: []

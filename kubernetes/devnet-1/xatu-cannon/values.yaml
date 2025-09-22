@@ -1,0 +1,117 @@
+xatu-cannon:
+  enabled: true
+  fullnameOverride: xatu-cannon
+  image:
+    repository: docker.ethquokkaops.io/dh/ethpandaops/xatu
+    tag: latest
+    pullPolicy: Always
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 8000Mi
+    requests:
+      cpu: 256m
+      memory: 512Mi
+
+  config:
+    logging: "info"
+    metricsAddr: ":9090"
+    pprofAddr: ":6060"
+    name: "stefan-devnet-1-xatu-cannon"
+    derivers:
+      attesterSlashing:
+        enabled: true
+        iterator:
+          backfill:
+            enabled: true
+      blsToExecutionChange:
+        enabled: true
+        iterator:
+          backfill:
+            enabled: true
+      deposit:
+        enabled: true
+        iterator:
+          backfill:
+            enabled: true
+      executionTransaction:
+        enabled: true
+        iterator:
+          backfill:
+            enabled: true
+      proposerSlashing:
+        enabled: true
+        iterator:
+          backfill:
+            enabled: true
+      voluntaryExit:
+        enabled: true
+        iterator:
+          backfill:
+            enabled: true
+      withdrawal:
+        enabled: true
+        iterator:
+          backfill:
+            enabled: true
+      beaconBlock:
+        enabled: true
+        iterator:
+          backfill:
+            enabled: true
+      blockClassification:
+        enabled: false
+        iterator:
+          backfill:
+            enabled: false
+      beaconBlobSidecar:
+        enabled: true
+        iterator:
+          backfill:
+            enabled: true
+      proposerDuty:
+        enabled: true
+        iterator:
+          backfill:
+            enabled: true
+      elaboratedAttestation:
+        enabled: true
+        iterator:
+          backfill:
+            enabled: true
+      beaconValidators:
+        enabled: true
+        chunkSize: 10
+        iterator:
+          backfill:
+            enabled: true
+      beaconCommittee:
+        enabled: true
+        iterator:
+          backfill:
+            enabled: true
+    tracing:
+      enabled: false
+    ethereum:
+      beaconNodeAddress: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.stefan-devnets.node_ingress.combined}>@bn-bootnode-1.srv.stefan-devnet-1.ethpandaops.io
+      overrideNetworkName: stefan-devnet-1
+      beaconNodeHeaders: {}
+      blockCacheSize: 300
+      blockCacheTtl: 1h
+      blockPreloadWorkers: 50
+    coordinator:
+      address: server.xatu-experimental.ethpandaops.io:443
+      tls: true
+      headers:
+        authorization: "Bearer <path:/secrets/services/services.enc.yaml#xatu | jsonPath {.experimental.coordinator_secret}>"
+    outputs:
+    - name: grpc
+      type: xatu
+      config:
+        address: server.xatu-experimental.ethpandaops.io:443
+        maxQueueSize: 100000
+        tls: true
+        workers: 10
+        headers:
+          authorization: "Basic <path:/secrets/services/services.enc.yaml#xatu | jsonPath {.experimental.event_ingester_auth}>"
+        maxExportBatchSize: 64

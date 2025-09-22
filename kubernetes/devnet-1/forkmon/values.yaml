@@ -1,0 +1,42 @@
+# Ansible managed. Don't change this file manually. Template info: /vendor/collections/ansible_collections/ethpandaops/general/roles/generate_kubernetes_config/templates/forkmon.yaml.j2
+
+forkmon:
+  fullnameOverride: forkmon
+  image:
+    repository: docker.ethquokkaops.io/dh/skylenet/nodemonitor
+    tag: darkmode
+    pullPolicy: IfNotPresent
+  ingress:
+    enabled: true
+    className: ingress-nginx-public
+    hosts:
+      - host: forkmon.stefan-devnet-1.ethpandaops.io
+        paths:
+          - path: /
+            pathType: Prefix
+  network: stefan-devnet-1
+  endpoints:
+  # Rpc
+  - addr: http://geth-prysm-001:8545
+    name: rpc-prysm-geth-001
+  - addr: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.stefan-devnets.node_ingress.combined}>@rpc-bootnode-1.srv.stefan-devnet-1.ethpandaops.io
+    name: bootnode-1
+  - addr: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.stefan-devnets.node_ingress.combined}>@rpc-lighthouse-geth-full-1.srv.stefan-devnet-1.ethpandaops.io
+    name: lighthouse-geth-full-1
+  - addr: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.stefan-devnets.node_ingress.combined}>@rpc-lighthouse-geth-super-1.srv.stefan-devnet-1.ethpandaops.io
+    name: lighthouse-geth-super-1
+
+  config: |
+    # How often to reload data from the nodes
+    reload_interval = "10s"
+    # If specified, a http server will serve static content here
+    server_address = "0.0.0.0:{{ .Values.httpPort}}"
+    # Shown in the document title, if specified
+    chain_name="{{ .Values.network }}"
+    # Local or non third party connection require rpc kind
+    {{- range .Values.endpoints }}
+    [[clients]]
+      url  = {{ .addr | quote }}
+      name = {{ .name | quote }}
+      kind = "rpc"
+    {{- end }}

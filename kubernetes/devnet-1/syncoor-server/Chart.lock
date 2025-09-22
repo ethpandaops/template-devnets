@@ -1,0 +1,6 @@
+dependencies:
+- name: syncoor-server
+  repository: https://ethpandaops.github.io/ethereum-helm-charts
+  version: 0.0.1
+digest: sha256:749466174292a18127bade8d247e7a0cbe22f2587272e25c8b5373ede8d78811
+generated: "2025-09-22T14:02:20.084783007+02:00"
