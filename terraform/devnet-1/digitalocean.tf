@@ -191,28 +191,51 @@ resource "local_file" "ansible_inventory" {
   filename = "../../ansible/inventories/devnet-1/inventory.ini"
 }
 
+locals {
+  ssh_config_path = pathexpand("~/.ssh/config.d/ssh_config.${var.ethereum_network}")
+}
+
 resource "local_file" "ssh_config" {
   content = templatefile("${path.module}/ssh_config.tmpl",
     {
       ethereum_network = var.ethereum_network
       hosts = merge(
         {
-          for key, server in digitalocean_droplet.main : "ethpandaops-${var.ethereum_network}-${key}" => {
-            hostname        = server.ipv4_address
-            private_ip      = server.ipv4_address_private
-            name            = key
-            user            = "devops"
+          for key, server in digitalocean_droplet.main : "${var.ethereum_network}-${key}" => {
+            hostname   = server.ipv4_address
+            private_ip = server.ipv4_address_private
+            name       = key
+            user       = "devops"
           }
         }
       )
     }
   )
-  filename = "${path.module}/ssh_config"
+  filename = local.ssh_config_path
 
   depends_on = [digitalocean_droplet.main]
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Ensure cleanup on destroy
+resource "null_resource" "ssh_config_cleanup" {
+  triggers = {
+    ssh_config_path = local.ssh_config_path
+  }
+
+  # This provisioner runs on destroy
+  provisioner "local-exec" {
+    when    = destroy
+    command = "rm -f ${self.triggers.ssh_config_path} || true"
+  }
+
+  depends_on = [local_file.ssh_config]
 }
 
 output "ssh_config_file" {
-  value = "SSH config generated at: ${abspath(local_file.ssh_config.filename)}"
+  value       = "SSH config generated at: ${local.ssh_config_path}"
   description = "Path to the generated SSH config file"
 }
