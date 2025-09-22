@@ -190,3 +190,29 @@ resource "local_file" "ansible_inventory" {
   )
   filename = "../../ansible/inventories/devnet-1/inventory.ini"
 }
+
+resource "local_file" "ssh_config" {
+  content = templatefile("${path.module}/ssh_config.tmpl",
+    {
+      ethereum_network = var.ethereum_network
+      hosts = merge(
+        {
+          for key, server in digitalocean_droplet.main : "ethpandaops-${var.ethereum_network}-${key}" => {
+            hostname        = server.ipv4_address
+            private_ip      = server.ipv4_address_private
+            name            = key
+            user            = "devops"
+          }
+        }
+      )
+    }
+  )
+  filename = "${path.module}/ssh_config"
+
+  depends_on = [digitalocean_droplet.main]
+}
+
+output "ssh_config_file" {
+  value = "SSH config generated at: ${abspath(local_file.ssh_config.filename)}"
+  description = "Path to the generated SSH config file"
+}

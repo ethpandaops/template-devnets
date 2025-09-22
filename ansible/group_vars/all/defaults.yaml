@@ -3,7 +3,7 @@ ansible_python_interpreter: /usr/bin/python3
 # Template name refers to the name of the devnet without number
 # Generally refer to the first word of the repository name
 # e.g. peerdas, or pectra
-devnet_name: template
+devnet_name: stefan
 
 # IPv6 Specific configuration
 global_ipv6_enabled: true
@@ -38,7 +38,6 @@ fail2ban_ignoreips:
   - "127.0.0.1/8 ::1"
   - "{{ lookup('ansible.builtin.url', 'http://ifconfig.me/ip', split_lines=False) }}/32" # Avoid banning ourself
 
-
 # role: ethpandaops.general.docker_network
 docker_network_name: shared
 docker_network_enable_ipv6: "{{ global_ipv6_enabled }}"
@@ -57,9 +56,13 @@ docker_users:
 docker_daemon_options:
   "log-driver": "json-file"
   "log-opts":
-      "max-size": "500m"
-      "max-file": "8"
-  "registry-mirrors": ["https://docker-cache.ethquokkaops.io","https://docker.ethquokkaops.io/gh"]
+    "max-size": "500m"
+    "max-file": "8"
+  "registry-mirrors":
+    [
+      "https://docker-cache.ethquokkaops.io",
+      "https://docker.ethquokkaops.io/gh",
+    ]
 
 # role: ethpandaops.general.prometheus
 prometheus_container_networks: "{{ docker_networks_shared }}"

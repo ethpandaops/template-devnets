@@ -1,13 +1,13 @@
 default_ethereum_client_images:
-### Consensus layer clients
-  lighthouse: docker.ethquokkaops.io/dh/sigp/lighthouse:latest
+  ### Consensus layer clients
+  lighthouse: docker.ethquokkaops.io/dh/ethpandaops/lighthouse:unstable
   lodestar: docker.ethquokkaops.io/dh/chainsafe/lodestar:latest
   nimbus: docker.ethquokkaops.io/dh/statusim/nimbus-eth2:multiarch-latest
   prysm: docker.ethquokkaops.io/gcr/prysmaticlabs/prysm/beacon-chain:latest
   prysm_validator: docker.ethquokkaops.io/gcr/prysmaticlabs/prysm/validator:latest
   teku: docker.ethquokkaops.io/dh/consensys/teku:latest
   grandine: docker.ethquokkaops.io/dh/ethpandaops/grandine:develop
-### Execution layer clients
+  ### Execution layer clients
   besu: docker.ethquokkaops.io/dh/hyperledger/besu:latest
   geth: docker.ethquokkaops.io/dh/ethereum/client-go:stable
   erigon: docker.ethquokkaops.io/dh/erigontech/erigon:main-latest
