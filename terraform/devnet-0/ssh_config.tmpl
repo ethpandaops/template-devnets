@@ -12,7 +12,6 @@ Host ${host_key}
     StrictHostKeyChecking no
     UserKnownHostsFile /dev/null
     LogLevel ERROR
-    IdentityFile ~/.ssh/devops_eth2_shared_key
 
 %{ endfor ~}
 
@@ -23,4 +22,3 @@ Host ethpandaops-${ethereum_network}-*
     StrictHostKeyChecking no
     UserKnownHostsFile /dev/null
     LogLevel ERROR
-    IdentityFile ~/.ssh/devops_eth2_shared_key
