@@ -1,0 +1,23 @@
+# Ansible managed. Don't change this file manually. Template info: /vendor/collections/ansible_collections/ethpandaops/general/roles/generate_kubernetes_config/templates/dora-endpoints-cl.yaml.j2
+# Consensus layer endpoints
+
+- url: http://prysm-geth-001:5052
+  name: rpc-prysm-geth-001
+  authGroup: pandaops
+  archive: true
+  priority: 1
+- url: https://bn-bootnode-1.srv.stefan-devnet-0.ethpandaops.io
+  name: bootnode-1
+  authGroup: pandaops
+  priority: -1
+- url: https://bn-lighthouse-geth-full-1.srv.stefan-devnet-0.ethpandaops.io
+  name: lighthouse-geth-full-1
+  authGroup: pandaops
+  priority: -1
+  archive: true
+- url: https://bn-lighthouse-geth-super-1.srv.stefan-devnet-0.ethpandaops.io
+  name: lighthouse-geth-super-1
+  authGroup: pandaops
+  priority: -1
+  archive: true
+

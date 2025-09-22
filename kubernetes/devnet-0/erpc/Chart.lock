@@ -1,0 +1,6 @@
+dependencies:
+- name: erpc
+  repository: https://ethpandaops.github.io/ethereum-helm-charts
+  version: 0.0.4
+digest: sha256:6996d2725b78ec78966c46986dadb554f07de8f0178bcd961f2bcb722aa6d84f
+generated: "2025-09-16T20:52:50.975582156+02:00"

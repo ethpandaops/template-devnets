@@ -1,0 +1,60 @@
+# Ansible managed. Don't change this file manually. Template info: /vendor/collections/ansible_collections/ethpandaops/general/roles/generate_kubernetes_config/templates/dora.yaml.j2
+
+dora:
+  fullnameOverride: dora
+  image:
+    repository: docker.ethquokkaops.io/dh/ethpandaops/dora
+    tag: master-latest
+    pullPolicy: Always
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+  ingress:
+    enabled: true
+    className: ingress-nginx-public
+    hosts:
+      - host: dora.stefan-devnet-0.ethpandaops.io
+        paths:
+          - path: /
+            pathType: Prefix
+
+  name: stefan-devnet-0
+  configPath: "https://config.stefan-devnet-0.ethpandaops.io/cl/config.yaml"
+  validatorNamesInventory: "https://config.stefan-devnet-0.ethpandaops.io/api/v1/nodes/validator-ranges"
+  ethExplorerLink: "https://explorer.stefan-devnet-0.ethpandaops.io"
+  publicRpcUrl: "https://rpc.stefan-devnet-0.ethpandaops.io"
+  rainbowkitProjectId: "15fe4ab4d5c0bcb6f0dc7c398301ff0e"
+  executionGenesisConfig: "https://config.stefan-devnet-0.ethpandaops.io/el/genesis.json"
+  apiRequireAuth: False
+  apiAuthSecret: ""
+  apiWhitelistedIPs: []    apiDefaultRateLimit: 60
+  apiDisableDefaultRateLimit: false
+  proxyCount: 2
+  extraEnv:
+    - name: FRONTEND_PPROF
+      value: "true"
+    - name: FRONTEND_SHOW_SENSITIVE_PEER_INFOS
+      value: "true"
+    - name: API_CORS_ORIGINS
+      value: "*"
+  postgresql:
+    name: "dora-postgresql"
+    fullnameOverride: "dora-postgresql"
+
+  mevRelays:
+    - index: 0
+      name: "Flashbots"
+      url: "http://mev-relay-1.stefan-devnet-0.ethpandaops.io:9062/"
+
+  authGroups:
+    pandaops:
+      credentials:
+        username: ""
+        password: "<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.stefan-devnets.node_ingress.combined}>"
+
+  endpointsUrl: "https://raw.githubusercontent.com/ethpandaops/template-devnets/refs/heads/master/kubernetes/devnet-0/dora/endpoints-cl.yaml"
+  executionEndpointsUrl: "https://raw.githubusercontent.com/ethpandaops/template-devnets/refs/heads/master/kubernetes/devnet-0/dora/endpoints-el.yaml"

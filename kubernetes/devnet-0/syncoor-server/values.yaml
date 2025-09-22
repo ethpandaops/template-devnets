@@ -1,0 +1,38 @@
+# Ansible managed. Don't change this file manually. Template info: /vendor/collections/ansible_collections/ethpandaops/general/roles/generate_kubernetes_config/templates/syncoor-server.yaml.j2
+
+syncoor-server:
+  fullnameOverride: syncoor-server
+  controllers:
+    main:
+      containers:
+        main:
+          image:
+            repository: docker.ethquokkaops.io/gh/ethpandaops/syncoor
+            tag: master
+            pullPolicy: Always
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 400m
+              memory: 512Mi
+
+  secrets:
+    secretenv:
+      enabled: true
+      stringData:
+        AUTH_TOKEN: "syncoor<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.stefan-devnets.node_ingress.combined}>"
+
+  ingress:
+    main:
+      className: ingress-nginx-public
+      enabled: true
+      hosts:
+        - host: syncoor-api.stefan-devnet-0.ethpandaops.io
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http

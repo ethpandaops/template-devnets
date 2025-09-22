@@ -1,0 +1,53 @@
+# Ansible managed. Don't change this file manually. Template info: /vendor/collections/ansible_collections/ethpandaops/general/roles/generate_kubernetes_config/templates/checkpointz.yaml.j2
+
+checkpointz:
+  fullnameOverride: checkpointz
+  replicas: 1
+
+  image:
+    repository: docker.ethquokkaops.io/dh/ethpandaops/checkpointz
+    tag: latest
+    pullPolicy: Always
+  resources:
+    requests:
+      cpu: 64m
+      memory: 256Mi
+  ingress:
+    enabled: true
+    className: ingress-nginx-public
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-production
+    hosts:
+      - host: checkpoint-sync.stefan-devnet-0.ethpandaops.io
+        paths:
+          - path: /
+            pathType: Prefix
+
+    tls:
+    - hosts:
+      - checkpoint-sync.stefan-devnet-0.ethpandaops.io
+      secretName: stefan-devnet-0-checkpoint-sync-tls
+
+  config:
+    global:
+      listenAddr: ":5555"
+      logging: "info" # panic,fatal,warm,info,debug,trace
+      metricsAddr: ":9090"
+
+    checkpointz:
+      mode: full
+      caches:
+        blocks:
+          max_items: 100
+        states:
+          max_items: 5
+      historical_epoch_count: 20
+
+    beacon:
+      upstreams:
+        - name: rpc-prysm-geth-001
+          address: http://prysm-geth-001:5052
+          dataProvider: true
+        - name: lighthouse-geth-super-1
+          address: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.stefan-devnets.node_ingress.combined}>@bn-lighthouse-geth-super-1.srv.stefan-devnet-0.ethpandaops.io
+          dataProvider: true

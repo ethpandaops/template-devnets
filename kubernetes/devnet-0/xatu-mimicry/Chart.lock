@@ -1,0 +1,6 @@
+dependencies:
+- name: xatu-mimicry
+  repository: https://ethpandaops.github.io/ethereum-helm-charts
+  version: 0.0.7
+digest: sha256:d1dc3c0f099559e871b1cef7265ed4bf758fc89120cac0f73c13b984a7147a06
+generated: "2025-09-16T20:53:37.887986785+02:00"
