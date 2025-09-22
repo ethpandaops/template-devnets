@@ -1,0 +1,76 @@
+localhost
+
+[all:vars]
+ethereum_network_name=${ethereum_network_name}
+
+%{ for gid, group in groups ~}
+[${replace(gid, "-", "_")}]
+%{ for key, host in hosts ~}
+%{ if host.group == gid ~}
+${host.hostname} ansible_host=${host.ip} ipv6=${host.ipv6} cloud=${host.cloud} cloud_region=${host.region} ethereum_node_cl_supernode_enabled=${title(host.supernode)} %{ if tonumber(host.validator_end) > 0 }validator_start=${host.validator_start} validator_end=${host.validator_end}%{ endif }
+%{ endif ~}
+%{ endfor ~}
+%{ if gid == "lighthouse-reth" ~}
+%{ for key, host in hosts ~}
+%{ if host.group == "mev-relay" ~}
+${host.hostname}
+%{ endif ~}
+%{ endfor ~}
+%{ endif ~}
+
+%{ endfor ~}
+
+# Consensus client groups
+
+%{ for cl in ["lighthouse", "lodestar", "nimbus", "teku", "prysm", "grandine"] ~}
+[${cl}:children]
+%{ for gid, group in groups ~}
+%{ if split("-", gid)[0] == "${cl}" ~}
+${replace(gid, "-", "_")}
+%{ endif ~}
+%{ endfor ~}
+%{ endfor ~}
+
+# Execution client groups
+
+%{ for el in ["besu", "ethereumjs", "geth", "nethermind", "erigon", "reth", "nimbusel"] ~}
+[${el}:children]
+%{ for gid, group in groups ~}
+%{ if split("-", gid)[0] != "bootnode" && split("-", gid)[0] != "mev" ~}
+%{ if length(split("-", gid)) >= 2 && split("-", gid)[1] == "${el}" ~}
+${replace(gid, "-", "_")}
+%{ endif ~}
+%{ endif ~}
+%{ endfor ~}
+%{ endfor ~}
+
+# Global groups
+
+[consensus_node:children]
+%{ for x,y in merge( { for gid, group in groups : split("-", gid)[0] => true... if split("-", gid)[0] != "bootnode" && split("-", gid)[0] != "mev" } )   ~}
+${x}
+%{ endfor ~}
+
+[execution_node:children]
+%{ for x,y in merge( { for gid, group in groups : split("-", gid)[1] => true... if split("-", gid)[0] != "bootnode" && split("-", gid)[0] != "mev" && length(split("-", gid)) >= 2 } )   ~}
+${x}
+%{ endfor ~}
+
+[ethereum_node:children]
+consensus_node
+execution_node
+
+%{ if contains(keys(groups), "bootnode") ~}
+[dns_server:children]
+bootnode
+%{ endif ~}
+
+[mev_boost:children]
+consensus_node
+
+[arm]
+%{ for key, host in hosts ~}
+%{ if can(regex("arm", key)) ~}
+${host.hostname}
+%{ endif ~}
+%{ endfor ~}
