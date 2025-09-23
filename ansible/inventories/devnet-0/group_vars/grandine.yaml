@@ -34,6 +34,7 @@ grandine_container_env:
   VIRTUAL_HOST: "{{ ethereum_node_beacon_hostname }}"
   VIRTUAL_PORT: "{{ ethereum_node_cl_ports_http_beacon | string }}"
   LETSENCRYPT_HOST: "{{ ethereum_node_beacon_hostname }}"
+  GRANDINE_LOG: "fork_choice_control=debug,p2p=debug"
 grandine_container_volumes:
   - "{{ grandine_datadir }}:/data"
   - "{{ grandine_auth_jwt_path }}:/execution-auth.jwt:ro"
@@ -42,6 +43,7 @@ grandine_container_command_extra_args:
   - --configuration-directory=/network-config/
   - --boot-nodes={{ ethereum_cl_bootnodes | join(',') }}
   - --graffiti={{ ansible_hostname }}
+  - --features=LogHttpRequests
 
 grandine_validator_container_volumes:
   - "{{ grandine_validator_datadir }}:/validator-data"
