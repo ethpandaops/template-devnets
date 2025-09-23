@@ -161,10 +161,10 @@ reth_container_env:
   VIRTUAL_HOST: "{{ ethereum_node_rcp_hostname }}"
   VIRTUAL_PORT: "{{ ethereum_node_el_ports_http_rpc | string }}"
   LETSENCRYPT_HOST: "{{ ethereum_node_rcp_hostname }}"
-  BUILDER_TX_SIGNING_KEY: "{{ secret_mev_signingkey }}"
-  COINBASE_SECRET_KEY: "{{ secret_mev_signingkey }}"
-  RELAY_SECRET_KEY: "{{ secret_mev_signingkey }}"
-  OPTIMISTIC_RELAY_SECRET_KEY: "{{ secret_mev_signingkey }}"
+  BUILDER_TX_SIGNING_KEY: "{{ secret_mev_builder_tx_signing_key }}"
+  COINBASE_SECRET_KEY: "{{ secret_mev_coinbase_secret_key }}"
+  RELAY_SECRET_KEY: "{{ secret_mev_relay_secret_key }}"
+  OPTIMISTIC_RELAY_SECRET_KEY: "{{ secret_mev_optimistic_relay_secret_key }}"
 
 reth_container_command_extra_args:
   - --chain=/network-config/genesis.json
