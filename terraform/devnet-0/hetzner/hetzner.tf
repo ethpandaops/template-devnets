@@ -84,7 +84,7 @@ locals {
 
 locals {
   hcloud_default_location    = "nbg1"
-  hcloud_default_image       = "debian-12"
+  hcloud_default_image       = "debian-13"
   hcloud_default_server_type = var.hetzner_fullnode_size
   hcloud_global_labels = [
     "Owner:Devops",
