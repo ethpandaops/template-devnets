@@ -40,7 +40,7 @@ default_tooling_images:
   blobscan_indexer: blossomlabs/blobscan-indexer:latest
   dora: ethpandaops/dora:master-latest
   dugtrio: ethpandaops/dugtrio:latest
-  ethereum_genesis_generator: ethpandaops/ethereum-genesis-generator:5.0.7
+  ethereum_genesis_generator: ethpandaops/ethereum-genesis-generator:5.1.0
   tracoor: ethpandaops/tracoor:latest
   ncli: status-im/nimbus-eth2:unstable
   lcli: ethpandaops/lighthouse:unstable
