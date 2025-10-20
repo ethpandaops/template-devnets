@@ -68,8 +68,8 @@ locals {
               can(regex("mev-relay", vm_group.name)) ? "mev-relay:${var.ethereum_network}" : null
             ]))
             region = try(vm_group.region, var.digitalocean_regions[i % length(var.digitalocean_regions)])
-            size = try(vm_group.size, can(regex("(super|bootnode)", vm_group.name)) ? var.digitalocean_supernode_size : var.digitalocean_fullnode_size)
-            ipv6 = try(vm_group.ipv6, true)
+            size   = try(vm_group.size, can(regex("(super|bootnode)", vm_group.name)) ? var.digitalocean_supernode_size : var.digitalocean_fullnode_size)
+            ipv6   = try(vm_group.ipv6, true)
           }
         }
       }
@@ -189,4 +189,53 @@ resource "local_file" "ansible_inventory" {
     }
   )
   filename = "../../ansible/inventories/devnet-0/inventory.ini"
+}
+
+locals {
+  ssh_config_path = pathexpand("~/.ssh/config.d/ssh_config.${var.ethereum_network}")
+}
+
+resource "local_file" "ssh_config" {
+  content = templatefile("${path.module}/ssh_config.tmpl",
+    {
+      ethereum_network = var.ethereum_network
+      hosts = merge(
+        {
+          for key, server in digitalocean_droplet.main : "${var.ethereum_network}-${key}" => {
+            hostname   = server.ipv4_address
+            private_ip = server.ipv4_address_private
+            name       = key
+            user       = "devops"
+          }
+        }
+      )
+    }
+  )
+  filename = local.ssh_config_path
+
+  depends_on = [digitalocean_droplet.main]
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Ensure cleanup on destroy
+resource "null_resource" "ssh_config_cleanup" {
+  triggers = {
+    ssh_config_path = local.ssh_config_path
+  }
+
+  # This provisioner runs on destroy
+  provisioner "local-exec" {
+    when    = destroy
+    command = "rm -f ${self.triggers.ssh_config_path} || true"
+  }
+
+  depends_on = [local_file.ssh_config]
+}
+
+output "ssh_config_file" {
+  value       = "SSH config generated at: ${local.ssh_config_path}"
+  description = "Path to the generated SSH config file"
 }
