@@ -80,7 +80,7 @@ locals {
 locals {
   digitalocean_default_region = "ams3"
   digitalocean_default_size   = var.digitalocean_fullnode_size
-  digitalocean_default_image  = "debian-12-x64"
+  digitalocean_default_image  = "debian-13-x64"
   digitalocean_global_tags = [
     "Owner:Devops",
     "EthNetwork:${var.ethereum_network}"

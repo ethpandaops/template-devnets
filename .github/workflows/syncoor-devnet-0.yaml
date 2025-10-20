@@ -83,7 +83,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-    - uses: ethpandaops/hive-github-action/helpers/self-hosted-runner-dependencies@a9ec89442df18ee579d3179b76c47f5f93954307 # v0.4.0
+    - uses: ethpandaops/hive-github-action/helpers/self-hosted-runner-dependencies@1aa8d73dad34de13afbb3113ab16c1a462d2fbc3 # v0.5.0
       if: runner.environment != 'github-hosted'
 
     - name: Install Kurtosis CLI
@@ -145,7 +145,7 @@ jobs:
         rclone-version: ${{ env.INSTALL_RCLONE_VERSION }}
 
     - name: Update test results index
-      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
