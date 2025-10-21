@@ -23,9 +23,8 @@ geth_container_command_extra_args:
 geth_init_custom_network: true
 geth_init_custom_network_genesis_file: "{{ eth_testnet_config_dir }}/genesis.json"
 geth_init_custom_network_container_command:
-  - --datadir=/data
-  - init
-  - /genesis.json
+  - --override.genesis=/genesis.json
+  
 geth_container_pull: true
 
 prometheus_config: |
