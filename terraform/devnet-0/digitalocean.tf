@@ -192,7 +192,7 @@ resource "local_file" "ansible_inventory" {
 }
 
 locals {
-  ssh_config_path = pathexpand("~/.ssh/config.d/ssh_config.${var.ethereum_network}")
+  ssh_config_path = pathexpand("~/.ssh/config.d/ssh_config.${var.ethereum_network}.digitalocean")
 }
 
 resource "local_file" "ssh_config" {
