@@ -43,8 +43,8 @@
 - hosts: bootnode
   become: true
   roles:
-    - role: ethpandaops.general.cl_bootnode
-      tags: [cl_bootnode]
+    - role: ethpandaops.general.lighthouse_bootnode
+      tags: [lighthouse_bootnode, bootnode]
     - role: ethpandaops.general.ethereum_testnet_config
       tags: [ethereum, eth_testnet_config, ethereum_testnet_config]
     - role: ethpandaops.general.validator_keys
@@ -93,15 +93,14 @@
             rate_upload: 1000mbit
       tags: [traffic_control]
 
-- hosts: "{{ primary_bootnode }}"
+- hosts: bootnode
   become: true
   tasks:
     - name: Refresh inventory web
       ansible.builtin.import_role:
         name: ethpandaops.general.ethereum_inventory_web
       tags: [eth_inventory_web, ethereum_inventory_web]
-      delegate_to: "{{ primary_bootnode }}"
-      run_once: true
+      when: inventory_hostname == primary_bootnode
       vars:
         eth_inventory_web_container_networks: "{{ docker_networks_shared }}" #noqa var-naming[no-role-prefix]
         eth_inventory_web_container_env: #noqa var-naming[no-role-prefix]
