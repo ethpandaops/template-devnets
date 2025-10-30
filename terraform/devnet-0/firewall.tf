@@ -39,6 +39,13 @@ resource "digitalocean_firewall" "main" {
     source_addresses = ["0.0.0.0/0", "::/0"]
   }
 
+  // Bootnode
+  inbound_rule {
+    protocol         = "udp"
+    port_range       = "9010"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }
+
   // Execution layer p2p Port
   inbound_rule {
     protocol         = "tcp"
