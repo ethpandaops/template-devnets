@@ -1,8 +1,9 @@
 name: Syncoor - Devnet 0
 
 on:
-  schedule:
-    - cron: '30 2 * * *'  # Daily at 02:30 UTC
+  #schedule:
+    #- cron: '30 10 1-31/2 * *' # Every odd day at 10h 30m (Fullnode runs)
+    #- cron: '30 10 2-30/2 * *' # Every even day at 10h 30m (Supernode runs)
   workflow_dispatch:
     inputs:
       el-client:
@@ -15,20 +16,63 @@ on:
         required: false
         default: '"lighthouse","teku","prysm","nimbus","lodestar","grandine"'
         type: string
-      run-timeout:
-        description: 'Timeout for the sync test'
+      runconfig:
+        description: >
+          Run configuration as JSON.
+          run-timeout: timeout in minutes.
+          cl-synctype: "checkpoint" (sync from checkpoint) or "genesis" (sync from genesis).
+          cl-nodetype: "fullnode" (normal node) or "supernode" (subscribes to all custody groups).
+          runs-on: GitHub runner label (ccx13: 2c/8GB RAM/80GB disk, ccx23: 4c/16GB RAM/160GB disk, ccx33: 8c/32GB RAM/240GB disk, ccx43: 16c/64GB RAM/360GB disk).
+          Example: {"run-timeout": "1800", "cl-synctype": ["checkpoint"], "cl-nodetype": ["fullnode"]}
         required: false
-        default: '3h'
+        default: >-
+          {
+            "run-timeout": "1800",
+            "cl-synctype": ["checkpoint"],
+            "cl-nodetype": ["fullnode"],
+            "runs-on": "self-hosted-ghr-size-ccx33-x64"
+          }
+        type: string
+      checkpoint-sync-url:
+        description: 'Checkpoint sync URL. Will be auto generated if not provided. (Example: https://checkpoint-sync.$NETWORK.ethpandaops.io)'
+        required: false
+        default: ''
+        type: string
+      image:
+        description: 'Syncoor Docker image'
+        required: false
+        default: 'docker.ethquokkaops.io/dh/ethpandaops/syncoor:master'
+        type: string
+      git-ref:
+        description: 'Git reference (branch, tag, or commit) to checkout'
+        required: false
+        default: ''
         type: string
       el-image:
         description: 'Execution layer client images as JSON (e.g., {"geth": "ethereum/client-go:latest", "besu": "hyperledger/besu:latest"})'
         required: false
-        default: '{}'
+        default: >-
+          {
+            "besu": "hyperledger/besu:latest",
+            "geth": "ethereum/client-go:stable",
+            "erigon": "erigontech/erigon:latest",
+            "nethermind": "nethermind/nethermind:latest",
+            "reth": "ghcr.io/paradigmxyz/reth",
+            "nimbusel": "ethpandaops/nimbus-eth1:master"
+          }
         type: string
       cl-image:
         description: 'Consensus layer client images as JSON (e.g., {"lighthouse": "sigp/lighthouse:latest", "teku": "consensys/teku:latest"})'
         required: false
-        default: '{}'
+        default: >-
+          {
+            "lighthouse": "sigp/lighthouse:latest",
+            "teku": "consensys/teku:latest",
+            "prysm": "offchainlabs/prysm-beacon-chain:stable",
+            "nimbus": "statusim/nimbus-eth2:amd64-latest",
+            "lodestar": "chainsafe/lodestar:latest",
+            "grandine": "sifrai/grandine:stable"
+          }
         type: string
 
 env:
@@ -45,16 +89,11 @@ jobs:
     # - 24h -> 1440m
     # - 48h -> 2880m
     # - 72h -> 4320m
-    timeout-minutes: 240 # 4h
-    # Self-hosted runner sizes:
-    # - ccx13: 2 cores, 8GB, 80GB disk
-    # - ccx23: 4 cores, 16GB, 160GB disk
-    # - ccx33: 8 cores, 32GB, 240GB disk
-    # - ccx43: 16 cores, 64GB, 360GB disk
-    runs-on: self-hosted-ghr-size-ccx33-x64
-    #concurrency:
-    #  group: >-
-    #    ${{ matrix.network }}-${{ matrix.el-client }}-${{ matrix.cl-client }}
+    timeout-minutes: ${{ github.event_name == 'schedule' && 500 || fromJSON(fromJSON(inputs.runconfig || '{}')['run-timeout'] || '1800') }}
+    runs-on: ${{ fromJSON(inputs.runconfig || '{}')['runs-on'] || 'self-hosted-ghr-size-ccx33-x64' }}
+    concurrency:
+      group: >-
+        ${{ github.event_name }}-${{ matrix.network }}-${{ matrix.el-client }}-${{ matrix.cl-client }}-${{ matrix.cl-nodetype }}-${{ matrix.cl-synctype }}
     strategy:
       fail-fast: false
       matrix:
@@ -78,71 +117,135 @@ jobs:
               "lodestar",
               "grandine"
           '))}}
+        cl-nodetype: >-
+          ${{
+            github.event_name == 'schedule' &&
+            (github.event.schedule == '30 10 1-31/2 * *' && fromJSON('["fullnode"]') ||
+             github.event.schedule == '30 10 2-30/2 * *' && fromJSON('["supernode"]') ||
+             fromJSON('["fullnode","supernode"]')) ||
+            fromJSON(inputs.runconfig || '{}')['cl-nodetype'] || fromJSON('["fullnode","supernode"]')
+          }}
+        cl-synctype: >-
+          ${{
+            github.event_name == 'schedule' && fromJSON('["checkpoint"]') ||
+            fromJSON(inputs.runconfig || '{}')['cl-synctype'] || fromJSON('["checkpoint","genesis"]')
+          }}
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-
-    - uses: ethpandaops/hive-github-action/helpers/self-hosted-runner-dependencies@1aa8d73dad34de13afbb3113ab16c1a462d2fbc3 # v0.5.0
-      if: runner.environment != 'github-hosted'
-
-    - name: Install Kurtosis CLI
+    - name: Set default images for scheduled runs
+      id: default-images
+      if: github.event_name == 'schedule'
       run: |
-        echo "deb [trusted=yes] https://apt.fury.io/kurtosis-tech/ /" | sudo tee /etc/apt/sources.list.d/kurtosis.list
-        sudo apt update
-        sudo apt install kurtosis-cli
+        cat > /tmp/default-el-images.json <<'EOF'
+        {
+          "besu": "hyperledger/besu:latest",
+          "geth": "ethereum/client-go:stable",
+          "erigon": "erigontech/erigon:latest",
+          "nethermind": "nethermind/nethermind:latest",
+          "reth": "ghcr.io/paradigmxyz/reth",
+          "nimbusel": "ethpandaops/nimbus-eth1:master"
+        }
+        EOF
+        echo "el-images=$(cat /tmp/default-el-images.json | jq -c .)" >> $GITHUB_OUTPUT
 
-    - name: Parse client images
-      id: parse-images
+        cat > /tmp/default-cl-images.json <<'EOF'
+        {
+          "lighthouse": "sigp/lighthouse:latest",
+          "teku": "consensys/teku:latest",
+          "prysm": "offchainlabs/prysm-beacon-chain:stable",
+          "nimbus": "statusim/nimbus-eth2:amd64-latest",
+          "lodestar": "chainsafe/lodestar:latest",
+          "grandine": "sifrai/grandine:stable"
+        }
+        EOF
+        echo "cl-images=$(cat /tmp/default-cl-images.json | jq -c .)" >> $GITHUB_OUTPUT
+
+    - name: Prepare inputs
+      id: prepare
+      env:
+        EL_IMAGES: ${{ github.event_name == 'schedule' && steps.default-images.outputs.el-images || inputs.el-image }}
+        CL_IMAGES: ${{ github.event_name == 'schedule' && steps.default-images.outputs.cl-images || inputs.cl-image }}
       run: |
-        # Parse EL images
-        EL_IMAGES='${{ inputs.el-image }}'
+        set -x
+        # Parse EL image for current client
         if [ "$EL_IMAGES" != '{}' ] && [ -n "$EL_IMAGES" ]; then
-          EL_CLIENT="${{ matrix.el-client }}"
-          EL_IMAGE=$(echo "$EL_IMAGES" | jq -r --arg client "$EL_CLIENT" '.[$client] // ""')
+          EL_IMAGE=$(echo "$EL_IMAGES" | jq -r --arg client "${{ matrix.el-client }}" '.[$client] // ""')
           echo "el-image=$EL_IMAGE" >> $GITHUB_OUTPUT
         else
           echo "el-image=" >> $GITHUB_OUTPUT
         fi
 
-        # Parse CL images
-        CL_IMAGES='${{ inputs.cl-image }}'
+        # Parse CL image for current client
         if [ "$CL_IMAGES" != '{}' ] && [ -n "$CL_IMAGES" ]; then
-          CL_CLIENT="${{ matrix.cl-client }}"
-          CL_IMAGE=$(echo "$CL_IMAGES" | jq -r --arg client "$CL_CLIENT" '.[$client] // ""')
+          CL_IMAGE=$(echo "$CL_IMAGES" | jq -r --arg client "${{ matrix.cl-client }}" '.[$client] // ""')
           echo "cl-image=$CL_IMAGE" >> $GITHUB_OUTPUT
         else
           echo "cl-image=" >> $GITHUB_OUTPUT
         fi
 
+        # Generate checkpoint sync URL based on network
+        CHECKPOINT_SYNC_URL="https://checkpoint-sync.${{ matrix.network }}.ethpandaops.io"
+        echo "checkpoint-sync-url=$CHECKPOINT_SYNC_URL" >> $GITHUB_OUTPUT
+
+        # Set checkpoint sync enabled based on cl-synctype
+        if [ "${{ matrix.cl-synctype }}" = "checkpoint" ]; then
+          CHECKPOINT_SYNC_ENABLED="true"
+        else
+          CHECKPOINT_SYNC_ENABLED="false"
+        fi
+        echo "checkpoint-sync-enabled=$CHECKPOINT_SYNC_ENABLED" >> $GITHUB_OUTPUT
+
+        # Generate syncoor server address based on network
+        SERVER_URL="https://syncoor-api.${{ matrix.network }}.ethpandaops.io"
+        echo "syncoor-server-url=$SERVER_URL" >> $GITHUB_OUTPUT
+
+        # Generate S3 path based on network, cl-nodetype, and checkpoint sync
+        S3_PATH="devnets/${{ matrix.network }}"
+        if [ "${{ matrix.cl-nodetype }}" = "supernode" ]; then
+          S3_PATH="${S3_PATH}-clsupernode"
+        fi
+        if [ "$CHECKPOINT_SYNC_ENABLED" = "false" ]; then
+          S3_PATH="${S3_PATH}-clcheckpointsyncdisabled"
+        fi
+        echo "s3-path=$S3_PATH" >> $GITHUB_OUTPUT
+
+        # Calculate timeout (subtract 10 minutes)
+        TIMEOUT=$(( ${{ github.event_name == 'schedule' && 500 || fromJSON(fromJSON(inputs.runconfig || '{}')['run-timeout'] || '1800') }} - 10 ))
+        echo "run-timeout=$TIMEOUT" >> $GITHUB_OUTPUT
+
     - name: Run Syncoor Test
       uses: ethpandaops/syncoor@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        server: https://syncoor-api.template-devnet-0.ethpandaops.io
+        server: ${{ steps.prepare.outputs.syncoor-server-url }}
         server-auth: ${{ secrets.SYNCOOR_SERVER_AUTH }}
         log-force-colors: true
         client-logs: true
+        public: true
         network: ${{ matrix.network }}
         el-client: ${{ matrix.el-client }}
         cl-client: ${{ matrix.cl-client }}
-        el-image: ${{ steps.parse-images.outputs.el-image }}
-        cl-image: ${{ steps.parse-images.outputs.cl-image }}
+        el-image: ${{ steps.prepare.outputs.el-image }}
+        cl-image: ${{ steps.prepare.outputs.cl-image }}
         el-extra-args: >-
           ${{
-            (matrix.el-client == 'reth') && '--full' ||
-            (matrix.el-client == 'erigon') && '--prune.mode=full' ||
-            ''
+            (matrix.el-client == 'reth') && '["--full"]' ||
+            (matrix.el-client == 'erigon') && '["--prune.mode=full"]' ||
+            '[]'
           }}
         check-interval: 30s
-        run-timeout: ${{ inputs.run-timeout || '60m' }}
+        run-timeout: ${{ steps.prepare.outputs.run-timeout }}m
         log-level: info
-        report-dir: ./test-reports
         s3-upload: true
         s3-bucket: ${{ env.S3_BUCKET }}
-        s3-path: devnets/${{ matrix.network }}
+        s3-path: ${{ steps.prepare.outputs.s3-path }}
         rclone-config: ${{ secrets.SYNCOOR_RCLONE_CONFIG }}
         rclone-version: ${{ env.INSTALL_RCLONE_VERSION }}
+        checkpoint-sync-enabled: ${{ steps.prepare.outputs.checkpoint-sync-enabled }}
+        checkpoint-sync-url: ${{ inputs.checkpoint-sync-url || steps.prepare.outputs.checkpoint-sync-url }}
+        supernode: ${{ matrix.cl-nodetype == 'supernode' }}
+        image: ${{ inputs.image || 'docker.ethquokkaops.io/dh/ethpandaops/syncoor:master' }}
+        git-ref: ${{ inputs.git-ref }}
 
     - name: Update test results index
       uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
@@ -155,6 +258,6 @@ jobs:
             workflow_id: 'syncoor-generate-index.yaml',
             ref: context.ref,
             inputs: {
-              's3-path': 'devnets/${{ matrix.network }}'
+              's3-path': '${{ steps.prepare.outputs.s3-path }}'
             }
           });
