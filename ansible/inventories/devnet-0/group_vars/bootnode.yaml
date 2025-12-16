@@ -23,7 +23,7 @@ bootnodoor_cl_enabled: true
 bootnodoor_container_name: "bootnodoor"
 bootnodoor_container_image: "ethpandaops/bootnodoor:master"
 bootnodoor_container_networks: "{{ docker_networks_shared }}"
-bootnodoor_p2p_port: 9002
+bootnodoor_p2p_port: 9010
 bootnodoor_ui_port: 8004
 bootnodoor_enr_ip: "{{ ansible_host }}"
 
@@ -65,7 +65,25 @@ teku_container_command_extra_args:
   - --logging=info
   - --Xlog-include-p2p-warnings-enabled
   - --metrics-block-timing-tracking-enabled
-  - --p2p-discovery-bootnodes={{ ethereum_cl_bootnode }}
+  - >-
+    --p2p-discovery-bootnodes={{
+      (
+        (
+          groups['bootnode']
+          | map('extract', hostvars, ['ethereum_node_fact_cl_enr'])
+          | select('defined')
+          | list
+        )
+        +
+        (
+          groups['bootnode']
+          | map('extract', hostvars, ['bootnodoor_fact_enr'])
+          | select('defined')
+          | list
+        )
+      )
+      | join(',')
+    }}
 
 # role: ethpandaops.general.geth
 geth_container_name: execution
@@ -82,7 +100,25 @@ geth_container_command_extra_args:
   - --syncmode=full
   - --gcmode=archive
   - --state.scheme=hash
-  - --bootnodes={{ ethereum_el_bootnode }}
+  - >-
+    --bootnodes={{
+      (
+        (
+          groups['bootnode']
+          | map('extract', hostvars, ['ethereum_node_fact_el_enode'])
+          | select('defined')
+          | list
+        )
+        +
+        (
+          groups['bootnode']
+          | map('extract', hostvars, ['bootnodoor_fact_enode'])
+          | select('defined')
+          | list
+        )
+      )
+      | join(',')
+    }}
 
 # role: ethpandaops.general.prometheus
 prometheus_remote_push_url: https://victoriametrics.ethdevops.io/insert/0/prometheus/api/v1/write
