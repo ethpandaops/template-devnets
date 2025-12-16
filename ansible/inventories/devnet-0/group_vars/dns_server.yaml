@@ -1,15 +1,15 @@
 # role: ethpandaops.general.dns_server
 dns_server_disable_systemd_resolved: true
-dns_server_is_master: "{{ inventory_hostname == 'bootnode-1' }}"
+dns_server_is_master: "{{ inventory_hostname == primary_bootnode }}"
 dns_server_acme_zone: "{{ network_server_subdomain }}"
 
 # One or more master IPs (for slaves to pull from / accept NOTIFY from)
-dns_server_master: "{{ ([hostvars['bootnode-1'].ansible_host]
-                         if (groups.get('bootnode') is defined and 'bootnode-1' in groups['bootnode'])
+dns_server_master: "{{ ([hostvars[primary_bootnode].ansible_host]
+                         if (groups.get('bootnode') is defined and primary_bootnode in groups['bootnode'])
                          else []) | list }}"
 
 # All slave IPs (for master's also-notify / allow-transfer)
-dns_server_slave: "{{ (groups.get('bootnode', []) | difference(['bootnode-1']))
+dns_server_slave: "{{ (groups.get('bootnode', []) | difference([primary_bootnode]))
                       | map('extract', hostvars, 'ansible_host')
                       | list }}"
 
@@ -25,14 +25,14 @@ dns_server_zones:
                       5m )    ; NX (TTL Negativ Cache)
               IN  NS     {{ server_fqdn }}.
       {# extra NS for each secondary, if their FQDNs are known #}
-      {% for h in groups['bootnode'] | sort if h != 'bootnode-1' %}
+      {% for h in groups['bootnode'] | sort if h != primary_bootnode %}
       {% if hostvars[h].server_fqdn is defined %}
               IN  NS     {{ hostvars[h].server_fqdn }}.
       {% endif %}
       {% endfor %}
 
       ; certificates
-      cert    IN  A      {{ hostvars['bootnode-1']['ansible_host'] }}
+      cert    IN  A      {{ hostvars[primary_bootnode]['ansible_host'] }}
 
       ; bootnodes
       {% for host in groups['bootnode'] | sort %}
@@ -60,7 +60,7 @@ dns_server_zones:
       {% endfor %}
 
 # role: ethpandaops.general.wildcard_cert_issuer
-wildcard_cert_issuer_enabled: "{{ inventory_hostname == 'bootnode-1' }}"
+wildcard_cert_issuer_enabled: "{{ inventory_hostname == primary_bootnode }}"
 wildcard_cert_issuer_base_domain: "{{ network_server_subdomain }}"
 wildcard_cert_issuer_acme_directory: "https://acme.zerossl.com/v2/DV90"
 wildcard_cert_issuer_acme_eab_kid: "{{ secret_zerossl.ACME_EAB_KID }}"

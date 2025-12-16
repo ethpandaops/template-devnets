@@ -1,5 +1,5 @@
-ethereum_cl_bootnode: "{{ hostvars['bootnode-1']['bootnodoor_fact_enr'] }}"
-ethereum_el_bootnode: "{{ hostvars['bootnode-1']['bootnodoor_fact_enode'] }}"
+ethereum_cl_bootnode: "{{ hostvars[primary_bootnode]['bootnodoor_fact_enr'] }}"
+ethereum_el_bootnode: "{{ hostvars[primary_bootnode]['bootnodoor_fact_enode'] }}"
 
 # role: eth_inventory_web
 eth_inventory_web_container_networks: "{{ docker_networks_shared }}"
