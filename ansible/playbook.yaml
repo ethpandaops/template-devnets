@@ -43,8 +43,8 @@
 - hosts: bootnode
   become: true
   roles:
-    - role: ethpandaops.general.cl_bootnode
-      tags: [cl_bootnode]
+    - role: ethpandaops.general.bootnodoor
+      tags: [bootnodoor]
     - role: ethpandaops.general.ethereum_testnet_config
       tags: [ethereum, eth_testnet_config, ethereum_testnet_config]
     - role: ethpandaops.general.validator_keys
