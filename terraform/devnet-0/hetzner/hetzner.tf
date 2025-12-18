@@ -59,7 +59,7 @@ locals {
     [
       for i in range(0, vm_group.count) : {
         group_name = "${vm_group.name}"
-        id         = "${vm_group.name}-${i + 1}-arm"
+        id         = "hc-${vm_group.name}-${i + 1}"
         vms = {
           "${i + 1}" = {
             labels = join(",", compact([
@@ -207,7 +207,7 @@ resource "local_file" "ssh_config" {
       ethereum_network = var.ethereum_network
       hosts = merge(
         {
-          for key, server in hcloud_server.main : "${var.ethereum_network}-hc-${key}" => {
+          for key, server in hcloud_server.main : "${var.ethereum_network}-${key}" => {
             hostname   = coalesce(server.ipv4_address, (try(server.ipv6_address, "")))
             private_ip = try(hcloud_server_network.main[key].ip, "")
             name       = key
