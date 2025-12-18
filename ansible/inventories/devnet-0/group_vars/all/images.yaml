@@ -1,5 +1,5 @@
 default_ethereum_client_images:
-### Consensus layer clients
+  ### Consensus layer clients
   lighthouse: sigp/lighthouse:latest
   lodestar: chainsafe/lodestar:latest
   nimbus: statusim/nimbus-eth2:multiarch-latest
@@ -7,7 +7,7 @@ default_ethereum_client_images:
   prysm_validator: gcr.io/offchainlabs/prysm/validator:latest
   teku: consensys/teku:latest
   grandine: ethpandaops/grandine:develop
-### Execution layer clients
+  ### Execution layer clients
   besu: hyperledger/besu:latest
   geth: ethereum/client-go:stable
   erigon: erigontech/erigon:main-latest
@@ -40,7 +40,7 @@ default_tooling_images:
   blobscan_indexer: blossomlabs/blobscan-indexer:latest
   dora: ethpandaops/dora:master-latest
   dugtrio: ethpandaops/dugtrio:latest
-  ethereum_genesis_generator: ethpandaops/ethereum-genesis-generator:5.1.0
+  ethereum_genesis_generator: ethpandaops/ethereum-genesis-generator:5.2.2
   tracoor: ethpandaops/tracoor:latest
   ncli: status-im/nimbus-eth2:unstable
   lcli: ethpandaops/lighthouse:unstable
