@@ -140,7 +140,7 @@ resource "hcloud_server" "main" {
   for_each = {
     for vm in local.hcloud_vms : "${vm.id}" => vm
   }
-  name        = "${var.ethereum_network}-${each.value.name}"
+  name        = "${var.ethereum_network}-hc-${each.value.name}"
   image       = each.value.image
   server_type = each.value.server_type
   location    = each.value.location
@@ -207,7 +207,7 @@ resource "local_file" "ssh_config" {
       ethereum_network = var.ethereum_network
       hosts = merge(
         {
-          for key, server in hcloud_server.main : "${var.ethereum_network}-${key}" => {
+          for key, server in hcloud_server.main : "${var.ethereum_network}-hc-${key}" => {
             hostname   = coalesce(server.ipv4_address, (try(server.ipv6_address, "")))
             private_ip = try(hcloud_server_network.main[key].ip, "")
             name       = key
