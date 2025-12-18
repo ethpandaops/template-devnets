@@ -140,7 +140,7 @@ resource "hcloud_server" "main" {
   for_each = {
     for vm in local.hcloud_vms : "${vm.id}" => vm
   }
-  name        = "${var.ethereum_network}-hc-${each.value.name}"
+  name        = "${var.ethereum_network}-${each.value.name}"
   image       = each.value.image
   server_type = each.value.server_type
   location    = each.value.location
