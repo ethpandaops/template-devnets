@@ -12,6 +12,7 @@ secret_nginx_shared_basic_auth:
     name: ENC[AES256_GCM,data:O7L3,iv:DiOGlqfOfrDlt7X4OGY27OYlkDDEHguv+kg1zRhBek0=,tag:KuOX20lI/iYZOORFraiISw==,type:str]
     password: ENC[AES256_GCM,data:HyMDeoK5s6JDfsJ7j5Gg,iv:yvC4WWOOJvVeegWl0uj2P8yxcfBgNrvYSm5xUB5qux8=,tag:XoZbXpvLtUJPVoEaV3ltsg==,type:str]
 secret_ethstats: ENC[AES256_GCM,data:vO/gY2iluciwksE=,iv:WHYxXgQ2LdLGMKxvagmT3UhmQl/dRucpyhYzZxHvLHc=,tag:NX4Lkg6SPPusRx/zHGn00w==,type:str]
+secret_bootnodoor_seed: ENC[AES256_GCM,data:A611+/dn9lT08iGrqgLNgqPpWGEyGf1usFFWM4P9uB0Twfryjk5bzBVFLcLPKzkhuj4DThToS8F3s4iCAmq/+Q==,iv:ic2cap4ynWi/IS6dkn3fkKgNTndnZCxTbBbIABpXgrA=,tag:1Jwqi77lNG3yXZ9RZnZe5g==,type:str]
 secret_genesis_mnemonic: ENC[AES256_GCM,data:zRxUC65Kt1b8DM4QPyEJ/u0Uhp2ftMcJVtacbXRrOCUGm+gy0n+VH199hVxvviouJQkbv5FiJYiFjwjJ/yFX5ajPgOqanjRpBfEfwwD2Drtafaw/mWT7pSILHlo7oI18+bGIWjXve5mpUSuAC7jiaufDVROvSa6bcew0Ogbp5pzbFJBFFim3LFjyC1uSRO7JbRoK4cUl1CxnaCUaC/3GKz4l/fIe,iv:EaQilsQbnswzCqkWSK9G/R3wwmMRDwWZDjdZQ1fUZRk=,tag:2kWU1BNG/B82qzmNxmwIjQ==,type:str]
 secret_mev_coinbase_secret_key: ENC[AES256_GCM,data:TYLALYjoxOyyrpPoJ/gBvXO2vMdbbFqrI0gyZAJ7MHgI7SMmb7qTfDzakHmOASZ5ezJXfOMWqy0zBqQwymLhzA==,iv:MNJfTjd3pfAW9tR8WUEcp5BOcjjBTQFRoAN+NkC+VAA=,tag:dlR3sMxJb9he8xZn3FcD6w==,type:str]
 secret_mev_builder_tx_signing_key: ENC[AES256_GCM,data:Tr01nA3sls3AhttJga/ndK+nMjZSiyMIE3zafwsEZjZt9aETG+zEnkcAK5y9P1aq2N1UZ/KMOF0BPNbgCtOddw==,iv:tBmNG6Esy/3HFCiNZIggEb2Xlgc5MEwS4mVgQpcuSyc=,tag:2mfyvSzaMvCqeIFQGV7NMA==,type:str]
@@ -41,8 +42,8 @@ sops:
     azure_kv: []
     hc_vault: []
     age: []
-    lastmodified: "2025-09-29T12:17:20Z"
-    mac: ENC[AES256_GCM,data:uADIBQaMWRk8OtH0RU5/5xvdaz9pFvHoBBMTUdTbtX+H7ly4IUCJ6AmryNnO3WBV719ikiZ5ofLcnN7+BTJLOjaDGxKR1OrpUvQNuhn8q0BVYkL1QB6QJeJnVf2p9ylEg6LpgAmFBaMkdndUyoVZcdvON13mIeBqhRg80MvwMg8=,iv:nImuyf6+ql6ixbQuEjCayBAt3vtvEDU7n/+/gmKvLK4=,tag:GSfy52+wzjSRdvUA+3iaGA==,type:str]
+    lastmodified: "2025-12-12T05:07:13Z"
+    mac: ENC[AES256_GCM,data:GCMJnneHuL+040VvJyp65IXdchCnWFyoiJgvKwcV3fPU8WNaMOuUEbDHK3wW6oZyEGeu0HlOQOuJwXacqb9iG5hG4aqN93uu/th0dRNEfJr0ij4lRU9Yrrx0t3kpzVYhLI7sPE82XwhbsOXSWlQIRl9PDQPtgudeEcARn2fSt68=,iv:vOD+PBlJqgEnzEPdhwrGHGEzJ5L6wM5HUY3I7Flleyw=,tag:NNJ9SfOkEAAv3R3r1n+rww==,type:str]
     pgp:
         - created_at: "2025-10-27T13:25:35Z"
           enc: |-

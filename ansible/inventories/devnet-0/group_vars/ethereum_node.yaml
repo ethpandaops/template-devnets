@@ -1,8 +1,9 @@
 ethereum_cl_bootnodes:
-  - "{{ hostvars[primary_bootnode]['cl_bootnode_fact_enr'] }}"
+  - "{{ hostvars[primary_bootnode]['bootnodoor_fact_enr'] }}"
   - "{{ hostvars[primary_bootnode]['ethereum_node_fact_cl_enr'] }}"
 
 ethereum_el_bootnodes:
+  - "{{ hostvars[primary_bootnode]['bootnodoor_fact_enode'] }}"
   - "{{ hostvars[primary_bootnode]['ethereum_node_fact_el_enode'] }}"
 
 ethereum_node_xatu_sentry_enabled: true
