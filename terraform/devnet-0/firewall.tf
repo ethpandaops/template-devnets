@@ -14,6 +14,12 @@ resource "digitalocean_firewall" "main" {
     source_addresses = ["0.0.0.0/0", "::/0"]
   }
 
+  // Allow all inbound ICMP
+  inbound_rule {
+    protocol         = "icmp"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }
+
   // Nginx / Web
   inbound_rule {
     protocol         = "tcp"

@@ -10,6 +10,14 @@ resource "hcloud_firewall" "machine_firewall" {
     source_ips  = ["0.0.0.0/0", "::/0"]
   }
 
+  # Allow all inbound ICMP
+  rule {
+    description = "Allow all inbound ICMP"
+    direction   = "in"
+    protocol    = "icmp"
+    source_ips  = ["0.0.0.0/0", "::/0"]
+  }
+
   # Nginx / Web
   rule {
     description = "Allow HTTP"
