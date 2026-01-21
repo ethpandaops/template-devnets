@@ -76,22 +76,8 @@
   roles:
     - role: ethpandaops.general.ethereum_node
       tags: [ethereum, ethereum_node]
-    - role: ethpandaops.general.traffic_control
-      when: ethereum_node_cl_supernode_enabled == False
-      vars:
-        traffic_control_rules:
-          - interface: eth0
-            rate_download: 100mbit
-            rate_upload: 50mbit
-      tags: [traffic_control]
-    - role: ethpandaops.general.traffic_control
-      when: ethereum_node_cl_supernode_enabled == True
-      vars:
-        traffic_control_rules:
-          - interface: eth0
-            rate_download: 1000mbit
-            rate_upload: 1000mbit
-      tags: [traffic_control]
+    - role: ethpandaops.general.brakebear
+      tags: [brakebear]
 
 - hosts: bootnode
   become: true
