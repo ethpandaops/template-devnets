@@ -20,6 +20,15 @@ ${host.hostname}
 
 %{ endfor ~}
 
+%{ if !contains(keys(groups), "lighthouse-reth") ~}
+[lighthouse_reth]
+%{ for key, host in hosts ~}
+%{ if host.group == "mev-relay" ~}
+${host.hostname}
+%{ endif ~}
+%{ endfor ~}
+%{ endif ~}
+
 # Consensus client groups
 
 %{ for cl in ["lighthouse", "lodestar", "nimbus", "teku", "prysm", "grandine"] ~}
