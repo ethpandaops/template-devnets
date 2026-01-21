@@ -60,7 +60,7 @@ dns_server_zones:
       {% endfor %}
 
       ; mev-relay
-      {% for host in groups.get('mev-relay', []) | sort %}
+      {% for host in groups.get('mev_relay', []) | sort %}
       {{ hostvars[host]['inventory_hostname'] }}                                   IN  A     {{ hostvars[host]['ansible_host'] }}
       {% if hostvars[host]['ipv6'] is defined %}
       {{ hostvars[host]['inventory_hostname'] }}                                   IN  AAAA  {{ hostvars[host]['ipv6'] }}
