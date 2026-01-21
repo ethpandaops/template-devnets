@@ -14,6 +14,12 @@ resource "digitalocean_firewall" "main" {
     source_addresses = ["0.0.0.0/0", "::/0"]
   }
 
+  // Allow all inbound ICMP
+  inbound_rule {
+    protocol         = "icmp"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }
+
   // Nginx / Web
   inbound_rule {
     protocol         = "tcp"
@@ -30,19 +36,12 @@ resource "digitalocean_firewall" "main" {
   // Consensus layer p2p port
   inbound_rule {
     protocol         = "tcp"
-    port_range       = "9000-9002"
+    port_range       = "9000-9001"
     source_addresses = ["0.0.0.0/0", "::/0"]
   }
   inbound_rule {
     protocol         = "udp"
     port_range       = "9000-9002"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-
-  // Bootnode
-  inbound_rule {
-    protocol         = "udp"
-    port_range       = "9010"
     source_addresses = ["0.0.0.0/0", "::/0"]
   }
 
@@ -112,6 +111,19 @@ resource "digitalocean_firewall" "bootnode" {
     port_range       = "53"
     source_addresses = ["0.0.0.0/0", "::/0"]
   }
+
+  // Bootnodoor P2P
+  inbound_rule {
+    protocol         = "tcp"
+    port_range       = "9010"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }
+  inbound_rule {
+    protocol         = "udp"
+    port_range       = "9010"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }
+
   depends_on = [digitalocean_project_resources.droplets]
 }
 

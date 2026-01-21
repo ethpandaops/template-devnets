@@ -10,6 +10,14 @@ resource "hcloud_firewall" "machine_firewall" {
     source_ips  = ["0.0.0.0/0", "::/0"]
   }
 
+  # Allow all inbound ICMP
+  rule {
+    description = "Allow all inbound ICMP"
+    direction   = "in"
+    protocol    = "icmp"
+    source_ips  = ["0.0.0.0/0", "::/0"]
+  }
+
   # Nginx / Web
   rule {
     description = "Allow HTTP"
@@ -132,6 +140,22 @@ resource "hcloud_firewall" "bootnode_firewall" {
     direction   = "in"
     protocol    = "tcp"
     port        = "53"
+    source_ips  = ["0.0.0.0/0", "::/0"]
+  }
+
+  // Bootnodoor P2P
+  rule {
+    description = "Allow Bootnodoor P2P port TCP"
+    direction   = "in"
+    protocol    = "tcp"
+    port        = "9010"
+    source_ips  = ["0.0.0.0/0", "::/0"]
+  }
+  rule {
+    description = "Allow Bootnodoor P2P port UDP"
+    direction   = "in"
+    protocol    = "udp"
+    port        = "9010"
     source_ips  = ["0.0.0.0/0", "::/0"]
   }
 }

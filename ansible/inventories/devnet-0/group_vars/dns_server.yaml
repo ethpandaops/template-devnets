@@ -39,6 +39,7 @@ dns_server_zones:
       {{ hostvars[host]['inventory_hostname'] }}                                   IN  A     {{ hostvars[host]['ansible_host'] }}
       {{ ethereum_node_rpc_prefix }}{{ hostvars[host]['inventory_hostname'] }}     IN  A     {{ hostvars[host]['ansible_host'] }}
       {{ ethereum_node_beacon_prefix }}{{ hostvars[host]['inventory_hostname'] }}  IN  A     {{ hostvars[host]['ansible_host'] }}
+      bootnodoor-{{ hostvars[host]['inventory_hostname'] }}                        IN  A     {{ hostvars[host]['ansible_host'] }}
       {% if hostvars[host]['ipv6'] is defined %}
       {{ hostvars[host]['inventory_hostname'] }}                                   IN  AAAA  {{ hostvars[host]['ipv6'] }}
       {{ ethereum_node_rpc_prefix }}{{ hostvars[host]['inventory_hostname'] }}     IN  AAAA  {{ hostvars[host]['ipv6'] }}
