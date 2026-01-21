@@ -59,6 +59,14 @@ dns_server_zones:
       {% endif %}
       {% endfor %}
 
+      ; mev-relay
+      {% for host in groups.get('mev-relay', []) | sort %}
+      {{ hostvars[host]['inventory_hostname'] }}                                   IN  A     {{ hostvars[host]['ansible_host'] }}
+      {% if hostvars[host]['ipv6'] is defined %}
+      {{ hostvars[host]['inventory_hostname'] }}                                   IN  AAAA  {{ hostvars[host]['ipv6'] }}
+      {% endif %}
+      {% endfor %}
+
 # role: ethpandaops.general.wildcard_cert_issuer
 wildcard_cert_issuer_enabled: "{{ inventory_hostname == primary_bootnode }}"
 wildcard_cert_issuer_base_domain: "{{ network_server_subdomain }}"
