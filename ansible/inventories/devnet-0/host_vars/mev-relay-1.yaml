@@ -139,18 +139,9 @@ lighthouse_container_pull: true
 
 ethereum_el_bootnodes:
   - "{{ hostvars[primary_bootnode]['ethereum_node_fact_el_enode'] }}"
-  - "{{ hostvars['lighthouse-geth-1']['ethereum_node_fact_el_enode'] }}"
-  - "{{ hostvars['prysm-reth-1']['ethereum_node_fact_el_enode'] }}"
-  - "{{ hostvars['teku-nethermind-1']['ethereum_node_fact_el_enode'] }}"
-  - "{{ hostvars['prysm-geth-1']['ethereum_node_fact_el_enode'] }}"
 
 ethereum_cl_bootnodes:
-  - "{{ hostvars[primary_bootnode]['cl_bootnode_fact_enr'] }}"
   - "{{ hostvars[primary_bootnode]['ethereum_node_fact_cl_enr'] }}"
-  - "{{ hostvars['lighthouse-geth-1']['ethereum_node_fact_cl_enr'] }}"
-  - "{{ hostvars['prysm-reth-1']['ethereum_node_fact_cl_enr'] }}"
-  - "{{ hostvars['teku-nethermind-1']['ethereum_node_fact_cl_enr'] }}"
-  - "{{ hostvars['prysm-geth-1']['ethereum_node_fact_cl_enr'] }}"
 
 # role: ethpandaops.general.ethereum_node
 ethereum_node_el: reth
@@ -164,7 +155,6 @@ reth_container_env:
   BUILDER_TX_SIGNING_KEY: "{{ secret_mev_builder_tx_signing_key }}"
   COINBASE_SECRET_KEY: "{{ secret_mev_coinbase_secret_key }}"
   RELAY_SECRET_KEY: "{{ secret_mev_relay_secret_key }}"
-  OPTIMISTIC_RELAY_SECRET_KEY: "{{ secret_mev_optimistic_relay_secret_key }}"
 
 reth_container_command_extra_args:
   - --chain=/network-config/genesis.json
@@ -195,7 +185,6 @@ reth_rbuilder_config: |
 
   coinbase_secret_key = "env:COINBASE_SECRET_KEY"
   relay_secret_key = "env:RELAY_SECRET_KEY"
-  optimistic_relay_secret_key = "env:OPTIMISTIC_RELAY_SECRET_KEY"
 
   cl_node_url = ["http://beacon:5052"]
   jsonrpc_server_port = 8645
@@ -207,7 +196,6 @@ reth_rbuilder_config: |
 
   genesis_fork_version = "0x10{{ ethereum_genesis_fork_version_suffix }}"
 
-  sbundle_mergeable_signers = []
   live_builders = ["mp-ordering"]
 
   enabled_relays = ["flashbots"]

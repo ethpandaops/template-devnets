@@ -38,6 +38,9 @@ ${host.hostname}
 ${replace(gid, "-", "_")}
 %{ endif ~}
 %{ endfor ~}
+%{ if cl == "lighthouse" && contains(keys(groups), "mev-relay") ~}
+mev_relay
+%{ endif ~}
 %{ endfor ~}
 
 # Execution client groups
@@ -51,6 +54,9 @@ ${replace(gid, "-", "_")}
 %{ endif ~}
 %{ endif ~}
 %{ endfor ~}
+%{ if el == "reth" && contains(keys(groups), "mev-relay") ~}
+mev_relay
+%{ endif ~}
 %{ endfor ~}
 
 # Global groups
