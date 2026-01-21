@@ -19,7 +19,6 @@ erigon_container_command_extra_args:
   - --http.api=eth,erigon,engine,web3,net,debug,trace,txpool,admin
   - --http.vhosts=*
   - --ws
-  - --prune=htc
   - --networkid={{ ethereum_network_id }}
   - --db.size.limit=500GB
   - --bootnodes={{ ethereum_el_bootnodes | join(',') }}
