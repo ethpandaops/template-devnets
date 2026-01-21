@@ -7,6 +7,28 @@ ethereum_el_bootnodes:
 
 ethereum_node_xatu_sentry_enabled: true
 
+# role: ethpandaops.general.brakebear
+brakebear_download_speed: "{{ ethereum_node_cl_supernode_enabled | ternary('1000Mbps', '100Mbps') }}"
+brakebear_upload_speed: "{{ ethereum_node_cl_supernode_enabled | ternary('1000Mbps', '50Mbps') }}"
+brakebear_config: |
+  log_level: "info"
+  docker_containers:
+    - name: "execution"
+      download_rate: {{ brakebear_download_speed }}
+      upload_rate: {{ brakebear_upload_speed }}
+      exclusions:
+        private-networks: true
+        docker-networks:
+          names: ["*"]
+    - name: "beacon"
+      download_rate: {{ brakebear_download_speed }}
+      upload_rate: {{ brakebear_upload_speed }}
+      exclusions:
+        private-networks: true
+        docker-networks:
+          names: ["*"]
+
+
 # role: ethpandaops.general.prometheus
 prometheus_remote_push_url: https://victoriametrics-public.analytics.production.platform.ethpandaops.io/insert/1/prometheus
 prometheus_remote_write_username: "{{ secret_prometheus_remote_write.username }}"
