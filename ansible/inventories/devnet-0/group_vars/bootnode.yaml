@@ -1,4 +1,5 @@
-ethereum_cl_bootnode: "{{ hostvars[primary_bootnode]['cl_bootnode_fact_enr'] }}"
+ethereum_cl_bootnode: "{{ hostvars[primary_bootnode]['bootnodoor_fact_enr'] }}"
+ethereum_el_bootnode: "{{ hostvars[primary_bootnode]['bootnodoor_fact_enode'] }}"
 
 # role: eth_inventory_web
 eth_inventory_web_container_networks: "{{ docker_networks_shared }}"
@@ -8,6 +9,36 @@ eth_inventory_web_container_env:
   VIRTUAL_PATH: "/meta/api"
   VIRTUAL_DEST: "/"
   LETSENCRYPT_HOST: "{{ server_fqdn }}"
+
+# role: ethpandaops.general.bootnodoor
+bootnodoor_privkey: >-
+  {{
+    (secret_bootnodoor_seed ~ ':' ~ ethereum_genesis_chain_id|string)
+    | hash('sha256')
+  }}
+bootnodoor_set_facts: true
+bootnodoor_el_enabled: true
+bootnodoor_cl_enabled: true
+
+bootnodoor_container_name: "bootnodoor"
+bootnodoor_container_image: "ethpandaops/bootnodoor:master"
+bootnodoor_container_networks: "{{ docker_networks_shared }}"
+bootnodoor_p2p_port: 9010
+bootnodoor_ui_port: 8004
+bootnodoor_enr_ip: "{{ ansible_host }}"
+
+bootnodoor_el_config: /network-config/genesis.json
+bootnodoor_el_genesis_hash: /network-config/deposit_contract_block_hash.txt
+bootnodoor_cl_config: /network-config/config.yaml
+bootnodoor_cl_gvr: /network-config/genesis_validators_root.txt
+bootnodoor_container_volumes_extra:
+  - "{{ eth_testnet_config_dir }}:/network-config:ro"
+
+bootnodoor_container_command_extra_args: []
+bootnodoor_container_env:
+  VIRTUAL_HOST: "bootnodoor-{{ server_fqdn }}"
+  VIRTUAL_PORT: "{{ bootnodoor_ui_port | string }}"
+  LETSENCRYPT_HOST: "bootnodoor-{{ server_fqdn }}"
 
 # role: ethpandaops.general.ethereum_node
 ethereum_node_el: geth
@@ -34,6 +65,25 @@ teku_container_command_extra_args:
   - --logging=info
   - --Xlog-include-p2p-warnings-enabled
   - --metrics-block-timing-tracking-enabled
+  - >-
+    --p2p-discovery-bootnodes={{
+      (
+        (
+          groups['bootnode']
+          | map('extract', hostvars, ['ethereum_node_fact_cl_enr'])
+          | select('defined')
+          | list
+        )
+        +
+        (
+          groups['bootnode']
+          | map('extract', hostvars, ['bootnodoor_fact_enr'])
+          | select('defined')
+          | list
+        )
+      )
+      | join(',')
+    }}
 
 # role: ethpandaops.general.geth
 geth_container_name: execution
@@ -50,7 +100,25 @@ geth_container_command_extra_args:
   - --syncmode=full
   - --gcmode=archive
   - --state.scheme=hash
-
+  - >-
+    --bootnodes={{
+      (
+        (
+          groups['bootnode']
+          | map('extract', hostvars, ['ethereum_node_fact_el_enode'])
+          | select('defined')
+          | list
+        )
+        +
+        (
+          groups['bootnode']
+          | map('extract', hostvars, ['bootnodoor_fact_enode'])
+          | select('defined')
+          | list
+        )
+      )
+      | join(',')
+    }}
 
 # role: ethpandaops.general.prometheus
 prometheus_remote_push_url: https://victoriametrics.ethdevops.io/insert/0/prometheus/api/v1/write

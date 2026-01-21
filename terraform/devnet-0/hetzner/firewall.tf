@@ -142,6 +142,22 @@ resource "hcloud_firewall" "bootnode_firewall" {
     port        = "53"
     source_ips  = ["0.0.0.0/0", "::/0"]
   }
+
+  // Bootnodoor P2P
+  rule {
+    description = "Allow Bootnodoor P2P port TCP"
+    direction   = "in"
+    protocol    = "tcp"
+    port        = "9010"
+    source_ips  = ["0.0.0.0/0", "::/0"]
+  }
+  rule {
+    description = "Allow Bootnodoor P2P port UDP"
+    direction   = "in"
+    protocol    = "udp"
+    port        = "9010"
+    source_ips  = ["0.0.0.0/0", "::/0"]
+  }
 }
 
 resource "hcloud_firewall" "mev_relay_firewall" {
