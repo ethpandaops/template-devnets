@@ -1,6 +1,10 @@
 resource "hcloud_firewall" "machine_firewall" {
   name = "${var.ethereum_network}-firewall"
 
+  apply_to {
+    label_selector = "EthNetwork=${var.ethereum_network}"
+  }
+
   # SSH
   rule {
     description = "Allow SSH"
