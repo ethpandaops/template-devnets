@@ -128,9 +128,9 @@ resource "digitalocean_firewall" "bootnode" {
 }
 
 resource "digitalocean_firewall" "mev_relay" {
-  count       = contains(keys(digitalocean_droplet.main), "mev-relay-1") ? 1 : 0
-  name        = "${var.ethereum_network}-nodes-mev-relay"
-  tags        = ["mev-relay:${var.ethereum_network}"]
+  count = contains(keys(digitalocean_droplet.main), "mev-relay-1") ? 1 : 0
+  name  = "${var.ethereum_network}-nodes-mev-relay"
+  tags  = ["mev-relay:${var.ethereum_network}"]
 
   // mev-relay ports
   inbound_rule {
