@@ -162,11 +162,11 @@ reth_container_command_extra_args:
   - --http.api=trace,rpc,eth,net,debug,web3,admin,flashbots,txpool
   - --ws.api=trace,rpc,eth,net,debug,web3,admin,flashbots,txpool
   - --ws.origins=*
-  - --builder.gaslimit=45000000
+  - --builder.gaslimit=60000000
   - --engine.persistence-threshold=0
   - --engine.memory-block-buffer-target=0
-  - --disable-tx-gossip
   - --rpc.eth-proof-window=3
+  - --txpool.no-local-transactions-propagation
 reth_container_pull: true
 
 reth_container_image: "{{ default_tooling_images.mev_builder }}"
@@ -179,6 +179,8 @@ reth_rbuilder_config: |
   redacted_telemetry_server_ip = "0.0.0.0"
   full_telemetry_server_port = 6060
   full_telemetry_server_ip = "0.0.0.0"
+
+  time_to_keep_mempool_txs_secs = 384
 
   chain = "/network-config/genesis.json"
   reth_datadir = "/data/reth"
