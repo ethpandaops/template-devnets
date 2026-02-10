@@ -87,7 +87,7 @@ prometheus_config: |
           labels:
             instance: "{{ ethereum_network_name }}-{{ inventory_hostname }}"
     - job_name: "execution"
-      metrics_path: "/debug/metrics/prometheus"
+      metrics_path: "/metrics"
       static_configs:
         - targets: ["execution:{{ ethereum_node_el_ports_metrics }}"]
           labels:
