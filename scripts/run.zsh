@@ -1,17 +1,18 @@
 #!/bin/zsh
 node="bootnode-1"
 network="devnet-0"
-prefix="testing"
+domain="ethpandaops.io"
+srv="srv"
+prefix="template"
 sops_name=$(sops --decrypt ../ansible/inventories/$network/group_vars/all/all.sops.yaml | yq -r '.secret_nginx_shared_basic_auth.name')
 sops_password=$(sops --decrypt ../ansible/inventories/$network/group_vars/all/all.sops.yaml | yq -r '.secret_nginx_shared_basic_auth.password')
 sops_mnemonic=$(sops --decrypt ../ansible/inventories/$network/group_vars/all/all.sops.yaml | yq -r '.secret_genesis_mnemonic')
-network_subdomain=$(yq -r '.network_subdomain' ../ansible/inventories/$network/group_vars/all/all.yaml)
-network_server_subdomain=$(yq -r '.network_server_subdomain' ../ansible/inventories/$network/group_vars/all/all.yaml)
 rpc_prefix=$(yq -r '.ethereum_node_rpc_prefix' ../ansible/inventories/$network/group_vars/all/all.yaml)
-beacon_prefix=$(yq -r '.ethereum_node_rpc_prefix' ../ansible/inventories/$network/group_vars/all/all.yaml)
-bn_endpoint="${BEACON_ENDPOINT:-https://$sops_name:$sops_password@$beacon_prefix$node.$network_server_subdomain}"
-rpc_endpoint="${RPC_ENDPOINT:-https://$sops_name:$sops_password@$rpc_prefix$node.$network_server_subdomain}"
-bootnode_endpoint="${BOOTNODE_ENDPOINT:-https://bootnode-1.$network_server_subdomain}"
+rpc_endpoint="${RPC_ENDPOINT:-https://$sops_name:$sops_password@rpc.$node.$prefix-$network.$domain}"
+beacon_prefix=$(yq -r '.ethereum_node_beacon_prefix' ../ansible/inventories/$network/group_vars/all/all.yaml)
+bn_endpoint="${BEACON_ENDPOINT:-https://$sops_name:$sops_password@$beacon_prefix$node.$srv.$prefix-$network.$domain}"
+rpc_endpoint="${RPC_ENDPOINT:-https://$sops_name:$sops_password@$rpc_prefix$node.$srv.$prefix-$network.$domain}"
+bootnode_endpoint="${BOOTNODE_ENDPOINT:-https://bootnode-1.$prefix-$network.$domain}"
 
 # Helper function to display available options
 print_usage() {
@@ -301,27 +302,27 @@ for arg in "${command[@]}"; do
       ;;
     "get_enrs")
       # Get the ENRs of the network
-      curl -s https://config.$network_subdomain/api/v1/nodes/inventory | jq -r '.ethereum_pairs[] | .consensus.enr'
+      curl -s https://config.$prefix-$network.$domain/api/v1/nodes/inventory | jq -r '.ethereum_pairs[] | .consensus.enr'
       ;;
     "get_enodes")
       # Get the enodes of the network
-      curl -s https://config.$network_subdomain/api/v1/nodes/inventory | jq -r '.ethereum_pairs[] | .execution.enode'
+      curl -s https://config.$prefix-$network.$domain/api/v1/nodes/inventory | jq -r '.ethereum_pairs[] | .execution.enode'
       ;;
     "get_peerid")
       # Get the peerid of the network
-      curl -s https://config.$network_subdomain/api/v1/nodes/inventory | jq -r '.ethereum_pairs[] | .consensus.peer_id'
+      curl -s https://config.$prefix-$network.$domain/api/v1/nodes/inventory | jq -r '.ethereum_pairs[] | .consensus.peer_id'
       ;;
     "get_rpc")
       # Get the rpc of the network
-      curl -s https://config.$network_subdomain/api/v1/nodes/inventory | jq -r '.ethereum_pairs[] | .execution.rpc_uri'
+      curl -s https://config.$prefix-$network.$domain/api/v1/nodes/inventory | jq -r '.ethereum_pairs[] | .execution.rpc_uri'
       ;;
     "get_beacon")
       # Get the beacon of the network
-      curl -s https://config.$network_subdomain/api/v1/nodes/inventory | jq -r '.ethereum_pairs[] | .consensus.beacon_uri'
+      curl -s https://config.$prefix-$network.$domain/api/v1/nodes/inventory | jq -r '.ethereum_pairs[] | .consensus.beacon_uri'
       ;;
     "get_inventory")
       # Get the inventory of the network
-      curl -s https://config.$network_subdomain/api/v1/nodes/inventory | jq -r '.ethereum_pairs[]'
+      curl -s https://config.$prefix-$network.$domain/api/v1/nodes/inventory | jq -r '.ethereum_pairs[]'
       ;;
     "fork_choice")
       # Get the fork choice of the network

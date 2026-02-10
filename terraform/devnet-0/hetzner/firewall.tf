@@ -1,6 +1,10 @@
 resource "hcloud_firewall" "machine_firewall" {
   name = "${var.ethereum_network}-firewall"
 
+  apply_to {
+    label_selector = "EthNetwork=${var.ethereum_network}"
+  }
+
   # SSH
   rule {
     description = "Allow SSH"
@@ -140,6 +144,22 @@ resource "hcloud_firewall" "bootnode_firewall" {
     direction   = "in"
     protocol    = "tcp"
     port        = "53"
+    source_ips  = ["0.0.0.0/0", "::/0"]
+  }
+
+  // Bootnodoor P2P
+  rule {
+    description = "Allow Bootnodoor P2P port TCP"
+    direction   = "in"
+    protocol    = "tcp"
+    port        = "9010"
+    source_ips  = ["0.0.0.0/0", "::/0"]
+  }
+  rule {
+    description = "Allow Bootnodoor P2P port UDP"
+    direction   = "in"
+    protocol    = "udp"
+    port        = "9010"
     source_ips  = ["0.0.0.0/0", "::/0"]
   }
 }

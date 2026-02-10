@@ -20,6 +20,15 @@ ${host.hostname}
 
 %{ endfor ~}
 
+%{ if !contains(keys(groups), "lighthouse-reth") ~}
+[lighthouse_reth]
+%{ for key, host in hosts ~}
+%{ if host.group == "mev-relay" ~}
+${host.hostname}
+%{ endif ~}
+%{ endfor ~}
+%{ endif ~}
+
 # Consensus client groups
 
 %{ for cl in ["lighthouse", "lodestar", "nimbus", "teku", "prysm", "grandine"] ~}
@@ -29,6 +38,9 @@ ${host.hostname}
 ${replace(gid, "-", "_")}
 %{ endif ~}
 %{ endfor ~}
+%{ if cl == "lighthouse" && contains(keys(groups), "mev-relay") ~}
+mev_relay
+%{ endif ~}
 %{ endfor ~}
 
 # Execution client groups
@@ -42,6 +54,9 @@ ${replace(gid, "-", "_")}
 %{ endif ~}
 %{ endif ~}
 %{ endfor ~}
+%{ if el == "reth" && contains(keys(groups), "mev-relay") ~}
+mev_relay
+%{ endif ~}
 %{ endfor ~}
 
 # Global groups
