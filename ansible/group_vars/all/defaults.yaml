@@ -60,6 +60,7 @@ docker_daemon_options:
       "max-size": "500m"
       "max-file": "8"
   "registry-mirrors": ["https://docker-cache.ethquokkaops.io","https://docker.ethquokkaops.io/gh"]
+  "features": { "containerd-snapshotter": false }
 
 # role: ethpandaops.general.prometheus
 prometheus_container_networks: "{{ docker_networks_shared }}"
