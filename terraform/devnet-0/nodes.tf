@@ -27,8 +27,8 @@ variable "nodes" {
   default = [
     { name = "bootnode", count = 1, cloud = "digitalocean" },
     { name = "mev-relay", count = 1, cloud = "hetzner", size = "ccx53" },
-    { name = "lighthouse-geth-super", count = 2, cloud = "digitalocean", validator_start = 0, validator_end = 200 },
-    { name = "lighthouse-geth-super", count = 1, cloud = "hetzner", validator_start = 200, validator_end = 300 },
-    { name = "prysm-nethermind-full", count = 1, cloud = "hetzner", validator_start = 300, validator_end = 400 },
+    { name = "lighthouse-geth", count = 2, cloud = "digitalocean", validator_start = 0, validator_end = 400 },
+    { name = "lighthouse-geth", count = 1, cloud = "hetzner", validator_start = 400, validator_end = 500 },
+    { name = "prysm-nethermind", count = 1, cloud = "hetzner", validator_start = 500, validator_end = 550 },
   ]
 }

@@ -52,18 +52,31 @@ locals {
         id         = "${node.name}-${node.start_index + i + 1}"
         vms = {
           "${i + 1}" = {
-            arch = can(regex("^cax", node.size != null ? node.size : (can(regex("(super|bootnode)", node.name)) ? var.hetzner_supernode_size : var.hetzner_fullnode_size))) ? "arm64" : "amd64"
-            labels = join(",", compact([
-              "group_name:${node.name}",
-              "val_start:${node.validator_start + (i * (node.validator_end - node.validator_start) / node.count)}",
-              "val_end:${min(node.validator_start + ((i + 1) * (node.validator_end - node.validator_start) / node.count), node.validator_end)}",
-              "supernode:${node.supernode != null ? (node.supernode ? "True" : "False") : (can(regex("(super|bootnode|mev)", node.name)) ? "True" : "False")}",
-              "arch:${can(regex("^cax", node.size != null ? node.size : (can(regex("(super|bootnode)", node.name)) ? var.hetzner_supernode_size : var.hetzner_fullnode_size))) ? "arm64" : "amd64"}",
-              can(regex("bootnode", node.name)) ? "bootnode:${var.ethereum_network}" : null,
-              can(regex("mev-relay", node.name)) ? "mev:${var.ethereum_network}" : null
-            ]))
+            # Validator range for this instance
+            val_start = node.validator_start + (i * (node.validator_end - node.validator_start) / node.count)
+            val_end   = min(
+              node.validator_start + ((i + 1) * (node.validator_end - node.validator_start) / node.count),
+              node.validator_end
+            )
+            validator_count = node.count > 0 ? (node.validator_end - node.validator_start) / node.count : 0
+
+            # Supernode: explicit > bootnode/mev > validator_count >= 128
+            supernode = (
+              node.supernode != null ? node.supernode :
+              can(regex("(bootnode|mev)", node.name)) ? true :
+              (node.count > 0 ? (node.validator_end - node.validator_start) / node.count >= 128 : false)
+            )
+
+            # Size: explicit > supernode-based default
+            size = (
+              node.size != null ? node.size :
+              (node.supernode != null ? node.supernode :
+                can(regex("(bootnode|mev)", node.name)) ? true :
+                (node.count > 0 ? (node.validator_end - node.validator_start) / node.count >= 128 : false)
+              ) ? var.hetzner_supernode_size : var.hetzner_fullnode_size
+            )
+
             location     = node.location != null ? node.location : var.hetzner_regions[i % length(var.hetzner_regions)]
-            size         = node.size != null ? node.size : (can(regex("(super|bootnode)", node.name)) ? var.hetzner_supernode_size : var.hetzner_fullnode_size)
             ipv4_enabled = node.ipv4_enabled
             ipv6_enabled = node.ipv6_enabled
           }
@@ -98,7 +111,19 @@ locals {
         server_type  = vm.size
         backups      = false
 
-        labels = concat(local.hcloud_global_labels, split(",", vm.labels))
+        # Architecture: cax* = ARM64, everything else = AMD64
+        arch = can(regex("^cax", vm.size)) ? "arm64" : "amd64"
+
+        labels = concat(local.hcloud_global_labels, [
+          "group_name:${group.group_name}",
+          "val_start:${vm.val_start}",
+          "val_end:${vm.val_end}",
+          "supernode:${vm.supernode ? "True" : "False"}",
+          "arch:${can(regex("^cax", vm.size)) ? "arm64" : "amd64"}",
+        ], compact([
+          can(regex("bootnode", group.group_name)) ? "bootnode:${var.ethereum_network}" : null,
+          can(regex("mev-relay", group.group_name)) ? "mev:${var.ethereum_network}" : null
+        ]))
       }
     ]
   ])

@@ -57,18 +57,24 @@ locals {
         id         = "${node.name}-${node.start_index + i + 1}"
         vms = {
           "${i + 1}" = {
-            tags = join(",", compact([
-              "group_name:${node.name}",
-              "val_start:${node.validator_start + (i * (node.validator_end - node.validator_start) / node.count)}",
-              "val_end:${min(node.validator_start + ((i + 1) * (node.validator_end - node.validator_start) / node.count), node.validator_end)}",
-              "supernode:${node.supernode != null ? (node.supernode ? "True" : "False") : (can(regex("(super|bootnode|mev)", node.name)) ? "True" : "False")}",
-              "arch:amd64",
-              can(regex("bootnode", node.name)) ? "bootnode:${var.ethereum_network}" : null,
-              can(regex("mev-relay", node.name)) ? "mev-relay:${var.ethereum_network}" : null
-            ]))
+            # Validator range for this instance
+            val_start = node.validator_start + (i * (node.validator_end - node.validator_start) / node.count)
+            val_end   = min(
+              node.validator_start + ((i + 1) * (node.validator_end - node.validator_start) / node.count),
+              node.validator_end
+            )
+            validator_count = node.count > 0 ? (node.validator_end - node.validator_start) / node.count : 0
+
+            # Supernode: explicit > bootnode/mev > validator_count >= 128
+            supernode = (
+              node.supernode != null ? node.supernode :
+              can(regex("(bootnode|mev)", node.name)) ? true :
+              (node.count > 0 ? (node.validator_end - node.validator_start) / node.count >= 128 : false)
+            )
+
             region = node.region != null ? node.region : var.digitalocean_regions[i % length(var.digitalocean_regions)]
-            size   = node.size != null ? node.size : (can(regex("(super|bootnode)", node.name)) ? var.digitalocean_supernode_size : var.digitalocean_fullnode_size)
             ipv6   = node.ipv6
+            arch   = "amd64"
           }
         }
       }
@@ -96,14 +102,23 @@ locals {
         ssh_keys    = [data.digitalocean_ssh_key.main.fingerprint]
         region      = vm.region
         image       = local.digitalocean_default_image
-        size        = vm.size
+        size        = vm.supernode ? var.digitalocean_supernode_size : var.digitalocean_fullnode_size
         resize_disk = true
         monitoring  = true
         backups     = false
         ipv6        = vm.ipv6
         vpc_uuid    = digitalocean_vpc.main[vm.region].id
 
-        tags = concat(local.digitalocean_global_tags, split(",", vm.tags))
+        tags = concat(local.digitalocean_global_tags, [
+          "group_name:${group.group_name}",
+          "val_start:${vm.val_start}",
+          "val_end:${vm.val_end}",
+          "supernode:${vm.supernode ? "True" : "False"}",
+          "arch:${vm.arch}",
+        ], compact([
+          can(regex("bootnode", group.group_name)) ? "bootnode:${var.ethereum_network}" : null,
+          can(regex("mev-relay", group.group_name)) ? "mev-relay:${var.ethereum_network}" : null
+        ]))
       }
     ]
   ])
