@@ -75,6 +75,15 @@ variable "lighthouse_nimbusel_super" {
   }
 }
 
+variable "lighthouse_ethrex_super" {
+  default = {
+    name            = "lighthouse-ethrex-super"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
 # Prysm
 variable "prysm_geth_super" {
   default = {
@@ -179,6 +188,15 @@ variable "lodestar_reth_super" {
 variable "lodestar_nimbusel_super" {
   default = {
     name            = "lodestar-nimbusel-super"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
+variable "lodestar_ethrex_super" {
+  default = {
+    name            = "lodestar-ethrex-super"
     count           = 0
     validator_start = 0
     validator_end   = 0
@@ -407,6 +425,15 @@ variable "lighthouse_nimbusel_full" {
   }
 }
 
+variable "lighthouse_ethrex_full" {
+  default = {
+    name            = "lighthouse-ethrex-full"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
 # Prysm
 variable "prysm_geth_full" {
   default = {
@@ -511,6 +538,15 @@ variable "lodestar_reth_full" {
 variable "lodestar_nimbusel_full" {
   default = {
     name            = "lodestar-nimbusel-full"
+    count           = 0
+    validator_start = 0
+    validator_end   = 0
+  }
+}
+
+variable "lodestar_ethrex_full" {
+  default = {
+    name            = "lodestar-ethrex-full"
     count           = 0
     validator_start = 0
     validator_end   = 0
