@@ -40,7 +40,7 @@ provider "cloudflare" {
 }
 
 provider "hcloud" {
-  token = var.hcloud_token
+  token = var.template_hcloud_token
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -52,7 +52,7 @@ variable "cloudflare_api_token" {
   description = "Cloudflare API Token"
 }
 
-variable "hcloud_token" {
+variable "template_hcloud_token" {
   type        = string
   sensitive   = true
   default     = ""
