@@ -60,7 +60,7 @@ docker_daemon_options:
       "max-size": "500m"
       "max-file": "8"
   "registry-mirrors": ["https://docker-cache.ethquokkaops.io","https://docker.ethquokkaops.io/gh"]
-  "features": { "containerd-snapshotter": false }
+  "features": { "containerd-snapshotter": false } # This is a temp fix for a docker 29 in combinations with our pull through cache, can be safely removed once the cache is working again with docker 29+
 
 # role: ethpandaops.general.prometheus
 prometheus_container_networks: "{{ docker_networks_shared }}"
