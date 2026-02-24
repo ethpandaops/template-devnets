@@ -39,6 +39,10 @@ provider "cloudflare" {
   api_token = var.cloudflare_api_token
 }
 
+provider "hcloud" {
+  token = var.template_hcloud_token
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////
 //                                        VARIABLES
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -46,6 +50,13 @@ variable "cloudflare_api_token" {
   type        = string
   sensitive   = true
   description = "Cloudflare API Token"
+}
+
+variable "template_hcloud_token" {
+  type        = string
+  sensitive   = true
+  default     = ""
+  description = "Hetzner Cloud API Token (optional if not using Hetzner)"
 }
 
 variable "ethereum_network" {
@@ -56,85 +67,32 @@ variable "ethereum_network" {
 variable "base_cidr_block" {
   default = "10.2.0.0/16"
 }
+
 ////////////////////////////////////////////////////////////////////////////////////////
 //                                        LOCALS
 ////////////////////////////////////////////////////////////////////////////////////////
 locals {
-  vm_groups = [
-    var.bootnode,
-    # Supernodes
-    var.lighthouse_geth_super,
-    var.lighthouse_nethermind_super,
-    var.lighthouse_besu_super,
-    var.lighthouse_erigon_super,
-    var.lighthouse_reth_super,
-    var.lighthouse_nimbusel_super,
-    var.prysm_geth_super,
-    var.prysm_nethermind_super,
-    var.prysm_besu_super,
-    var.prysm_erigon_super,
-    var.prysm_reth_super,
-    var.prysm_nimbusel_super,
-    var.teku_geth_super,
-    var.teku_nethermind_super,
-    var.teku_besu_super,
-    var.teku_erigon_super,
-    var.teku_reth_super,
-    var.teku_nimbusel_super,
-    var.nimbus_geth_super,
-    var.nimbus_nethermind_super,
-    var.nimbus_besu_super,
-    var.nimbus_erigon_super,
-    var.nimbus_reth_super,
-    var.nimbus_nimbusel_super,
-    var.lodestar_geth_super,
-    var.lodestar_nethermind_super,
-    var.lodestar_besu_super,
-    var.lodestar_erigon_super,
-    var.lodestar_reth_super,
-    var.lodestar_nimbusel_super,
-    var.grandine_geth_super,
-    var.grandine_nethermind_super,
-    var.grandine_besu_super,
-    var.grandine_erigon_super,
-    var.grandine_reth_super,
-    var.grandine_nimbusel_super,
-    # Fullnodes
-    var.lighthouse_geth_full,
-    var.lighthouse_nethermind_full,
-    var.lighthouse_besu_full,
-    var.lighthouse_erigon_full,
-    var.lighthouse_reth_full,
-    var.lighthouse_nimbusel_full,
-    var.prysm_geth_full,
-    var.prysm_nethermind_full,
-    var.prysm_besu_full,
-    var.prysm_erigon_full,
-    var.prysm_reth_full,
-    var.prysm_nimbusel_full,
-    var.teku_geth_full,
-    var.teku_nethermind_full,
-    var.teku_besu_full,
-    var.teku_erigon_full,
-    var.teku_reth_full,
-    var.teku_nimbusel_full,
-    var.nimbus_geth_full,
-    var.nimbus_nethermind_full,
-    var.nimbus_besu_full,
-    var.nimbus_erigon_full,
-    var.nimbus_reth_full,
-    var.nimbus_nimbusel_full,
-    var.lodestar_geth_full,
-    var.lodestar_nethermind_full,
-    var.lodestar_besu_full,
-    var.lodestar_erigon_full,
-    var.lodestar_reth_full,
-    var.lodestar_nimbusel_full,
-    var.grandine_geth_full,
-    var.grandine_nethermind_full,
-    var.grandine_besu_full,
-    var.grandine_erigon_full,
-    var.grandine_reth_full,
-    var.grandine_nimbusel_full,
+  # Normalize node entries with defaults and calculate starting index for continuous numbering
+  nodes_normalized = [
+    for idx, node in var.nodes : {
+      name            = node.name
+      count           = node.count
+      cloud           = node.cloud
+      validator_start = try(node.validator_start, 0)
+      validator_end   = try(node.validator_end, 0)
+      size            = try(node.size, null)
+      region          = try(node.region, null)
+      location        = try(node.location, try(node.region, null))
+      supernode       = try(node.supernode, null)
+      ipv6            = try(node.ipv6, true)
+      ipv4_enabled    = try(node.ipv4_enabled, true)
+      ipv6_enabled    = try(node.ipv6_enabled, true)
+      # Calculate starting index: sum of counts from all previous entries with same name
+      start_index = sum([for i, n in var.nodes : n.count if i < idx && n.name == node.name])
+    }
   ]
+
+  # Filter by cloud provider (only nodes with count > 0)
+  digitalocean_nodes = [for n in local.nodes_normalized : n if n.cloud == "digitalocean" && n.count > 0]
+  hetzner_nodes      = [for n in local.nodes_normalized : n if n.cloud == "hetzner" && n.count > 0]
 }
