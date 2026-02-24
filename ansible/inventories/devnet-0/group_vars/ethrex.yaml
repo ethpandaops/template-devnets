@@ -19,7 +19,7 @@ ethrex_container_volumes:
   - "{{ ethrex_auth_jwt_path }}:/execution-auth.jwt:ro"
   - "{{ eth_testnet_config_dir }}:/network-config:ro"
 ethrex_container_command_extra_args:
-  - --chain=/network-config/genesis.json
+  - --network=/network-config/genesis.json
   - --bootnodes={{ ethereum_el_bootnodes | join(',') }}
   - --http.api=eth,net,web3,debug,admin,txpool
 prometheus_config: |
