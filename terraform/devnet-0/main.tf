@@ -88,7 +88,7 @@ locals {
       ipv4_enabled    = try(node.ipv4_enabled, true)
       ipv6_enabled    = try(node.ipv6_enabled, true)
       # Calculate starting index: sum of counts from all previous entries with same name
-      start_index = sum([for i, n in var.nodes : n.count if i < idx && n.name == node.name])
+      start_index = sum(concat([for i, n in var.nodes : n.count if i < idx && n.name == node.name], [0]))
     }
   ]
 

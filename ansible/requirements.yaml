@@ -2,15 +2,15 @@ roles:
   - name: gantsign.oh-my-zsh
     version: "2.7.0"
   - name: geerlingguy.docker
-    version: "6.0.3"
+    version: "8.0.0"
   - name: geerlingguy.firewall
     version: "2.5.0"
   - src: geerlingguy.pip
-    version: "3.0.3"
+    version: "3.1.2"
   - name: robertdebock.fail2ban
     version: "4.2.3"
   - name: gantsign.golang
-    version: "3.4.0"
+    version: "3.5.0"
 
 collections:
   - name: ansible.posix
