@@ -49,11 +49,11 @@ on:
         default: ''
         type: string
       el-image:
-        description: 'Execution layer client images as JSON (e.g., {"geth": "ethereum/client-go:latest", "besu": "hyperledger/besu:latest"})'
+        description: 'Execution layer client images as JSON (e.g., {"geth": "ethereum/client-go:latest", "besu": "besu-eth/besu:latest"})'
         required: false
         default: >-
           {
-            "besu": "hyperledger/besu:latest",
+            "besu": "besu-eth/besu:latest",
             "geth": "ethereum/client-go:stable",
             "erigon": "erigontech/erigon:latest",
             "nethermind": "nethermind/nethermind:latest",
@@ -138,7 +138,7 @@ jobs:
       run: |
         cat > /tmp/default-el-images.json <<'EOF'
         {
-          "besu": "hyperledger/besu:latest",
+          "besu": "besu-eth/besu:latest",
           "geth": "ethereum/client-go:stable",
           "erigon": "erigontech/erigon:latest",
           "nethermind": "nethermind/nethermind:latest",
