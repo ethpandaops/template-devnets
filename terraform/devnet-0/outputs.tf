@@ -44,7 +44,7 @@ resource "local_file" "ansible_inventory" {
       )
     }
   )
-  filename = "../../ansible/inventories/devnet-0/inventory.ini"
+  filename = "../../ansible/inventories/${join("-", slice(split("-", var.ethereum_network), length(split("-", var.ethereum_network)) - 2, length(split("-", var.ethereum_network))))}/inventory.ini"
 }
 
 locals {
