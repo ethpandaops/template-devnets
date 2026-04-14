@@ -115,7 +115,7 @@ jobs:
           steps.client_config_dispatch.outputs.client_config
         }}
     steps:
-      - uses: ethpandaops/hive-github-action/helpers/client-config@a9ec89442df18ee579d3179b76c47f5f93954307 # v0.4.0
+      - uses: ethpandaops/hive-github-action/helpers/client-config@09050fc75bae8a10b1876a0826ca4114ea9ed6e8 # v0.6.3
         if: github.event_name == 'schedule'
         name: 'Client config: schedule'
         id: client_config_schedule
@@ -125,7 +125,7 @@ jobs:
           hive_version: 'ethereum/hive@master'
           goproxy: ${{ env.GOPROXY }}
 
-      - uses: ethpandaops/hive-github-action/helpers/client-config@a9ec89442df18ee579d3179b76c47f5f93954307 # v0.4.0
+      - uses: ethpandaops/hive-github-action/helpers/client-config@09050fc75bae8a10b1876a0826ca4114ea9ed6e8 # v0.6.3
         if: github.event_name == 'workflow_dispatch'
         name: 'Client config: workflow_dispatch'
         id: client_config_dispatch
@@ -168,14 +168,14 @@ jobs:
             "ethereum/eest/consume-rlp"
           '))}}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - uses: ethpandaops/hive-github-action/helpers/self-hosted-runner-dependencies@a9ec89442df18ee579d3179b76c47f5f93954307 # v0.4.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: ethpandaops/hive-github-action/helpers/self-hosted-runner-dependencies@09050fc75bae8a10b1876a0826ca4114ea9ed6e8 # v0.6.3
         if: runner.environment != 'github-hosted'
-      - uses: ethpandaops/actions/docker-login@a91b7a8dd6a264f5e845ac2aa52d2d6f24e6d01d
+      - uses: ethpandaops/actions/docker-login@99b48ca2b233a2eff93e6a6df76e46b718aca108
         with:
           username: ethpandaops
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - uses: ethpandaops/hive-github-action@a9ec89442df18ee579d3179b76c47f5f93954307 # v0.4.0
+      - uses: ethpandaops/hive-github-action@09050fc75bae8a10b1876a0826ca4114ea9ed6e8 # v0.6.3
         with:
           hive_repository: ${{ needs.prepare.outputs.hive_repo }}
           hive_version: ${{ needs.prepare.outputs.hive_tag }}
