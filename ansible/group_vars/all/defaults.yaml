@@ -13,10 +13,10 @@ global_ipv6_enabled: true
 # Use end of range for static assignments, start will be auto assigned to remaining containers.
 service_ipv6_offsets:
   nginx_proxy: 15    # :f
-  execution: 14      # :e (execution)
+  execution: 14      # :e
   snooper_engine: 13 # :d
   snooper_rpc: 12    # :c
-  consensus: 11      # :b (beacon)
+  beacon: 11         # :b
   validator: 10      # :a
 
 # Derive host IPv6 prefix from the Terraform-provided `ipv6` host var.

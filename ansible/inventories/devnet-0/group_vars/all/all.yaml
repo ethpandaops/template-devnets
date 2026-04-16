@@ -135,7 +135,7 @@ ethereum_node_el_ports_engine: 8551
 ethereum_node_el_ports_metrics: 6060
 ethereum_node_ipv6_enabled: true
 ethereum_node_el_public_ipv6: "{{ host_ipv6_prefix | ansible.utils.ipaddr(service_ipv6_offsets.execution) | ansible.utils.ipaddr('address') if (docker_network_enable_ipv6 | bool) else '' }}"
-ethereum_node_cl_public_ipv6: "{{ host_ipv6_prefix | ansible.utils.ipaddr(service_ipv6_offsets.consensus) | ansible.utils.ipaddr('address') if (docker_network_enable_ipv6 | bool) else '' }}"
+ethereum_node_cl_public_ipv6: "{{ host_ipv6_prefix | ansible.utils.ipaddr(service_ipv6_offsets.beacon) | ansible.utils.ipaddr('address') if (docker_network_enable_ipv6 | bool) else '' }}"
 ethereum_node_validator_public_ipv6: "{{ host_ipv6_prefix | ansible.utils.ipaddr(service_ipv6_offsets.validator) | ansible.utils.ipaddr('address') if (docker_network_enable_ipv6 | bool) else '' }}"
 ethereum_node_snooper_rpc_public_ipv6: "{{ host_ipv6_prefix | ansible.utils.ipaddr(service_ipv6_offsets.snooper_rpc) | ansible.utils.ipaddr('address') if (docker_network_enable_ipv6 | bool) else '' }}"
 ethereum_node_snooper_engine_public_ipv6: "{{ host_ipv6_prefix | ansible.utils.ipaddr(service_ipv6_offsets.snooper_engine) | ansible.utils.ipaddr('address') if (docker_network_enable_ipv6 | bool) else '' }}"
