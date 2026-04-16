@@ -42,8 +42,9 @@ dns_server_zones:
       bootnodoor-{{ hostvars[host]['inventory_hostname'] }}                        IN  A     {{ hostvars[host]['ansible_host'] }}
       {% if hostvars[host]['ipv6'] is defined %}
       {{ hostvars[host]['inventory_hostname'] }}                                   IN  AAAA  {{ hostvars[host]['ipv6'] }}
-      {{ ethereum_node_rpc_prefix }}{{ hostvars[host]['inventory_hostname'] }}     IN  AAAA  {{ hostvars[host]['ipv6'] }}
-      {{ ethereum_node_beacon_prefix }}{{ hostvars[host]['inventory_hostname'] }}  IN  AAAA  {{ hostvars[host]['ipv6'] }}
+      {% set proxy_ipv6 = hostvars[host].get('docker_nginx_proxy_public_ipv6', hostvars[host]['ipv6']) %}
+      {{ ethereum_node_rpc_prefix }}{{ hostvars[host]['inventory_hostname'] }}     IN  AAAA  {{ proxy_ipv6 if proxy_ipv6 | length > 0 else hostvars[host]['ipv6'] }}
+      {{ ethereum_node_beacon_prefix }}{{ hostvars[host]['inventory_hostname'] }}  IN  AAAA  {{ proxy_ipv6 if proxy_ipv6 | length > 0 else hostvars[host]['ipv6'] }}
       {% endif %}
       {% endfor %}
 
@@ -54,8 +55,9 @@ dns_server_zones:
       {{ ethereum_node_beacon_prefix }}{{ hostvars[host]['inventory_hostname'] }}  IN  A     {{ hostvars[host]['ansible_host'] }}
       {% if hostvars[host]['ipv6'] is defined %}
       {{ hostvars[host]['inventory_hostname'] }}                                   IN  AAAA  {{ hostvars[host]['ipv6'] }}
-      {{ ethereum_node_rpc_prefix }}{{ hostvars[host]['inventory_hostname'] }}     IN  AAAA  {{ hostvars[host]['ipv6'] }}
-      {{ ethereum_node_beacon_prefix }}{{ hostvars[host]['inventory_hostname'] }}  IN  AAAA  {{ hostvars[host]['ipv6'] }}
+      {% set proxy_ipv6 = hostvars[host].get('docker_nginx_proxy_public_ipv6', hostvars[host]['ipv6']) %}
+      {{ ethereum_node_rpc_prefix }}{{ hostvars[host]['inventory_hostname'] }}     IN  AAAA  {{ proxy_ipv6 if proxy_ipv6 | length > 0 else hostvars[host]['ipv6'] }}
+      {{ ethereum_node_beacon_prefix }}{{ hostvars[host]['inventory_hostname'] }}  IN  AAAA  {{ proxy_ipv6 if proxy_ipv6 | length > 0 else hostvars[host]['ipv6'] }}
       {% endif %}
       {% endfor %}
 
