@@ -18,9 +18,6 @@ service_ipv6_offsets:
   snooper_rpc: 12     # :c
   beacon: 11          # :b
   validator: 10       # :a
-  mev_boost: 9        # :9
-  xatu_sentry: 8      # :8
-  metrics_exporter: 7 # :7
 
 # Derive host IPv6 prefix from the Terraform-provided `ipv6` host var.
 # Hetzner gives a /64, DO gives a /124.
