@@ -12,12 +12,15 @@ global_ipv6_enabled: true
 # DO /124 has only ::3..::f usable, so offsets must stay small.
 # Use end of range for static assignments, start will be auto assigned to remaining containers.
 service_ipv6_offsets:
-  nginx_proxy: 15    # :f
-  execution: 14      # :e
-  snooper_engine: 13 # :d
-  snooper_rpc: 12    # :c
-  beacon: 11         # :b
-  validator: 10      # :a
+  nginx_proxy: 15     # :f
+  execution: 14       # :e
+  snooper_engine: 13  # :d
+  snooper_rpc: 12     # :c
+  beacon: 11          # :b
+  validator: 10       # :a
+  mev_boost: 9        # :9
+  xatu_sentry: 8      # :8
+  metrics_exporter: 7 # :7
 
 # Derive host IPv6 prefix from the Terraform-provided `ipv6` host var.
 # Hetzner gives a /64, DO gives a /124.
