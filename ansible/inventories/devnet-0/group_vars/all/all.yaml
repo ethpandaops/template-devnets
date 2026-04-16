@@ -254,7 +254,7 @@ docker_nginx_proxy_acme_companion_container_env:
   ACME_EAB_HMAC_KEY: "{{ secret_zerossl.ACME_EAB_HMAC_KEY }}"
 docker_nginx_proxy_container_networks: >-
   {{ [{'name': 'shared'} | combine({'ipv6_address': docker_nginx_proxy_public_ipv6} if (docker_nginx_proxy_public_ipv6 | default('') | length > 0) else {})] }}
-docker_nginx_proxy_docker_gen_container_networks: "{{ docker_networks_shared }}"
+docker_nginx_proxy_docker_gen_container_networks: []
 docker_nginx_proxy_acme_companion_container_networks: "{{ docker_networks_shared }}"
 docker_nginx_proxy_acme_monitor_container_networks: "{{ docker_networks_shared }}"
 docker_nginx_proxy_acme_monitor_enabled: false
@@ -267,8 +267,8 @@ docker_nginx_proxy_container_volumes:
   - "{{ docker_nginx_proxy_datadir }}/htpasswd:/etc/nginx/htpasswd:ro"
 docker_nginx_proxy_cert_loader_container_image: "{{ default_tooling_images.nginx_proxy_cert_loader }}"
 docker_nginx_proxy_cert_linker_container_image: "{{ default_tooling_images.nginx_proxy_cert_linker }}"
-docker_nginx_proxy_cert_loader_container_networks: "{{ docker_networks_shared }}"
-docker_nginx_proxy_cert_linker_container_networks: "{{ docker_networks_shared }}"
+docker_nginx_proxy_cert_loader_container_networks: []
+docker_nginx_proxy_cert_linker_container_networks: []
 docker_nginx_proxy_wildcard_cert: "{{ network_server_subdomain }}"
 docker_nginx_proxy_wildcard_cert_url: "http://cert.{{ network_server_subdomain }}/{{ network_server_subdomain }}-latest.tar.enc"
 docker_nginx_proxy_wildcard_cert_psk: "{{ secret_cert_encryption_psk }}"
