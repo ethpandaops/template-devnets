@@ -40,8 +40,14 @@ REPO_SECTIONS = {
 
 
 def hackmd(method, path="", body=None):
+    token = os.environ.get("HACKMD_TOKEN")
+    if not token:
+        raise SystemExit(
+            "HACKMD_TOKEN env var not set — generate one at "
+            "https://notes.ethereum.org/settings#api and `export HACKMD_TOKEN=...`"
+        )
     headers = {
-        "Authorization": f"Bearer {os.environ['HACKMD_TOKEN']}",
+        "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
         "User-Agent": UA,
     }
