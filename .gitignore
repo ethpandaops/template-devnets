@@ -31,3 +31,7 @@ terraform.rc
 # Validator keys
 **/files/validator_keys/*
 network-configs/**/mnemonics.yaml
+
+# scripts
+scripts/*.txt
+scripts/*.json

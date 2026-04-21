@@ -43,10 +43,10 @@
 - hosts: bootnode
   become: true
   roles:
-    - role: ethpandaops.general.cl_bootnode
-      tags: [cl_bootnode]
     - role: ethpandaops.general.ethereum_testnet_config
       tags: [ethereum, eth_testnet_config, ethereum_testnet_config]
+    - role: ethpandaops.general.bootnodoor
+      tags: [bootnodoor]
     - role: ethpandaops.general.validator_keys
       when: ethereum_node_cl_validator_enabled == true
       tags: [ethereum, validator_keys]
@@ -76,40 +76,25 @@
   roles:
     - role: ethpandaops.general.ethereum_node
       tags: [ethereum, ethereum_node]
-    - role: ethpandaops.general.traffic_control
-      when: ethereum_node_cl_supernode_enabled == False
-      vars:
-        traffic_control_rules:
-          - interface: eth0
-            rate_download: 100mbit
-            rate_upload: 50mbit
-      tags: [traffic_control]
-    - role: ethpandaops.general.traffic_control
-      when: ethereum_node_cl_supernode_enabled == True
-      vars:
-        traffic_control_rules:
-          - interface: eth0
-            rate_download: 1000mbit
-            rate_upload: 1000mbit
-      tags: [traffic_control]
+    - role: ethpandaops.general.brakebear
+      tags: [brakebear]
 
-- hosts: ethereum_node
+- hosts: bootnode
   become: true
   tasks:
     - name: Refresh inventory web
       ansible.builtin.import_role:
         name: ethpandaops.general.ethereum_inventory_web
       tags: [eth_inventory_web, ethereum_inventory_web]
-      delegate_to: bootnode-1
-      run_once: true
+      when: inventory_hostname == primary_bootnode
       vars:
-        eth_inventory_web_container_networks: "{{ docker_networks_shared }}" # noqa var-naming[no-role-prefix]
-        eth_inventory_web_container_env: # noqa var-naming[no-role-prefix]
-          VIRTUAL_HOST: "bootnode-1.{{ network_subdomain }}"
+        eth_inventory_web_container_networks: "{{ docker_networks_shared }}" #noqa var-naming[no-role-prefix]
+        eth_inventory_web_container_env: #noqa var-naming[no-role-prefix]
+          VIRTUAL_HOST: "{{ primary_bootnode }}.{{ network_server_subdomain }}"
           VIRTUAL_PORT: "80"
           VIRTUAL_PATH: "/meta/api"
           VIRTUAL_DEST: "/"
-          LETSENCRYPT_HOST: "bootnode-1.{{ network_subdomain }}"
+          LETSENCRYPT_HOST: "{{ primary_bootnode }}.{{ network_server_subdomain }}"
 
 - hosts: mev_relay
   become: true

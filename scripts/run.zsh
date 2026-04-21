@@ -1,17 +1,18 @@
 #!/bin/zsh
 node="bootnode-1"
 network="devnet-0"
-prefix="testing"
+domain="ethpandaops.io"
+srv="srv"
+prefix="template"
 sops_name=$(sops --decrypt ../ansible/inventories/$network/group_vars/all/all.sops.yaml | yq -r '.secret_nginx_shared_basic_auth.name')
 sops_password=$(sops --decrypt ../ansible/inventories/$network/group_vars/all/all.sops.yaml | yq -r '.secret_nginx_shared_basic_auth.password')
 sops_mnemonic=$(sops --decrypt ../ansible/inventories/$network/group_vars/all/all.sops.yaml | yq -r '.secret_genesis_mnemonic')
-network_subdomain=$(yq -r '.network_subdomain' ../ansible/inventories/$network/group_vars/all/all.yaml)
-network_server_subdomain=$(yq -r '.network_server_subdomain' ../ansible/inventories/$network/group_vars/all/all.yaml)
 rpc_prefix=$(yq -r '.ethereum_node_rpc_prefix' ../ansible/inventories/$network/group_vars/all/all.yaml)
-beacon_prefix=$(yq -r '.ethereum_node_rpc_prefix' ../ansible/inventories/$network/group_vars/all/all.yaml)
-bn_endpoint="${BEACON_ENDPOINT:-https://$sops_name:$sops_password@$beacon_prefix$node.$network_server_subdomain}"
-rpc_endpoint="${RPC_ENDPOINT:-https://$sops_name:$sops_password@$rpc_prefix$node.$network_server_subdomain}"
-bootnode_endpoint="${BOOTNODE_ENDPOINT:-https://bootnode-1.$network_server_subdomain}"
+rpc_endpoint="${RPC_ENDPOINT:-https://$sops_name:$sops_password@rpc.$node.$prefix-$network.$domain}"
+beacon_prefix=$(yq -r '.ethereum_node_beacon_prefix' ../ansible/inventories/$network/group_vars/all/all.yaml)
+bn_endpoint="${BEACON_ENDPOINT:-https://$sops_name:$sops_password@$beacon_prefix$node.$srv.$prefix-$network.$domain}"
+rpc_endpoint="${RPC_ENDPOINT:-https://$sops_name:$sops_password@$rpc_prefix$node.$srv.$prefix-$network.$domain}"
+bootnode_endpoint="${BOOTNODE_ENDPOINT:-https://bootnode-1.$prefix-$network.$domain}"
 
 # Helper function to display available options
 print_usage() {
@@ -463,22 +464,35 @@ for arg in "${command[@]}"; do
         echo "Continue? (y/n)"
         read -r response
         if [[ $response == "y" ]]; then
+          nonce_hex=$(curl -s --header 'Content-Type: application/json' --data-raw '{"jsonrpc":"2.0","method":"eth_getTransactionCount","params":["'$publickey'","pending"],"id":0}' $rpc_endpoint | jq -r '.result')
+          nonce=$(( ${nonce_hex} ))
+          deposit_eth=$((deposit_amount / 1000000000))
+
+          echo "Starting nonce: $nonce | Deposit per validator: ${deposit_eth} ETH"
+
+          i=0
           while read x; do
-            account_name="$(echo "$x" | jq '.account')"
-            pubkey="$(echo "$x" | jq '.pubkey')"
-            echo "Sending deposit for validator $account_name $pubkey"
-            ethereal beacon deposit \
-              --allow-unknown-contract=true \
-              --address="$deposit_contract_address" \
-              --connection=$rpc_endpoint \
-              --data="$x" \
-              --value="$deposit_amount" \
-              --from="$publickey" \
-              --privatekey="$privatekey" \
-              --allow-excessive-deposit
-            echo "Sent deposit for validator $account_name $pubkey"
-            sleep 5
+            account_name="$(echo "$x" | jq -r '.account')"
+            pubkey_val="0x$(echo "$x" | jq -r '.pubkey')"
+            withdrawal_creds="0x$(echo "$x" | jq -r '.withdrawal_credentials')"
+            signature_val="0x$(echo "$x" | jq -r '.signature')"
+            data_root="0x$(echo "$x" | jq -r '.deposit_data_root')"
+            echo "Sending deposit for validator $account_name (nonce: $((nonce + i)))"
+            cast send \
+              --private-key "$privatekey" \
+              --rpc-url "$rpc_endpoint" \
+              --nonce $((nonce + i)) \
+              --value "${deposit_eth}ether" \
+              --gas-limit 200000 \
+              "$deposit_contract_address" \
+              "deposit(bytes,bytes,bytes,bytes32)" \
+              "$pubkey_val" "$withdrawal_creds" "$signature_val" "$data_root" > /dev/null 2>&1 &
+            i=$((i + 1))
           done < deposits_$prefix-$network-${command[2]}_${command[3]}.txt
+
+          echo "Submitted $i deposits in parallel, waiting for confirmations..."
+          wait
+          echo "All $i deposits confirmed"
           exit;
         else
           echo "Exiting without depositing to the network"

@@ -18,13 +18,15 @@ ethereum_network_deposit_contract: >-
 ethereum_network_deposit_contract_block: >-
   {{ lookup('file', eth_testnet_config_local_dir_src + '/deposit_contract_block.txt') }}
 
-ethereum_node_rpc_prefix: "rpc-"   # prefix for rpc URLs
+ethereum_node_rpc_prefix: "rpc-" # prefix for rpc URLs
 ethereum_node_beacon_prefix: "bn-" # prefix for beacon URLs
 ethereum_node_rcp_hostname: "{{ ethereum_node_rpc_prefix }}{{ server_fqdn }}"
 ethereum_node_beacon_hostname: "{{ ethereum_node_beacon_prefix }}{{ server_fqdn }}"
 
+primary_bootnode: bootnode-1
+
 ### Checkpoint sync specific for Ansible & Kubernetes
-checkpoint_sync_node: bootnode-1
+checkpoint_sync_node: "{{ primary_bootnode }}"
 ethereum_node_cl_checkpoint_sync_enabled: false
 
 checkpoint_sync_url: https://checkpoint-sync.{{ ethereum_network_name }}.{{ domain }}
@@ -50,6 +52,7 @@ ethereum_genesis_timedelay: 60
 ethereum_genesis_timestamp_relative_cmd:
   Linux: "date +%s -d '+45 minutes'"
   Darwin: "date -v +45M +%s"
+shadowfork_height: 0
 ethereum_genesis_mnemonic: "{{ secret_genesis_mnemonic }}"
 ethereum_genesis_generator_config_files:
   cl/config.yaml: "{{ lookup('ansible.builtin.url', 'https://raw.githubusercontent.com/ethpandaops/ethereum-genesis-generator/v{{ethereum_genesis_generator_version}}/config-example/cl/config.yaml', split_lines=false) }}" # noqa yaml[line-length]
@@ -69,7 +72,11 @@ ethereum_genesis_generator_config_files:
     export GENESIS_TIMESTAMP={{ ethereum_genesis_timestamp }}
     export GENESIS_DELAY={{ ethereum_genesis_timedelay }}
     export WITHDRAWAL_TYPE=0x02
+    export EL_PREMINE_ADDRS='{"0x9a97ee9d32a0d68406e32b34c92afb81ce2bc467": {"balance": "100000ETH"}, "0x107781Bc6FA8f66B843f4216fd6D5862D3aa4fcd": {"balance": "100000ETH"}, "0x118A1030baf8Fa56f9B8235C163d3112FA8c3b89": {"balance": "100000ETH"}}'
 
+# 0x9a97ee9d32a0d68406e32b34c92afb81ce2bc467: 100000ETH - arbitrum
+# 0x107781Bc6FA8f66B843f4216fd6D5862D3aa4fcd: 100000ETH - optimism
+# 0x118A1030baf8Fa56f9B8235C163d3112FA8c3b89: 100000ETH - lido
 
 ethereum_genesis_validator_keys_output_dir: "{{ ansible_inventory_sources[0] | dirname }}/files/validator_keys"
 ethereum_genesis_validator_bls_change_execution_address: "{{ ethereum_node_cl_validator_fee_recipient }}"
@@ -127,6 +134,11 @@ ethereum_node_el_ports_ws_rpc: 8546
 ethereum_node_el_ports_engine: 8551
 ethereum_node_el_ports_metrics: 6060
 ethereum_node_ipv6_enabled: true
+ethereum_node_el_public_ipv6: "{{ host_ipv6_prefix | ansible.utils.ipaddr(service_ipv6_offsets.execution) | ansible.utils.ipaddr('address') if (docker_network_enable_ipv6 | bool) else '' }}"
+ethereum_node_cl_public_ipv6: "{{ host_ipv6_prefix | ansible.utils.ipaddr(service_ipv6_offsets.beacon) | ansible.utils.ipaddr('address') if (docker_network_enable_ipv6 | bool) else '' }}"
+ethereum_node_validator_public_ipv6: "{{ host_ipv6_prefix | ansible.utils.ipaddr(service_ipv6_offsets.validator) | ansible.utils.ipaddr('address') if (docker_network_enable_ipv6 | bool) else '' }}"
+ethereum_node_snooper_rpc_public_ipv6: "{{ host_ipv6_prefix | ansible.utils.ipaddr(service_ipv6_offsets.snooper_rpc) | ansible.utils.ipaddr('address') if (docker_network_enable_ipv6 | bool) else '' }}"
+ethereum_node_snooper_engine_public_ipv6: "{{ host_ipv6_prefix | ansible.utils.ipaddr(service_ipv6_offsets.snooper_engine) | ansible.utils.ipaddr('address') if (docker_network_enable_ipv6 | bool) else '' }}"
 ethereum_node_skip_cleanup: true
 ethereum_node_docker_watchtower_enabled: true
 ethereum_node_docker_watchtower_containers_list:
@@ -224,11 +236,13 @@ docker_nginx_proxy_docker_gen_container_image: "{{ default_tooling_images.nginx_
 docker_nginx_proxy_acme_companion_container_image: "{{ default_tooling_images.nginx_proxy_acme }}"
 
 # role: ethpandaops.general.docker_nginx_proxy
+docker_nginx_proxy_public_ipv6: "{{ host_ipv6_prefix | ansible.utils.ipaddr(service_ipv6_offsets.nginx_proxy) | ansible.utils.ipaddr('address') if (docker_network_enable_ipv6 | bool) else '' }}"
 docker_nginx_proxy_container_name: nginx-proxy
 docker_nginx_proxy_default_email: "certs@{{ domain }}"
 docker_nginx_proxy_docker_gen_container_name: nginx-proxy-gen
 docker_nginx_proxy_docker_gen_container_env:
   RESOLVERS: "1.1.1.1"
+  ENABLE_IPV6: "true"
 docker_nginx_proxy_acme_companion_enabled: false
 docker_nginx_proxy_acme_companion_container_name: nginx-proxy-acme
 docker_nginx_proxy_acme_companion_container_env:
@@ -238,8 +252,9 @@ docker_nginx_proxy_acme_companion_container_env:
   ACME_CA_URI: https://acme.zerossl.com/v2/DV90
   ACME_EAB_KID: "{{ secret_zerossl.ACME_EAB_KID }}"
   ACME_EAB_HMAC_KEY: "{{ secret_zerossl.ACME_EAB_HMAC_KEY }}"
-docker_nginx_proxy_container_networks: "{{ docker_networks_shared }}"
-docker_nginx_proxy_docker_gen_container_networks: "{{ docker_networks_shared }}"
+docker_nginx_proxy_container_networks: >-
+  {{ [{'name': 'shared'} | combine({'ipv6_address': docker_nginx_proxy_public_ipv6} if (docker_nginx_proxy_public_ipv6 | default('') | length > 0) else {})] }}
+docker_nginx_proxy_docker_gen_container_networks: []
 docker_nginx_proxy_acme_companion_container_networks: "{{ docker_networks_shared }}"
 docker_nginx_proxy_acme_monitor_container_networks: "{{ docker_networks_shared }}"
 docker_nginx_proxy_acme_monitor_enabled: false
@@ -252,8 +267,8 @@ docker_nginx_proxy_container_volumes:
   - "{{ docker_nginx_proxy_datadir }}/htpasswd:/etc/nginx/htpasswd:ro"
 docker_nginx_proxy_cert_loader_container_image: "{{ default_tooling_images.nginx_proxy_cert_loader }}"
 docker_nginx_proxy_cert_linker_container_image: "{{ default_tooling_images.nginx_proxy_cert_linker }}"
-docker_nginx_proxy_cert_loader_container_networks: "{{ docker_networks_shared }}"
-docker_nginx_proxy_cert_linker_container_networks: "{{ docker_networks_shared }}"
+docker_nginx_proxy_cert_loader_container_networks: []
+docker_nginx_proxy_cert_linker_container_networks: []
 docker_nginx_proxy_wildcard_cert: "{{ network_server_subdomain }}"
 docker_nginx_proxy_wildcard_cert_url: "http://cert.{{ network_server_subdomain }}/{{ network_server_subdomain }}-latest.tar.enc"
 docker_nginx_proxy_wildcard_cert_psk: "{{ secret_cert_encryption_psk }}"

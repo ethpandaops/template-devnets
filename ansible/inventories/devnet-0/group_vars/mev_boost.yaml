@@ -1,6 +1,7 @@
 mev_boost_container_image: "{{ default_tooling_images.mev_boost }}"
 
 mev_boost_container_env:
+  GENESIS_TIMESTAMP: "{{ (lookup('ansible.builtin.file', eth_testnet_config_local_dir_src + 'config.yaml') | from_yaml).MIN_GENESIS_TIME + (lookup('ansible.builtin.file', eth_testnet_config_local_dir_src + 'config.yaml') | from_yaml).GENESIS_DELAY }}"
   GENESIS_FORK_VERSION: "0x10{{ ethereum_genesis_fork_version_suffix }}"
   ALTAIR_FORK_VERSION: "0x20{{ ethereum_genesis_fork_version_suffix }}"
   BELLATRIX_FORK_VERSION: "0x30{{ ethereum_genesis_fork_version_suffix }}"

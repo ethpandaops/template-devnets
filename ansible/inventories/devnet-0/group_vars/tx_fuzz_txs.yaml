@@ -4,7 +4,7 @@ tx_fuzz_container_name: tx_fuzz_txs
 tx_fuzz_container_command:
   - spam
   - --no-al
-  - --rpc=https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@{{ ethereum_node_rpc_prefix }}bootnode-1.{{ network_server_subdomain }}
+  - --rpc=https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@{{ ethereum_node_rpc_prefix }}{{ primary_bootnode }}.{{ network_server_subdomain }}
   - --sk={{ tx_fuzz_txs_privkey }}
 
 

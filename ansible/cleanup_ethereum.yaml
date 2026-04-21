@@ -37,6 +37,7 @@
             - "execution"
             - "execution-init"
             - "nimbusel"
+            - "ethrex"
             # Consensus layer clients
             - "lighthouse-validator"
             - "lighthouse"
@@ -78,6 +79,7 @@
             - /data/nethermind
             - /data/reth
             - /data/nimbusel
+            - /data/ethrex
             # Consensus layer data
             - /data/lighthouse
             - /data/lighthouse-validator
