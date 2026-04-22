@@ -41,7 +41,7 @@ on:
       image:
         description: 'Syncoor Docker image'
         required: false
-        default: 'docker.ethquokkaops.io/dh/ethpandaops/syncoor:master'
+        default: 'ghcr.io/ethpandaops/syncoor:master'
         type: string
       git-ref:
         description: 'Git reference (branch, tag, or commit) to checkout'
