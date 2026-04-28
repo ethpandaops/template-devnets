@@ -4,7 +4,7 @@ ansible-galaxy install -r requirements.yaml --force
 
 # Install Mitogen for Ansible performance optimization
 # Following official installation instructions from https://mitogen.networkgenomics.com/ansible_detailed.html
-MITOGEN_VERSION="0.3.27"
+MITOGEN_VERSION="0.3.43"
 
 MITOGEN_DIR="vendor/mitogen-${MITOGEN_VERSION}"
 MITOGEN_URL="https://files.pythonhosted.org/packages/source/m/mitogen/mitogen-${MITOGEN_VERSION}.tar.gz"
