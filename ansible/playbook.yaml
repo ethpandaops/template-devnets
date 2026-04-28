@@ -1,4 +1,18 @@
 - hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Fail if devnet_name is still set to the placeholder "template"
+      ansible.builtin.fail:
+        msg: |
+          ##############################################################
+          # ERROR: devnet_name is set to "template"!                   #
+          # Update group_vars/all/defaults.yaml with a real devnet     #
+          # name (e.g. the repository's first word) before running.    #
+          ##############################################################
+      when: devnet_name | default('') == 'template'
+      tags: always
+
+- hosts: localhost
   roles:
     - role: ethpandaops.general.ethereum_genesis
       tags: [ethereum_genesis]
