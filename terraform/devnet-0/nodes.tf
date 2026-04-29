@@ -31,4 +31,27 @@ variable "nodes" {
     { name = "lighthouse-geth", count = 1, cloud = "hetzner", validator_start = 400, validator_end = 500 },
     { name = "prysm-nethermind", count = 1, cloud = "hetzner", validator_start = 500, validator_end = 550 },
   ]
+
+  validation {
+    condition = alltrue([
+      for n in var.nodes :
+      try(n.validator_start, 0) >= 0 && try(n.validator_start, 0) <= try(n.validator_end, 0)
+    ])
+    error_message = "Each node must satisfy 0 <= validator_start <= validator_end. Omit both fields (or set both to 0) for nodes without validators."
+  }
+
+  validation {
+    condition = alltrue(flatten([
+      for i, a in var.nodes : [
+        for j, b in var.nodes :
+        i >= j ||
+        try(a.validator_end, 0) == 0 ||
+        try(b.validator_end, 0) == 0 ||
+        try(a.validator_end, 0) <= try(b.validator_start, 0) ||
+        try(b.validator_end, 0) <= try(a.validator_start, 0)
+      ]
+    ]))
+    error_message = "Validator ranges overlap between nodes. Each [validator_start, validator_end) interval must be disjoint from every other node's interval."
+  }
 }
+
