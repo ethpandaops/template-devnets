@@ -116,6 +116,12 @@
     - role: ethpandaops.general.mev_relay
       tags: [mev_relay]
 
+- hosts: buildoor
+  become: true
+  roles:
+    - role: ethpandaops.general.buildoor
+      tags: [buildoor]
+
 - hosts: tx_fuzz_txs
   become: true
   roles:
