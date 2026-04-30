@@ -37,6 +37,11 @@ ${host.hostname}
 %{ if split("-", gid)[0] == "${cl}" ~}
 ${replace(gid, "-", "_")}
 %{ endif ~}
+%{ if split("-", gid)[0] == "buildoor" && length(split("-", gid)) >= 2 ~}
+%{ if split("-", gid)[1] == "${cl}" ~}
+${replace(gid, "-", "_")}
+%{ endif ~}
+%{ endif ~}
 %{ endfor ~}
 %{ if cl == "lighthouse" && contains(keys(groups), "mev-relay") ~}
 mev_relay
@@ -48,8 +53,13 @@ mev_relay
 %{ for el in ["besu", "ethereumjs", "geth", "nethermind", "erigon", "reth", "nimbusel", "ethrex"] ~}
 [${el}:children]
 %{ for gid, group in groups ~}
-%{ if split("-", gid)[0] != "bootnode" && split("-", gid)[0] != "mev" ~}
+%{ if split("-", gid)[0] != "bootnode" && split("-", gid)[0] != "mev" && split("-", gid)[0] != "buildoor" ~}
 %{ if length(split("-", gid)) >= 2 && split("-", gid)[1] == "${el}" ~}
+${replace(gid, "-", "_")}
+%{ endif ~}
+%{ endif ~}
+%{ if split("-", gid)[0] == "buildoor" && length(split("-", gid)) >= 3 ~}
+%{ if split("-", gid)[2] == "${el}" ~}
 ${replace(gid, "-", "_")}
 %{ endif ~}
 %{ endif ~}
@@ -59,17 +69,32 @@ mev_relay
 %{ endif ~}
 %{ endfor ~}
 
+# Buildoor host aggregator
+
+[buildoor:children]
+%{ for gid, group in groups ~}
+%{ if split("-", gid)[0] == "buildoor" ~}
+${replace(gid, "-", "_")}
+%{ endif ~}
+%{ endfor ~}
+
 # Global groups
 
 [consensus_node:children]
-%{ for x,y in merge( { for gid, group in groups : split("-", gid)[0] => true... if split("-", gid)[0] != "bootnode" && split("-", gid)[0] != "mev" } )   ~}
+%{ for x,y in merge( { for gid, group in groups : split("-", gid)[0] => true... if split("-", gid)[0] != "bootnode" && split("-", gid)[0] != "mev" && split("-", gid)[0] != "buildoor" } )   ~}
 ${x}
 %{ endfor ~}
+%{ if length([for gid, group in groups : gid if split("-", gid)[0] == "buildoor"]) > 0 ~}
+buildoor
+%{ endif ~}
 
 [execution_node:children]
-%{ for x,y in merge( { for gid, group in groups : split("-", gid)[1] => true... if split("-", gid)[0] != "bootnode" && split("-", gid)[0] != "mev" && length(split("-", gid)) >= 2 } )   ~}
+%{ for x,y in merge( { for gid, group in groups : split("-", gid)[1] => true... if split("-", gid)[0] != "bootnode" && split("-", gid)[0] != "mev" && split("-", gid)[0] != "buildoor" && length(split("-", gid)) >= 2 } )   ~}
 ${x}
 %{ endfor ~}
+%{ if length([for gid, group in groups : gid if split("-", gid)[0] == "buildoor"]) > 0 ~}
+buildoor
+%{ endif ~}
 
 [ethereum_node:children]
 consensus_node

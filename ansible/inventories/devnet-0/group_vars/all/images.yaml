@@ -20,6 +20,7 @@ default_tooling_images:
   mev_boost: ethpandaops/mev-boost:develop
   mev_builder: ethpandaops/reth-rbuilder:develop
   mev_relay: ethpandaops/mev-boost-relay:main
+  buildoor: ethpandaops/buildoor:main
   xatu_sentry: ethpandaops/xatu:latest
   xatu_cannon: ethpandaops/xatu:latest
   xatu_mimicry: ethpandaops/xatu:latest

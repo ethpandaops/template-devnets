@@ -69,6 +69,15 @@ dns_server_zones:
       {% endif %}
       {% endfor %}
 
+      ; buildoor
+      {% for host in groups.get('buildoor', []) | sort %}
+      buildoor-{{ hostvars[host]['inventory_hostname'] }}                          IN  A     {{ hostvars[host]['ansible_host'] }}
+      {% if hostvars[host]['ipv6'] is defined %}
+      {% set proxy_ipv6 = hostvars[host].get('docker_nginx_proxy_public_ipv6', hostvars[host]['ipv6']) %}
+      buildoor-{{ hostvars[host]['inventory_hostname'] }}                          IN  AAAA  {{ proxy_ipv6 if proxy_ipv6 | length > 0 else hostvars[host]['ipv6'] }}
+      {% endif %}
+      {% endfor %}
+
 # role: ethpandaops.general.wildcard_cert_issuer
 wildcard_cert_issuer_enabled: "{{ inventory_hostname == primary_bootnode }}"
 wildcard_cert_issuer_base_domain: "{{ network_server_subdomain }}"
