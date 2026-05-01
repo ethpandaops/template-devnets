@@ -1,5 +1,6 @@
-# Win precedence over prysm.yaml / geth.yaml so the overrides below stick
-ansible_group_priority: 100
+# NOTE: precedence over sibling groups (prysm/geth) is established via
+# `[buildoor:vars] ansible_group_priority=100` in inventory.ini — that variable
+# is consulted while loading group_vars, so it cannot be set here.
 
 buildoor_container_image: "{{ default_tooling_images.buildoor }}"
 buildoor_container_pull: true

@@ -78,6 +78,12 @@ ${replace(gid, "-", "_")}
 %{ endif ~}
 %{ endfor ~}
 
+# ansible_group_priority MUST live in the inventory (not group_vars/) — it is consulted
+# while loading group_vars, so a value placed in group_vars/buildoor.yaml is read too late
+# and the buildoor overrides lose to alphabetically-later sibling groups (geth, prysm).
+[buildoor:vars]
+ansible_group_priority=100
+
 # Global groups
 
 [consensus_node:children]
