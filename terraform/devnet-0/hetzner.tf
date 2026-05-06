@@ -6,6 +6,10 @@ variable "hcloud_ssh_key_fingerprint" {
   default = "d6:76:2d:9c:5b:33:80:ff:0f:09:a2:10:9b:58:7e:dc"
 }
 
+# cpx* (AMD shared) defaults: cax* (ARM) capacity is unreliable and the
+# legacy cpx41/cpx51 SKUs are no longer creatable in some EU locations.
+# cpx42/cpx62 are widely stocked and still ~3-4x cheaper than DigitalOcean
+# for equivalent specs (e.g. cpx62 16/32/640 ~€50/mo vs DO ~€177/mo).
 variable "hetzner_supernode_size" {
   type    = string
   default = "cpx62"
