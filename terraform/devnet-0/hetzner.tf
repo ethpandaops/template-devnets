@@ -8,12 +8,12 @@ variable "hcloud_ssh_key_fingerprint" {
 
 variable "hetzner_supernode_size" {
   type    = string
-  default = "cpx51"
+  default = "cx53"
 }
 
 variable "hetzner_fullnode_size" {
   type    = string
-  default = "cpx41"
+  default = "cx43"
 }
 
 variable "hetzner_regions" {
