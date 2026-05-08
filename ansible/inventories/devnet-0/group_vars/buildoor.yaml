@@ -14,6 +14,10 @@ buildoor_el_rpc: "http://execution:{{ ethereum_node_el_ports_http_rpc }}"
 # Avoid conflict with prysm metrics on 127.0.0.1:8080
 buildoor_api_port: 8085
 
+# Verify API tokens against the centralized authenticatoor service for this devnet.
+buildoor_auth_provider_url: "https://auth.{{ network_subdomain }}"
+buildoor_overview_url: "https://buildoor.{{ network_subdomain }}"
+
 # Wallet ECDSA private key
 buildoor_wallet_privkey: "{{ secret_buildoor_wallet_privkey }}"
 # Builder BLS private key
