@@ -24,9 +24,9 @@ buildoor_wallet_privkey: "{{ secret_buildoor_wallet_privkey }}"
 buildoor_builder_privkey: "{{ secret_buildoor_builder_privkey }}"
 
 buildoor_container_env:
-  VIRTUAL_HOST: "buildoor-{{ server_fqdn }}"
+  VIRTUAL_HOST: "api-{{ server_fqdn }}"
   VIRTUAL_PORT: "{{ buildoor_api_port | string }}"
-  LETSENCRYPT_HOST: "buildoor-{{ server_fqdn }}"
+  LETSENCRYPT_HOST: "api-{{ server_fqdn }}"
 
 # Buildoor host-only overrides
 ethereum_node_cl: prysm
