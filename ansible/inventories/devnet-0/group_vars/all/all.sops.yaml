@@ -36,14 +36,16 @@ nethermind_seq_server: ENC[AES256_GCM,data:wEIM2pUqK+I3rf42maFTr05r8cOJWjnpPQ==,
 nethermind_push_gateway: ENC[AES256_GCM,data:ScReyCHKHx2/8Yo3epSAsb3MykmlIrGkUegaV5+21aboPCgU+VbUOBfvqaTWpcQN3OjXH+euQj1bHL1etGk1qvjzm2sp/P9oqbHRU827nbejkk5SKEeC4q79U7QyQTbUJ1Z9paX1sYZysMDUf2LUb9r/wHhB7bknQYKnHBAg0Li7qw5T5o1yatJoDqfahe4R1Q==,iv:WuQDvBvS2zjEB805HYkq5TQ/H8baF23vyMP9JbdqCao=,tag:jTOnfh2+ZmWIXQBzIpIVCQ==,type:str]
 tysm_secret_key: ENC[AES256_GCM,data:MuvclVLaNVZ+7vRumg==,iv:XGBLMISj2wL7MQznXnVggjudiaw6Ff4i3wGt37/EKqA=,tag:ib5t0B5qa1FD6Ff8xYIFwQ==,type:str]
 tempo_grpc_url: ENC[AES256_GCM,data:ltAVTGgrqhUBXdAZe7D1HvdXK72YIORL/x4DYHgX911s+X8IZM9/guRqE1I/ZYSzNrQX0qON3/TrNSjpG1BUpkK9M0SLzqE4EKhaOOQonJRLunnufZVrZIDhXSMaGQhZcjsHQCV8,iv:4mzqA4Ck1g91+tST5oTSnTepikjOCWKJrV04Rsp/8Ts=,tag:MgjQUb+lR1SIU2d8KpvOew==,type:str]
+secret_buildoor_builder_privkey: ENC[AES256_GCM,data:FJj3WPEad/nxomBuvOcKYwuZRb1wpH/AV742UoSQimMDGZZ6ZuPLG9MRTXPEXlAX2oojiOPLN22XLae8PZ6mrg==,iv:PaHUBXc58KzROm9swDMeTuH55iZoSXpjZbmhhBlXVqQ=,tag:QtSpaxciweQhKEML+ZmbJA==,type:str]
+secret_buildoor_wallet_privkey: ENC[AES256_GCM,data:K4iVB2j+py1CYUsR6j7UUPtGVMeYdIkV9EY0Foi23lr7toUSlLTfqqZE23u533YQrpovinMl4z2Gji8V1VGAeA==,iv:POAoPAmGeZTYoqwGsSB8NMSI4MsCMMbIhv3zefnzfE4=,tag:05IHrIPCpwJnMafB3nDE8g==,type:str]
 sops:
     kms: []
     gcp_kms: []
     azure_kv: []
     hc_vault: []
     age: []
-    lastmodified: "2025-12-12T05:07:13Z"
-    mac: ENC[AES256_GCM,data:GCMJnneHuL+040VvJyp65IXdchCnWFyoiJgvKwcV3fPU8WNaMOuUEbDHK3wW6oZyEGeu0HlOQOuJwXacqb9iG5hG4aqN93uu/th0dRNEfJr0ij4lRU9Yrrx0t3kpzVYhLI7sPE82XwhbsOXSWlQIRl9PDQPtgudeEcARn2fSt68=,iv:vOD+PBlJqgEnzEPdhwrGHGEzJ5L6wM5HUY3I7Flleyw=,tag:NNJ9SfOkEAAv3R3r1n+rww==,type:str]
+    lastmodified: "2026-04-29T09:20:00Z"
+    mac: ENC[AES256_GCM,data:c/HVw/mtY1gAFLIc7K+uQbI2UdU1vs4ppVcoUQswUH3hSA6WIuUrpEzQCkP2xwKazPsE8ReK4ICY5oQVXgBWZsoUAyj2/gSpBGRsQbEsc/qUf32MthXPJaT5ulxkH06iCzFvHzD+doECGgtOZFU/KLvwV5tj88MbxGCy9+KYNRA=,iv:ftc09zuBrYKFzxhwAbO+vbEm1IFkU+qzbenN+Yz5ho8=,tag:8KlHK07wfyZOKI315Rf4WQ==,type:str]
     pgp:
         - created_at: "2025-10-27T13:25:35Z"
           enc: |-

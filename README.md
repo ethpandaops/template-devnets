@@ -226,4 +226,5 @@ Here's a table of where the keys are used
 | 9             | goomy             | ✅               |                | Spams blobs on the network        |
 | 10            | assertoor         | ✅               |                | Runs various test scenarios       |
 | 11            | mev_signing_key   | ✅               |                | Subsidizes mev-able txs on the network |
-| 11-29         | available         |                  |                |                                   |
+| 12            | buildoor wallet   | ✅               |                | Pre-funded wallet for buildoor lifecycle deposits/top-ups |
+| 13-29         | available         |                  |                |                                   |
