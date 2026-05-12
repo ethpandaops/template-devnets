@@ -274,6 +274,9 @@ docker_nginx_proxy_wildcard_cert_url: "http://cert.{{ network_server_subdomain }
 docker_nginx_proxy_wildcard_cert_psk: "{{ secret_cert_encryption_psk }}"
 
 # role: ethpandaops.general.vector
+# Ship docker logs to platform's ClickHouse logs-external pipeline.
+# Reuses secret_loki credentials — the same VMAuth backend fronts both ingresses.
+clickhouse_logs_endpoint: "https://logs-ingest.analytics.production.platform.ethpandaops.io"
 vector_config: |
   [sources.in]
     type = "docker_logs"
@@ -286,24 +289,31 @@ vector_config: |
       "snooper-",
     ]
 
-  [sinks.out]
-    type = "loki"
+  [transforms.clickhouse_shape]
+    type = "remap"
     inputs = ["in"]
-    out_of_order_action = "accept"
-    labels.forwarder = "vector"
-    labels.instance = "{{ inventory_hostname }}"
-    labels.network = "{{ ethereum_network_name }}"
-    labels.testnet = "{{ ethereum_network_name }}"
-    labels.ingress_user = "{{ secret_loki.username }}"
-    labels.container_name = "{{ '{{ container_name }}' }}"
-  {%- if ethereum_node_el is defined +%}
-    labels.ethereum_el = "{{ ethereum_node_el }}"
-  {%- endif +%}
-  {%- if ethereum_node_cl is defined +%}
-    labels.ethereum_cl = "{{ ethereum_node_cl }}"
-  {%- endif +%}
+    source = '''
+      .IngressUser = "{{ secret_loki.username }}"
+      .Namespace   = ""
+      .Pod         = ""
+      .Container   = string(.container_name) ?? ""
+      .Node        = "{{ inventory_hostname }}"
+      .Stream      = string(.stream) ?? ""
+      .Message     = string(.message) ?? ""
+      .Timestamp   = .timestamp
+      del(.container_name); del(.container_id); del(.container_created_at)
+      del(.image); del(.host); del(.label); del(.source_type)
+      del(.stream); del(.message); del(.timestamp)
+    '''
+
+  [sinks.clickhouse_logs]
+    type = "http"
+    inputs = ["clickhouse_shape"]
+    uri = "{{ clickhouse_logs_endpoint }}"
+    method = "post"
     encoding.codec = "json"
-    endpoint = "{{ secret_loki.endpoint }}"
     auth.strategy = "basic"
     auth.user = "{{ secret_loki.username }}"
     auth.password = "{{ secret_loki.password }}"
+    batch.max_events = 5000
+    batch.timeout_secs = 3
