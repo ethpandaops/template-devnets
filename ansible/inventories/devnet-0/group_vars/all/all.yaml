@@ -273,12 +273,22 @@ docker_nginx_proxy_wildcard_cert: "{{ network_server_subdomain }}"
 docker_nginx_proxy_wildcard_cert_url: "http://cert.{{ network_server_subdomain }}/{{ network_server_subdomain }}-latest.tar.enc"
 docker_nginx_proxy_wildcard_cert_psk: "{{ secret_cert_encryption_psk }}"
 
-# role: ethpandaops.general.vector
+# role: ethpandaops.general.otelcol_contrib
+# Reuses secret_loki credentials (same vmauth backend serves both ingresses).
+otlp_endpoint: "https://otlp.analytics.production.platform.ethpandaops.io"
+otlp_deployment_env: production
+
+otelcol_contrib_container_networks: "{{ docker_networks_shared }}"
+
+# Vector kept alongside otelcol just to ship logs to Loki. Will be removed
+# when Loki path is replaced (e.g. central aggregator or Loki OTLP support).
+vector_container_networks: "{{ docker_networks_shared }}"
 vector_config: |
   [sources.in]
     type = "docker_logs"
     exclude_containers = [
       "{{ vector_container_name }}",
+      "otelcol",
       "ethereum-metrics-exporter",
       "nginx-proxy",
       "node_exporter",
@@ -286,7 +296,7 @@ vector_config: |
       "snooper-",
     ]
 
-  [sinks.out]
+  [sinks.loki]
     type = "loki"
     inputs = ["in"]
     out_of_order_action = "accept"
@@ -307,3 +317,73 @@ vector_config: |
     auth.strategy = "basic"
     auth.user = "{{ secret_loki.username }}"
     auth.password = "{{ secret_loki.password }}"
+otelcol_contrib_config: |
+  extensions:
+    basicauth/client:
+      client_auth:
+        username: {{ secret_loki.username }}
+        password: {{ secret_loki.password }}
+
+  receivers:
+    filelog:
+      include: [/var/lib/docker/containers/*/*-json.log]
+      include_file_path: true
+      start_at: end
+      operators:
+        - type: container
+          format: docker
+          add_metadata_from_filepath: true
+        - type: filter
+          expr: 'attributes["container.name"] != nil and attributes["container.name"] matches "^(otelcol|ethereum-metrics-exporter|nginx-proxy|node_exporter|prometheus|snooper-.*)$"'
+        - type: json_parser
+          if: 'body matches "^\\s*\\{"'
+          on_error: send
+          severity:
+            parse_from: attributes.level
+            overwrite_text: true
+            mapping:
+              fatal4: [emergency, emerg]
+              fatal3: [alert]
+              fatal2: [critical, crit]
+              fatal:  [panic]
+
+    otlp:
+      protocols:
+        grpc: {endpoint: "[::]:4317"}
+        http: {endpoint: "[::]:4318"}
+
+  processors:
+    resource:
+      attributes:
+        - {key: deployment.environment, value: "{{ otlp_deployment_env }}", action: upsert}
+        - {key: network,                value: "{{ ethereum_network_name }}", action: upsert}
+        - {key: ingress_user,           value: "{{ secret_loki.username }}", action: upsert}
+        - {key: host.name,              value: "{{ inventory_hostname }}", action: upsert}
+
+    transform/service_name:
+      log_statements:
+        - context: resource
+          statements:
+            - set(attributes["service.name"], attributes["container.name"]) where attributes["container.name"] != nil
+
+    batch:
+      send_batch_size: 500
+      timeout: 5s
+
+  exporters:
+    otlphttp/staging:
+      endpoint: "{{ otlp_endpoint }}"
+      auth:
+        authenticator: basicauth/client
+
+  service:
+    extensions: [basicauth/client]
+    pipelines:
+      logs:
+        receivers: [filelog, otlp]
+        processors: [resource, transform/service_name, batch]
+        exporters: [otlphttp/staging]
+      traces:
+        receivers: [otlp]
+        processors: [resource, batch]
+        exporters: [otlphttp/staging]
