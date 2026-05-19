@@ -138,10 +138,10 @@ lighthouse_validator_datadir: /data/lighthouse-validator
 lighthouse_container_pull: true
 
 ethereum_el_bootnodes:
-  - "{{ hostvars[primary_bootnode]['ethereum_node_fact_el_enode'] }}"
+  - "{{ hostvars[primary_bootnode]['ethereum_node_fact_discovery_el_enode'] }}"
 
 ethereum_cl_bootnodes:
-  - "{{ hostvars[primary_bootnode]['ethereum_node_fact_cl_enr'] }}"
+  - "{{ hostvars[primary_bootnode]['ethereum_node_fact_discovery_cl_enr'] }}"
 
 # role: ethpandaops.general.ethereum_node
 ethereum_node_el: reth
