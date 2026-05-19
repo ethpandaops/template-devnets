@@ -334,7 +334,7 @@ otelcol_contrib_config: |
           format: docker
           add_metadata_from_filepath: true
         - type: filter
-          expr: 'attributes["container.name"] != nil and attributes["container.name"] matches "^(otelcol|ethereum-metrics-exporter|nginx-proxy|node_exporter|prometheus|snooper-.*)$"'
+          expr: '(attributes["container.name"] != nil and attributes["container.name"] matches "^(otelcol|ethereum-metrics-exporter|nginx-proxy|node_exporter|prometheus|snooper-.*)$") or body matches "github\\.com/open-telemetry/opentelemetry-collector-contrib|otelcol-contrib"'
         - type: json_parser
           if: 'body matches "^\\s*\\{"'
           on_error: send
