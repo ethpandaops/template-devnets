@@ -21,6 +21,7 @@ ethrex_container_volumes:
 ethrex_container_command_extra_args:
   - --network=/network-config/genesis.json
   - --bootnodes={{ ethereum_el_bootnodes | join(',') }}
+  - --http.api=eth,net,web3,admin,debug,txpool
 
 prometheus_config: |
   global:
