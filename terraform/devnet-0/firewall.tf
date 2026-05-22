@@ -45,6 +45,12 @@ resource "digitalocean_firewall" "main" {
     port_range       = "9000-9002"
     source_addresses = ["0.0.0.0/0", "::/0"]
   }
+  // Prysm QUIC port (default p2p-quic-port=13000)
+  inbound_rule {
+    protocol         = "udp"
+    port_range       = "13000"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }
 
   // Execution layer p2p Port
   inbound_rule {
@@ -200,6 +206,15 @@ resource "hcloud_firewall" "machine_firewall" {
     direction   = "in"
     protocol    = "udp"
     port        = "9000-9002"
+    source_ips  = ["0.0.0.0/0", "::/0"]
+  }
+
+  // Prysm QUIC port (default p2p-quic-port=13000)
+  rule {
+    description = "Allow Prysm QUIC port UDP"
+    direction   = "in"
+    protocol    = "udp"
+    port        = "13000"
     source_ips  = ["0.0.0.0/0", "::/0"]
   }
 
