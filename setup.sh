@@ -17,5 +17,9 @@ asdf plugin add awscli || true
 asdf install
 asdf reshim
 
+# Ensure asdf shims (python/pip) are on PATH — this script runs under bash,
+# which does not source the shell rc where asdf shims are normally added.
+export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
+
 # Install python tools
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
