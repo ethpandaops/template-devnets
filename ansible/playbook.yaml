@@ -102,8 +102,8 @@
       tags: [eth_inventory_web, ethereum_inventory_web]
       when: inventory_hostname == primary_bootnode
       vars:
-        eth_inventory_web_container_networks: "{{ docker_networks_shared }}" #noqa var-naming[no-role-prefix]
-        eth_inventory_web_container_env: #noqa var-naming[no-role-prefix]
+        eth_inventory_web_container_networks: "{{ docker_networks_shared }}" # noqa: var-naming[no-role-prefix]
+        eth_inventory_web_container_env: # noqa: var-naming[no-role-prefix]
           VIRTUAL_HOST: "{{ primary_bootnode }}.{{ network_server_subdomain }}"
           VIRTUAL_PORT: "80"
           VIRTUAL_PATH: "/meta/api"

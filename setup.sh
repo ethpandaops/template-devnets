@@ -23,3 +23,7 @@ export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
 
 # Install python tools
 python -m pip install -r requirements.txt
+
+# Regenerate shims so pip-installed console scripts (ansible-lint, ansible,
+# molecule) resolve on PATH in subsequent steps.
+asdf reshim python
