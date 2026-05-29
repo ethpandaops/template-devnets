@@ -20,8 +20,10 @@ ethereum_network_deposit_contract_block: >-
 
 ethereum_node_rpc_prefix: "rpc-" # prefix for rpc URLs
 ethereum_node_beacon_prefix: "bn-" # prefix for beacon URLs
+ethereum_node_watchtower_prefix: "watchtower-" # prefix for watchtower HTTP API URLs
 ethereum_node_rcp_hostname: "{{ ethereum_node_rpc_prefix }}{{ server_fqdn }}"
 ethereum_node_beacon_hostname: "{{ ethereum_node_beacon_prefix }}{{ server_fqdn }}"
+ethereum_node_watchtower_hostname: "{{ ethereum_node_watchtower_prefix }}{{ server_fqdn }}"
 
 primary_bootnode: bootnode-1
 
@@ -148,9 +150,18 @@ ethereum_node_docker_watchtower_containers_list:
   - xatu-sentry
   - external-block-builder
 docker_watchtower_container_additional_args:
-  - --interval=900
+  - --http-api-update
   - --stop-timeout=300s
   - --include-restarting
+# Join the nginx-proxy network and expose the HTTP API at watchtower-<fqdn>
+# (like bn-/rpc-), so the panda-pulse /roll command can reach it over HTTPS.
+# Requires secret_watchtower_api_token in this devnet's all.sops.yaml.
+docker_watchtower_container_networks: "{{ docker_networks_shared }}"
+docker_watchtower_container_env:
+  WATCHTOWER_HTTP_API_TOKEN: "{{ secret_watchtower_api_token }}"
+  VIRTUAL_HOST: "{{ ethereum_node_watchtower_hostname }}"
+  VIRTUAL_PORT: "8080"
+  LETSENCRYPT_HOST: "{{ ethereum_node_watchtower_hostname }}"
 ethereum_node_json_rpc_snooper_engine_enabled: true
 ethereum_node_json_rpc_snooper_engine_name: "snooper-engine"
 ethereum_node_json_rpc_snooper_engine_port: 8561

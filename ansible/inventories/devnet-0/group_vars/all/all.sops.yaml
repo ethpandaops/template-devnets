@@ -38,14 +38,15 @@ tysm_secret_key: ENC[AES256_GCM,data:MuvclVLaNVZ+7vRumg==,iv:XGBLMISj2wL7MQznXnV
 tempo_grpc_url: ENC[AES256_GCM,data:ltAVTGgrqhUBXdAZe7D1HvdXK72YIORL/x4DYHgX911s+X8IZM9/guRqE1I/ZYSzNrQX0qON3/TrNSjpG1BUpkK9M0SLzqE4EKhaOOQonJRLunnufZVrZIDhXSMaGQhZcjsHQCV8,iv:4mzqA4Ck1g91+tST5oTSnTepikjOCWKJrV04Rsp/8Ts=,tag:MgjQUb+lR1SIU2d8KpvOew==,type:str]
 secret_buildoor_builder_privkey: ENC[AES256_GCM,data:FJj3WPEad/nxomBuvOcKYwuZRb1wpH/AV742UoSQimMDGZZ6ZuPLG9MRTXPEXlAX2oojiOPLN22XLae8PZ6mrg==,iv:PaHUBXc58KzROm9swDMeTuH55iZoSXpjZbmhhBlXVqQ=,tag:QtSpaxciweQhKEML+ZmbJA==,type:str]
 secret_buildoor_wallet_privkey: ENC[AES256_GCM,data:K4iVB2j+py1CYUsR6j7UUPtGVMeYdIkV9EY0Foi23lr7toUSlLTfqqZE23u533YQrpovinMl4z2Gji8V1VGAeA==,iv:POAoPAmGeZTYoqwGsSB8NMSI4MsCMMbIhv3zefnzfE4=,tag:05IHrIPCpwJnMafB3nDE8g==,type:str]
+secret_watchtower_api_token: ENC[AES256_GCM,data:2zrCM7CycAblVBME/QYUJVwQyq8y1rK3VioUuRWsp0IXeyXE,iv:IJ6B/a/Ph0PFngexZm+B2RwbcjRrKOAc1R1V67m/lD8=,tag:2o6cv+gfXIEGLrdRZO7Mug==,type:str]
 sops:
     kms: []
     gcp_kms: []
     azure_kv: []
     hc_vault: []
     age: []
-    lastmodified: "2026-04-29T09:20:00Z"
-    mac: ENC[AES256_GCM,data:c/HVw/mtY1gAFLIc7K+uQbI2UdU1vs4ppVcoUQswUH3hSA6WIuUrpEzQCkP2xwKazPsE8ReK4ICY5oQVXgBWZsoUAyj2/gSpBGRsQbEsc/qUf32MthXPJaT5ulxkH06iCzFvHzD+doECGgtOZFU/KLvwV5tj88MbxGCy9+KYNRA=,iv:ftc09zuBrYKFzxhwAbO+vbEm1IFkU+qzbenN+Yz5ho8=,tag:8KlHK07wfyZOKI315Rf4WQ==,type:str]
+    lastmodified: "2026-05-29T14:29:21Z"
+    mac: ENC[AES256_GCM,data:L+zvY0TE08jW5hP+HMltY6jKJ/wBHb4C0Qjh4/CLaVPAsfTHN/tO5UvBafdrSiam6zWdYe4s4QAmrSqCSD+knP+VwgO9M1BkFA+DSRmX/GbZZfL800XmJSsmfmRyjWxNu0naGZNcxe+H44CCLjuvV7hhVKcMlkeUkrCbHf+U2Z0=,iv:pKzoQW13nqa1BDq+uhdcul0sMVCzRMb0mJMk9IlSirs=,tag:AsTsGBIwiupf9IKoj8WjgQ==,type:str]
     pgp:
         - created_at: "2025-10-27T13:25:35Z"
           enc: |-
