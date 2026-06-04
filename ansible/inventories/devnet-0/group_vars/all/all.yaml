@@ -288,7 +288,6 @@ vector_config: |
     type = "docker_logs"
     exclude_containers = [
       "{{ vector_container_name }}",
-      "otelcol",
       "ethereum-metrics-exporter",
       "nginx-proxy",
       "node_exporter",
