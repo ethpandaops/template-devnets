@@ -59,7 +59,7 @@ default_tooling_images:
   nginx_proxy_acme: nginxproxy/acme-companion
   nginx_proxy_cert_loader: ethpandaops/debian-docker:latest
   nginx_proxy_cert_linker: nginxproxy/docker-gen
-  vector: timberio/vector:0.46.1-alpine
+  vector: timberio/vector:0.56.0-alpine
   spamoor: ethpandaops/spamoor:master-latest
   blobber: ethpandaops/blobber:latest
   syncoor_web: docker.ethquokkaops.io/gh/ethpandaops/syncoor-web:master

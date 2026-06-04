@@ -273,12 +273,22 @@ docker_nginx_proxy_wildcard_cert: "{{ network_server_subdomain }}"
 docker_nginx_proxy_wildcard_cert_url: "http://cert.{{ network_server_subdomain }}/{{ network_server_subdomain }}-latest.tar.enc"
 docker_nginx_proxy_wildcard_cert_psk: "{{ secret_cert_encryption_psk }}"
 
+# OTLP egress to the prod analytics gateway (Vector ships container logs here).
+# Ingress identity (auth username + ingress_user tag) is the current devnet name
+# rather than secret_loki.username: the sops username drifts stale between devnet
+# iterations, while the gateway only validates the (constant) password — so using
+# the network name keeps log attribution correct no matter what sops holds.
+otlp_endpoint: "https://otlp.analytics.production.platform.ethpandaops.io"
+otlp_deployment_env: production
+
 # role: ethpandaops.general.vector
 vector_config: |
+  # Docker container logs (clean per-container metadata straight from the Docker API)
   [sources.in]
     type = "docker_logs"
     exclude_containers = [
       "{{ vector_container_name }}",
+      "otelcol",
       "ethereum-metrics-exporter",
       "nginx-proxy",
       "node_exporter",
@@ -286,24 +296,128 @@ vector_config: |
       "snooper-",
     ]
 
-  [sinks.out]
-    type = "loki"
+  # Shape docker_logs events into an OTLP resourceLogs envelope with full metadata.
+  [transforms.otel_shape]
+    type = "remap"
     inputs = ["in"]
-    out_of_order_action = "accept"
-    labels.forwarder = "vector"
-    labels.instance = "{{ inventory_hostname }}"
-    labels.network = "{{ ethereum_network_name }}"
-    labels.testnet = "{{ ethereum_network_name }}"
-    labels.ingress_user = "{{ secret_loki.username }}"
-    labels.container_name = "{{ '{{ container_name }}' }}"
-  {%- if ethereum_node_el is defined +%}
-    labels.ethereum_el = "{{ ethereum_node_el }}"
-  {%- endif +%}
+    source = '''
+      ts_ns = to_string(to_unix_timestamp(now(), unit: "nanoseconds"))
+      if is_timestamp(.timestamp) {
+        ts_ns = to_string(to_unix_timestamp!(.timestamp, unit: "nanoseconds"))
+      }
+      msg  = string(.message)        ?? ""
+      ctr  = string(.container_name) ?? "unknown"
+      img  = string(.image)          ?? ""
+      strm = string(.stream)         ?? "stdout"
+
+      # Extract the source log level: JSON-structured lines (.level / .severity)
+      # first, then logfmt (level=xxx), then a level token near the start of a
+      # plain-text line. Client formats vary (lighthouse truncates to 4 chars:
+      # DEBG/ERRO/CRIT), so the text matcher allows a union of forms. SeverityText
+      # keeps the source's exact text; only SeverityNumber is normalised to the
+      # OTel scale (https://opentelemetry.io/docs/specs/otel/logs/data-model/#field-severitynumber).
+      # Unrecognised lines are left unset rather than guessed.
+      sevtext = ""
+      if starts_with(msg, "{") {
+        j = parse_json(msg) ?? {}
+        if is_string(j.level) {
+          sevtext = string!(j.level)
+        } else if is_string(j.severity) {
+          sevtext = string!(j.severity)
+        }
+      }
+      if sevtext == "" {
+        lm = parse_regex(msg, r'(?i)\b(?:level|lvl|severity)="?(?P<l>[a-z]+)') ?? {}
+        if is_string(lm.l) {
+          sevtext = string!(lm.l)
+        } else {
+          hm = parse_regex(truncate(msg, 48), r'(?i)\b(?P<l>TRACE|DEBUG|DEBG|DBUG|NOTICE|INFO|WARNING|WARN|ERROR|ERRO|CRITICAL|CRIT|FATAL|PANIC)\b') ?? {}
+          if is_string(hm.l) {
+            sevtext = string!(hm.l)
+          }
+        }
+      }
+      lvl = upcase(sevtext)
+      sevnum = 0
+      if lvl == "TRACE" {
+        sevnum = 1
+      } else if lvl == "DEBUG" || lvl == "DEBG" || lvl == "DBUG" {
+        sevnum = 5
+      } else if lvl == "INFO" || lvl == "INFOR" || lvl == "NOTICE" {
+        sevnum = 9
+      } else if lvl == "WARN" || lvl == "WARNING" {
+        sevnum = 13
+      } else if lvl == "ERROR" || lvl == "ERRO" {
+        sevnum = 17
+      } else if lvl == "CRIT" || lvl == "CRITICAL" {
+        sevnum = 18
+      } else if lvl == "FATAL" || lvl == "PANIC" {
+        sevnum = 21
+      }
+
+      attrs = [
+        {"key": "service.name",           "value": {"stringValue": ctr}},
+        {"key": "container.name",         "value": {"stringValue": ctr}},
+        {"key": "container.image.name",   "value": {"stringValue": img}},
+        {"key": "deployment.environment", "value": {"stringValue": "{{ otlp_deployment_env }}"}},
+        {"key": "forwarder",              "value": {"stringValue": "vector"}},
+        {"key": "ingress_user",           "value": {"stringValue": "{{ ethereum_network_name }}"}},
+        {"key": "network",                "value": {"stringValue": "{{ ethereum_network_name }}"}},
+        {"key": "testnet",                "value": {"stringValue": "{{ ethereum_network_name }}"}},
+        {"key": "instance",               "value": {"stringValue": "{{ inventory_hostname }}"}},
+        {"key": "host.name",              "value": {"stringValue": "{{ inventory_hostname }}"}}
+      ]
   {%- if ethereum_node_cl is defined +%}
-    labels.ethereum_cl = "{{ ethereum_node_cl }}"
+      attrs = push(attrs, {"key": "ethereum_cl", "value": {"stringValue": "{{ ethereum_node_cl }}"}})
   {%- endif +%}
-    encoding.codec = "json"
-    endpoint = "{{ secret_loki.endpoint }}"
-    auth.strategy = "basic"
-    auth.user = "{{ secret_loki.username }}"
-    auth.password = "{{ secret_loki.password }}"
+  {%- if ethereum_node_el is defined +%}
+      attrs = push(attrs, {"key": "ethereum_el", "value": {"stringValue": "{{ ethereum_node_el }}"}})
+  {%- endif +%}
+      . = {
+        "resource_log": {
+          "resource": {"attributes": attrs},
+          "scopeLogs": [{
+            "scope": {"name": "{{ ethereum_network_name }}-vector"},
+            "logRecords": [{
+              "timeUnixNano":   ts_ns,
+              "severityNumber": sevnum,
+              "severityText":   sevtext,
+              "body": {"stringValue": msg},
+              "attributes": [{"key": "stream", "value": {"stringValue": strm}}]
+            }]
+          }]
+        }
+      }
+    '''
+
+  # Batch many shaped log events into one OTLP envelope (reduce works on logs).
+  [transforms.batch_envelope]
+    type = "reduce"
+    inputs = ["otel_shape"]
+    expire_after_ms = 30000
+    end_every_period_ms = 5000
+    max_events = 500
+    merge_strategies.resource_log = "array"
+
+  [transforms.finalize_envelope]
+    type = "remap"
+    inputs = ["batch_envelope"]
+    source = '''
+      . = {"resourceLogs": .resource_log}
+    '''
+
+  [sinks.otlp_logs]
+    type = "opentelemetry"
+    inputs = ["finalize_envelope"]
+    [sinks.otlp_logs.protocol]
+      type = "http"
+      uri = "{{ otlp_endpoint }}/v1/logs"
+      method = "post"
+      encoding.codec = "otlp"
+      auth.strategy = "basic"
+      auth.user = "{{ ethereum_network_name }}"
+      auth.password = "{{ secret_loki.password }}"
+      # One event here is already a full OTLP envelope (built by the reduce above).
+      # max_events MUST be 1 — OTLP/HTTP allows one envelope per request.
+      batch.max_events = 1
+      batch.timeout_secs = 5
