@@ -51,6 +51,7 @@ print_usage() {
   echo "  exit s e                          Exit from the network from validator index start to end - mandatory argument"
   echo "  set_withdrawal_addr s e address   Set the withdrawal credentials for validator index start (mandatory) to end (optional) and Ethereum address"
   echo "  full_withdrawal s e               Withdraw from the network from validator index start to end - mandatory argument"
+  echo "  sync_mapping [src]                Extend validator_names.yaml with post-genesis mnemonic deposits found on the beacon node (src default: main-mnemonic)"
   echo "  help                              Print this help message"
   echo ""
   echo " To use an alternative endpoint run the script by setting the environment variable:"
@@ -764,6 +765,102 @@ for arg in "${command[@]}"; do
         rm -rf /tmp/set_withdrawal_addr
         echo
       fi
+      ;;
+    "sync_mapping")
+      # Extend the validator names mapping with post-genesis deposits made from
+      # the genesis mnemonic. Reads the current mapping, fetches the on-chain
+      # validator set from the beacon node, matches newly-deposited validators
+      # back to the mnemonic by deriving its pubkeys, and appends the new index
+      # ranges. Re-running is idempotent: once added, ranges advance past them.
+      src_name="${command[2]:-main-mnemonic}"
+      mapping_file="../network-configs/$network/metadata/validator_names.yaml"
+
+      if [[ ! -f "$mapping_file" ]]; then
+        echo "Mapping file not found: $mapping_file" >&2
+        exit 1
+      fi
+
+      # YAML -> JSON, tolerant of both mikefarah (-o=json) and python-yq (-c) yq.
+      if yq --version 2>&1 | grep -qi mikefarah; then
+        mapping_json=$(yq -o=json -I=0 '.' "$mapping_file")
+      else
+        mapping_json=$(yq -c '.' "$mapping_file")
+      fi
+
+      # Next free mnemonic key index for this source, and next free on-chain index.
+      next_key=$(echo "$mapping_json" | jq --arg src "$src_name" \
+        '[ .[] | to_entries[] | select(.value.src == $src) | .value.to ] | (max // -1) + 1')
+      next_state=$(echo "$mapping_json" | jq \
+        '[ .[] | to_entries[] | (.key | tostring | split("-")[1] | tonumber) ] | (max // -1) + 1')
+
+      echo "Syncing '$src_name' mapping (next on-chain index: $next_state, next key index: $next_key)"
+
+      # The validator set and derived key map can be large (thousands of
+      # entries), so they are exchanged with jq via files (--slurpfile) instead
+      # of command-line args, which would overflow the argument list.
+      sync_tmp=$(mktemp -d)
+
+      # Fetch the full validator set from the beacon node in a single request and
+      # keep the validators beyond the last mapped index (index >= next_state).
+      curl -s "$bn_endpoint/eth/v1/beacon/states/head/validators" \
+        | jq -c --argjson min "$next_state" \
+          '[ .data[] | {index: (.index | tonumber), pubkey: .validator.pubkey} | select(.index >= $min) ]' \
+        > "$sync_tmp/new.json"
+
+      new_count=$(jq 'length' "$sync_tmp/new.json")
+      if [[ "$new_count" == "0" ]]; then
+        rm -rf "$sync_tmp"
+        echo "No on-chain validators beyond index $((next_state - 1)); mapping is up to date."
+        exit 0
+      fi
+      echo "Found $new_count new on-chain validator(s); matching against the mnemonic..."
+
+      # Derive the mnemonic's pubkeys for the next key indices (at most as many as
+      # there are new validators) into a pubkey -> key-index lookup.
+      eth2-val-tools pubkeys \
+        --source-min=$next_key --source-max=$((next_key + new_count)) \
+        --validators-mnemonic="$sops_mnemonic" \
+        | jq -R -s --argjson base $next_key \
+          '[ split("\n")[] | select(length > 0) ] | to_entries
+           | map({key: (.value | ascii_downcase), value: ($base + .key)}) | from_entries' \
+        > "$sync_tmp/derived.json"
+
+      # Match new validators to the mnemonic by pubkey and collapse runs where the
+      # on-chain index and the key index both advance by one into single entries.
+      new_lines=$(jq -rn \
+        --slurpfile new "$sync_tmp/new.json" \
+        --slurpfile derived "$sync_tmp/derived.json" \
+        --arg src "$src_name" '
+        ($new[0]) as $vals
+        | ($derived[0]) as $keymap
+        | ( $vals
+            | map(. as $v | ($v.pubkey | ascii_downcase) as $pk
+                  | select($keymap | has($pk))
+                  | {state: $v.index, key: $keymap[$pk]})
+            | sort_by(.state) ) as $pairs
+        | reduce $pairs[] as $p ([];
+            if (length > 0) and (.[-1].state_to + 1 == $p.state) and (.[-1].key_to + 1 == $p.key)
+            then .[:-1] + [ .[-1] + {state_to: $p.state, key_to: $p.key} ]
+            else . + [ {state_from: $p.state, state_to: $p.state, key_from: $p.key, key_to: $p.key} ]
+            end)
+        | .[] | "- \(.state_from)-\(.state_to): { src: \"\($src)\", from: \(.key_from), to: \(.key_to) }"
+      ')
+
+      rm -rf "$sync_tmp"
+
+      if [[ -z "$new_lines" ]]; then
+        echo "None of the $new_count new validator(s) were derived from '$src_name'; nothing to add."
+        exit 0
+      fi
+
+      echo "Adding mapping entr(y/ies):"
+      echo "$new_lines"
+
+      # Make sure the file ends with a newline before appending.
+      [[ -n "$(tail -c1 "$mapping_file" 2>/dev/null)" ]] && printf '\n' >> "$mapping_file"
+      printf '%s\n' "$new_lines" >> "$mapping_file"
+      echo "Updated $mapping_file"
+      exit 0
       ;;
     "help")
       print_usage "${command[@]}"
