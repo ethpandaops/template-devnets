@@ -60,6 +60,9 @@ locals {
             )
             validator_count = node.count > 0 ? (node.validator_end - node.validator_start) / node.count : 0
 
+            # Builder index for buildoor nodes (start index + instance offset); null = no tag
+            builder_index = node.builder_start != null ? node.builder_start + i : null
+
             # Supernode: explicit > bootnode/mev > validator_count >= 128
             supernode = (
               node.supernode != null ? node.supernode :
@@ -122,7 +125,8 @@ locals {
           "arch:${can(regex("^cax", vm.size)) ? "arm64" : "amd64"}",
           ], compact([
             can(regex("bootnode", group.group_name)) ? "bootnode:${var.ethereum_network}" : null,
-            can(regex("mev-relay", group.group_name)) ? "mev:${var.ethereum_network}" : null
+            can(regex("mev-relay", group.group_name)) ? "mev:${var.ethereum_network}" : null,
+            vm.builder_index != null ? "builder_index:${vm.builder_index}" : null
         ]))
       }
     ]
