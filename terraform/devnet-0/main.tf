@@ -80,6 +80,7 @@ locals {
       cloud           = node.cloud
       validator_start = try(node.validator_start, 0)
       validator_end   = try(node.validator_end, 0)
+      builder_start   = try(node.builder_start, null)
       size            = try(node.size, null)
       region          = try(node.region, null)
       location        = try(node.location, try(node.region, null))

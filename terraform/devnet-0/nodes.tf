@@ -14,6 +14,8 @@
 #     - size            : Instance size override (provider-specific)
 #     - region          : Region override (digitalocean) or location (hetzner)
 #     - supernode       : Force supernode=true/false (auto-detected from name)
+#     - builder_start   : First builder index (buildoor nodes only). Exposes a
+#                         builder_index=N server tag and inventory var per instance.
 #
 # Examples:
 #   { name = "bootnode", count = 1, cloud = "digitalocean" }

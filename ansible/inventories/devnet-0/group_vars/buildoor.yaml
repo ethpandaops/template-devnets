@@ -21,27 +21,25 @@ buildoor_overview_url: "https://buildoor.{{ network_subdomain }}"
 # Wallet ECDSA private key
 buildoor_wallet_privkey: "{{ secret_buildoor_wallet_privkey }}"
 # Builder BLS private key
-buildoor_builder_privkey: "{{ secret_buildoor_builder_privkey }}"
+buildoor_builder_mnemonic: "{{ secret_buildoor_builder_mnemonic }}"
+buildoor_builder_mnemonic_index: "{{ builder_index }}"
 
 buildoor_container_env:
   VIRTUAL_HOST: "api-{{ server_fqdn }}"
   VIRTUAL_PORT: "{{ buildoor_api_port | string }}"
   LETSENCRYPT_HOST: "api-{{ server_fqdn }}"
 
-# Buildoor host-only overrides
-ethereum_node_cl: prysm
-ethereum_node_el: geth
-ethereum_node_cl_validator_enabled: false
-ethereum_node_mev_boost_enabled: false
-
-# Buildoor currently requires a custom prysm build with ePBS support.
-prysm_container_image: ethpandaops/prysm-beacon-chain:bharath-123-buildoor-apis
-
 # Re-apply the prysm.yaml merge so we don't lose the bootnode args while adding --prepare-all-payloads
 prysm_container_command_extra_args: >-
   {{ prysm_container_command_extra_simple_args
      + prysm_container_command_extra_bootnode_args
      + ['--prepare-all-payloads'] }}
+lighthouse_container_command_extra_args: >-
+  {{ lighthouse_container_command_extra_simple_args
+     + ['--always-prepare-payload'] }}
+lodestar_container_command_extra_args: >-
+  {{ lodestar_container_command_extra_simple_args
+     + ['--emitPayloadAttributes'] }}
 
 ethereum_node_docker_watchtower_containers_list:
   - execution

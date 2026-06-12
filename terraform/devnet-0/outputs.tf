@@ -20,6 +20,7 @@ resource "local_file" "ansible_inventory" {
             validator_end   = try([for tag in tolist(server.tags) : split(":", tag)[1] if can(regex("^val_end:", tag))][0], 0)
             supernode       = try(title([for tag in tolist(server.tags) : split(":", tag)[1] if can(regex("^supernode:", tag))][0]), "undefined")
             arch            = try([for tag in tolist(server.tags) : split(":", tag)[1] if can(regex("^arch:", tag))][0], "amd64")
+            builder_index   = try([for tag in tolist(server.tags) : split(":", tag)[1] if can(regex("^builder_index:", tag))][0], "")
             tags            = "${server.tags}"
             hostname        = "${split(".", key)[0]}"
             cloud           = "digitalocean"
@@ -35,6 +36,7 @@ resource "local_file" "ansible_inventory" {
             validator_end   = server.labels.val_end
             supernode       = server.labels.supernode
             arch            = server.labels.arch
+            builder_index   = try(server.labels.builder_index, "")
             tags            = server.labels
             hostname        = split(".", key)[0]
             cloud           = "hetzner"
