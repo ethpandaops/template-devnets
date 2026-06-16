@@ -1,13 +1,16 @@
 # role: ethpandaops.general.bootstrap
 bootstrap_default_user_authorized_keys_github_team_cl:
+  - aarshkshah1992
+  - Inspector-Butters
+  - james-prysm
   - kasey
-  - terencechain
+  - nalepae
   - potuz
-  - nisdas
   - prestonvanloon
   - rkapka
-  - nalepae
-  - james-prysm
+  - satushh
+  - syjn99
+  - terencechain
 
 # role: validator_keys
 validator_keys_sync_files:
