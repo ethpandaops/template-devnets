@@ -1,9 +1,8 @@
 # role: ethpandaops.general.bootstrap
-bootstrap_default_user_authorized_keys_github_team_cl:
-  - sauliusgrigaitis
-  - tumas
-  - povi
-  - hangleang
+grandine_extra_github_users: []  # handles not yet in the coredevs registry
+bootstrap_default_user_authorized_keys_github_team_cl: >-
+  {{ (query('ethpandaops.general.url_cached', coredevs_api_url ~ '/api/v1/users/grandine?format=txt') | select | list)
+     + grandine_extra_github_users }}
 
 # role: geerlingguy.docker
 docker_daemon_options:
