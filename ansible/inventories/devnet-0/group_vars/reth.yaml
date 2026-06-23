@@ -1,14 +1,8 @@
 # role: ethpandaops.general.bootstrap
-bootstrap_default_user_authorized_keys_github_team_el:
-  - gakonst
-  - onbjerg
-  - klkvr
-  - shekhirin
-  - rkrasiuk
-  - mattsse
-  - jenpaff
-  - emmajam
-  - rjected
+reth_extra_github_users: []  # handles not yet in the coredevs registry
+bootstrap_default_user_authorized_keys_github_team_el: >-
+  {{ (query('ethpandaops.general.url_cached', coredevs_api_url ~ '/api/v1/users/reth?format=txt') | select | list)
+     + reth_extra_github_users }}
 
 # role: ethpandaops.general.ethereum_node
 ethereum_node_el: reth

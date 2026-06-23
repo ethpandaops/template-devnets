@@ -1,13 +1,8 @@
 # role: ethpandaops.general.bootstrap
-bootstrap_default_user_authorized_keys_github_team_cl:
-  - zah
-  - tersec
-  - etan-status
-  - arnetheduck
-  - chirag-parmar
-  - agnxsh
-  - Tomi-3-0
-  - ahshum
+nimbus_extra_github_users: []  # handles not yet in the coredevs registry
+bootstrap_default_user_authorized_keys_github_team_cl: >-
+  {{ (query('ethpandaops.general.url_cached', coredevs_api_url ~ '/api/v1/users/nimbus?format=txt') | select | list)
+     + nimbus_extra_github_users }}
 
 # role: validator_keys
 validator_keys_sync_files:

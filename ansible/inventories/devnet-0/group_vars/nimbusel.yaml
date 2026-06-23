@@ -1,9 +1,8 @@
 # role: ethpandaops.general.bootstrap
-bootstrap_default_user_authorized_keys_github_team_el:
-   - tersec
-   - jangko
-   - advaita-saha
-   - mjfh
+nimbusel_extra_github_users: []  # handles not yet in the coredevs registry
+bootstrap_default_user_authorized_keys_github_team_el: >-
+  {{ (query('ethpandaops.general.url_cached', coredevs_api_url ~ '/api/v1/users/nimbus?format=txt') | select | list)
+     + nimbusel_extra_github_users }}
 
 # role: ethpandaops.general.ethereum_node
 ethereum_node_el: nimbusel
