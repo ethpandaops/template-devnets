@@ -104,6 +104,10 @@ geth_container_command_extra_args:
   - --syncmode=full
   - --gcmode=archive
   - --state.scheme=hash
+  # OTLP traces → local otelcol sidecar (handles upstream auth + endpoint).
+  - --rpc.telemetry
+  - --rpc.telemetry.endpoint=http://vector:4318/v1/traces
+  - --rpc.telemetry.instance-id={{ ethereum_network_name }}-{{ inventory_hostname }}
   - >-
     --bootnodes={{
       (
