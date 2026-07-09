@@ -8,12 +8,12 @@ variable "hcloud_ssh_key_fingerprint" {
 
 variable "hetzner_supernode_size" {
   type    = string
-  default = "cax41"
+  default = "cpx62"
 }
 
 variable "hetzner_fullnode_size" {
   type    = string
-  default = "cax31"
+  default = "cpx42"
 }
 
 variable "hetzner_regions" {
@@ -25,10 +25,43 @@ variable "hetzner_regions" {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
+//                                        DATA SOURCES
+////////////////////////////////////////////////////////////////////////////////////////
+data "hcloud_server_type" "supernode" {
+  count = local.hetzner_has_servers ? 1 : 0
+  name  = var.hetzner_supernode_size
+}
+
+data "hcloud_server_type" "fullnode" {
+  count = local.hetzner_has_servers ? 1 : 0
+  name  = var.hetzner_fullnode_size
+}
+
+data "hcloud_datacenters" "all" {
+  count = local.hetzner_has_servers ? 1 : 0
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
 //                                        LOCALS
 ////////////////////////////////////////////////////////////////////////////////////////
 locals {
   hetzner_has_servers = length(local.hetzner_nodes) > 0
+
+  required_hetzner_server_type_ids = local.hetzner_has_servers ? toset([
+    tostring(data.hcloud_server_type.supernode[0].id),
+    tostring(data.hcloud_server_type.fullnode[0].id),
+  ]) : toset([])
+
+  hetzner_available_locations = local.hetzner_has_servers ? distinct([
+    for dc in data.hcloud_datacenters.all[0].datacenters : dc.location.name
+    if alltrue([for tid in local.required_hetzner_server_type_ids : contains([for id in dc.available_server_type_ids : tostring(id)], tid)])
+  ]) : []
+
+  hetzner_regions_filtered = [
+    for r in var.hetzner_regions : r if contains(local.hetzner_available_locations, r)
+  ]
+
+  hetzner_regions_effective = length(local.hetzner_regions_filtered) > 0 ? local.hetzner_regions_filtered : var.hetzner_regions
 
   hetzner_network = {
     for region in var.hetzner_regions : region => {
@@ -79,7 +112,7 @@ locals {
               ) ? var.hetzner_supernode_size : var.hetzner_fullnode_size
             )
 
-            location     = node.location != null ? node.location : var.hetzner_regions[i % length(var.hetzner_regions)]
+            location     = node.location != null ? node.location : local.hetzner_regions_effective[i % length(local.hetzner_regions_effective)]
             ipv4_enabled = node.ipv4_enabled
             ipv6_enabled = node.ipv6_enabled
           }
@@ -170,6 +203,10 @@ resource "hcloud_server" "main" {
     ipv4_enabled = each.value.ipv4_enabled
     ipv6_enabled = each.value.ipv6_enabled
   }
+
+  lifecycle {
+    ignore_changes = [location]
+  }
 }
 
 resource "hcloud_server_network" "main" {
@@ -177,5 +214,5 @@ resource "hcloud_server_network" "main" {
     for vm in local.hcloud_vms : vm.id => vm
   }
   server_id  = hcloud_server.main[each.key].id
-  network_id = hcloud_network.main[each.value.location].id
+  network_id = hcloud_network.main[hcloud_server.main[each.key].location].id
 }
