@@ -176,28 +176,10 @@ xatu_sentry_config_server_address: "{{ ethereum_network_name }}-ingest.xatu.ethp
 xatu_sentry_config_server_auth_user: "{{ secret_xatu_sentry.user }}"
 xatu_sentry_config_server_auth_password: "{{ secret_xatu_sentry.password }}"
 xatu_sentry_config_network_name_override: "{{ ethereum_network_name }}"
-# Full config override: the role default ships beaconCommittees/proposerDuty
-# off, but the head-speed committee stream is what keeps the lab's attestation
-# tables tracking the head instead of trailing finality.
-xatu_sentry_config: |
-  logging: "info"
-  metricsAddr: ":9090"
-  name: "{{ xatu_sentry_config_name }}"
-  ethereum:
-    beaconNodeAddress: {{ xatu_sentry_config_beacon_uri }}
-    overrideNetworkName: {{ xatu_sentry_config_network_name_override }}
-  beaconCommittees:
-    enabled: true
-  proposerDuty:
-    enabled: true
-  outputs:
-  - name: grpc
-    type: xatu
-    config:
-      address: {{ xatu_sentry_config_server_address }}
-      tls: {{ xatu_sentry_config_server_tls_enabled }}
-      headers:
-        authorization: "Basic {{ (xatu_sentry_config_server_auth_user + ":" + xatu_sentry_config_server_auth_password) | b64encode }}"
+# Head-speed committee/duty streams keep the lab's attestation tables
+# tracking the head instead of trailing finality.
+xatu_sentry_config_beacon_committees_enabled: true
+xatu_sentry_config_proposer_duty_enabled: true
 
 # role: ethpandaops.general.ethereum_metrics_exporter
 ethereum_metrics_exporter_container_image: "{{ default_tooling_images.ethereum_metrics_exporter }}"
