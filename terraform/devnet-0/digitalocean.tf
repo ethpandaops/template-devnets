@@ -40,6 +40,8 @@ variable "digitalocean_regions" {
 //                                        LOCALS
 ////////////////////////////////////////////////////////////////////////////////////////
 locals {
+  digitalocean_has_servers = length(local.digitalocean_nodes) > 0
+
   digitalocean_vpcs = {
     for region in var.digitalocean_regions : region => {
       name     = "${var.ethereum_network}-${region}"
@@ -139,8 +141,10 @@ data "digitalocean_ssh_key" "main" {
   name = var.digitalocean_ssh_key_name
 }
 
+// Skip VPC creation entirely on Hetzner-only devnets; an empty VPC per region
+// is still billable surface and blocks project teardown.
 resource "digitalocean_vpc" "main" {
-  for_each = local.digitalocean_vpcs
+  for_each = local.digitalocean_has_servers ? local.digitalocean_vpcs : {}
 
   name     = each.value["name"]
   region   = each.value["region"]
