@@ -38,7 +38,11 @@ grandine_container_volumes:
   - "{{ grandine_datadir }}:/data"
   - "{{ grandine_auth_jwt_path }}:/execution-auth.jwt:ro"
   - "{{ eth_testnet_config_dir }}:/network-config:ro"
-grandine_container_command_extra_args:
+# Split so groups with higher priority (e.g. buildoor) can re-merge the base
+# args instead of replacing them wholesale.
+grandine_container_command_extra_args: >-
+  {{ grandine_container_command_extra_simple_args }}
+grandine_container_command_extra_simple_args:
   - --configuration-directory=/network-config/
   - --boot-nodes={{ ethereum_cl_bootnodes | join(',') }}
   - --graffiti={{ ansible_hostname }}
