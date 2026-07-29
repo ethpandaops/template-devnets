@@ -138,7 +138,7 @@ lighthouse_validator_datadir: /data/lighthouse-validator
 lighthouse_container_pull: true
 
 ethereum_el_bootnodes:
-  - "{{ hostvars[primary_bootnode]['ethereum_node_fact_discovery_el_enode'] }}"
+  - "{{ hostvars[primary_bootnode]['ethereum_node_fact_discovery_el_enr'] }}"
 
 ethereum_cl_bootnodes:
   - "{{ hostvars[primary_bootnode]['ethereum_node_fact_discovery_cl_enr'] }}"
@@ -159,6 +159,7 @@ reth_container_env:
 reth_container_command_extra_args:
   - --chain=/network-config/genesis.json
   - --bootnodes={{ ethereum_el_bootnodes | join(',') }}
+  - --disable-discv4-discovery
   - --http.api=trace,rpc,eth,net,debug,web3,admin,flashbots,txpool
   - --ws.api=trace,rpc,eth,net,debug,web3,admin,flashbots,txpool
   - --ws.origins=*

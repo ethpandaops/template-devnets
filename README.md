@@ -195,6 +195,10 @@ curl -s https://bootnode-1.devnet-0.ethpandaops.io/meta/api/v1/validator-ranges.
 ethdo --connection=https://user:password@bn.lighthouse-nethermind-1.devnet-0.ethpandaops.io block info --blockid 100 --json | jq -r .message.proposer_index | ./whose_validator.zsh
 ```
 from the [ansible/](ansible/) directory.
+* Getting execution layer client ENRs
+```shell
+curl -s https://config.devnet-0.ethpandaops.io/api/v1/nodes/inventory | jq -r '.ethereum_pairs[] | .execution.enr'
+```
 * Getting execution layer client enodes
 ```shell
 curl -s https://config.devnet-0.ethpandaops.io/api/v1/nodes/inventory | jq -r '.ethereum_pairs[] | .execution.enode'
