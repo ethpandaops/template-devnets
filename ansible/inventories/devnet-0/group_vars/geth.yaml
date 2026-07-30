@@ -25,6 +25,11 @@ geth_container_command_extra_args:
   - --networkid={{ ethereum_network_id }}
   - --syncmode=full
   - --bootnodes={{ ethereum_el_bootnodes | join(',') }}
+  - --rpc.telemetry
+  - --rpc.telemetry.endpoint=http://vector:4318/v1/traces
+  - --rpc.telemetry.sample-ratio=1 # Required until geth ships the fix for the SampleRatio default https://github.com/ethereum/go-ethereum/pull/34948
+  - --rpc.telemetry.instance-id={{ ethereum_network_name }}-{{ inventory_hostname }}
+  - --rpc.telemetry.tags=execution_client={{ ethereum_node_el }},consensus_client={{ ethereum_node_cl }},supernode={{ ethereum_node_cl_supernode_enabled | bool | default(false) }},network={{ ethereum_network_name }},instance-id={{ ethereum_network_name }}-{{ inventory_hostname }}
 
 geth_container_pull: true
 

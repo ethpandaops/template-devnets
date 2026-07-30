@@ -49,6 +49,10 @@ prysm_container_command_extra_simple_args:
   - --min-sync-peers=1
   - --verbosity=debug
   - --subscribe-all-subnets
+  - --enable-tracing
+  - --tracing-endpoint=http://vector:4318/v1/traces # the flag default is a stale Jaeger URL; always set explicitly
+  - --tracing-process-name={{ ethereum_network_name }}-{{ inventory_hostname }}
+  - --trace-sample-fraction=1.0 # default samples only 20%
 prysm_container_command_extra_bootnode_args: >-
   {{ ethereum_cl_bootnodes | map('regex_replace', '^', '--bootstrap-node=') | list }}
 

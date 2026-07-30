@@ -276,15 +276,18 @@ docker_nginx_proxy_wildcard_cert: "{{ network_server_subdomain }}"
 docker_nginx_proxy_wildcard_cert_url: "http://cert.{{ network_server_subdomain }}/{{ network_server_subdomain }}-latest.tar.enc"
 docker_nginx_proxy_wildcard_cert_psk: "{{ secret_cert_encryption_psk }}"
 
-# OTLP egress to the prod analytics gateway (Vector ships container logs here).
+# OTLP egress to the prod analytics gateway (shared by Vector's logs + traces sinks).
 # Ingress identity (auth username + ingress_user tag) is the current devnet name
 # rather than secret_loki.username: the sops username drifts stale between devnet
 # iterations, while the gateway only validates the (constant) password — so using
-# the network name keeps log attribution correct no matter what sops holds.
+# the network name keeps log/trace attribution correct no matter what sops holds.
 otlp_endpoint: "https://otlp.analytics.production.platform.ethpandaops.io"
 otlp_deployment_env: production
 
 # role: ethpandaops.general.vector
+# Shared docker network so the clients can reach Vector's OTLP listeners and
+# Vector can read the other containers' logs.
+vector_container_networks: "{{ docker_networks_shared }}"
 vector_config: |
   # Docker container logs (clean per-container metadata straight from the Docker API)
   [sources.in]
@@ -297,6 +300,19 @@ vector_config: |
       "prometheus",
       "snooper-",
     ]
+
+  # OTLP traces pushed by the clients (beacon -> :4317 grpc, geth -> :4318 http).
+  # use_otlp_decoding preserves the resourceSpans envelope so the sink forwards
+  # natively with the client's batching intact (1 request in = 1 request out).
+  [sources.otlp_in]
+    type = "opentelemetry"
+    use_otlp_decoding = true
+
+  [sources.otlp_in.grpc]
+    address = "[::]:4317"
+
+  [sources.otlp_in.http]
+    address = "[::]:4318"
 
   # Shape docker_logs events into an OTLP resourceLogs envelope with full metadata.
   [transforms.otel_shape]
@@ -421,5 +437,20 @@ vector_config: |
       auth.password = "{{ secret_loki.password }}"
       # One event here is already a full OTLP envelope (built by the reduce above).
       # max_events MUST be 1 — OTLP/HTTP allows one envelope per request.
+      batch.max_events = 1
+      batch.timeout_secs = 5
+
+  [sinks.otlp_traces]
+    type = "opentelemetry"
+    inputs = ["otlp_in.traces"]
+    [sinks.otlp_traces.protocol]
+      type = "http"
+      uri = "{{ otlp_endpoint }}/v1/traces"
+      method = "post"
+      encoding.codec = "otlp"
+      auth.strategy = "basic"
+      auth.user = "{{ ethereum_network_name }}"
+      auth.password = "{{ secret_loki.password }}"
+      # use_otlp_decoding => one event already carries the client's full span batch.
       batch.max_events = 1
       batch.timeout_secs = 5

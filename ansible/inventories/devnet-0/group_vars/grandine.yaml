@@ -43,6 +43,8 @@ grandine_container_command_extra_args:
   - --boot-nodes={{ ethereum_cl_bootnodes | join(',') }}
   - --graffiti={{ ansible_hostname }}
   - --features=LogHttpRequests
+  - --telemetry-metrics-url=http://vector:4317 # despite the name this exports tracing spans (grandine #487); gRPC only
+  - --telemetry-service-name={{ ethereum_network_name }}-{{ inventory_hostname }}
 
 grandine_validator_container_volumes:
   - "{{ grandine_validator_datadir }}:/validator-data"
