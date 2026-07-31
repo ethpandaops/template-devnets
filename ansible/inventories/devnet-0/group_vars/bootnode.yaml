@@ -1,5 +1,5 @@
 ethereum_cl_bootnode: "{{ hostvars[primary_bootnode]['bootnodoor_fact_enr'] }}"
-ethereum_el_bootnode: "{{ hostvars[primary_bootnode]['bootnodoor_fact_enode'] }}"
+ethereum_el_bootnode: "{{ hostvars[primary_bootnode]['bootnodoor_fact_el_enr'] }}"
 
 # role: eth_inventory_web
 eth_inventory_web_container_networks: "{{ docker_networks_shared }}"
@@ -104,19 +104,21 @@ geth_container_command_extra_args:
   - --syncmode=full
   - --gcmode=archive
   - --state.scheme=hash
+  - --discovery.v4=false
+  - --discovery.v5=true
   - >-
     --bootnodes={{
       (
         (
           groups['bootnode']
-          | map('extract', hostvars, ['ethereum_node_fact_discovery_el_enode'])
+          | map('extract', hostvars, ['ethereum_node_fact_discovery_el_enr'])
           | select('defined')
           | list
         )
         +
         (
           groups['bootnode']
-          | map('extract', hostvars, ['bootnodoor_fact_enode'])
+          | map('extract', hostvars, ['bootnodoor_fact_el_enr'])
           | select('defined')
           | list
         )

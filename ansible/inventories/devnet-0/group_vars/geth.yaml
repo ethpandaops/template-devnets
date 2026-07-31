@@ -25,6 +25,8 @@ geth_container_command_extra_args:
   - --networkid={{ ethereum_network_id }}
   - --syncmode=full
   - --bootnodes={{ ethereum_el_bootnodes | join(',') }}
+  - --discovery.v4=false
+  - --discovery.v5=true
 
 geth_container_pull: true
 
