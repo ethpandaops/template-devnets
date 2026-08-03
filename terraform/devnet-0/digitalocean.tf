@@ -68,6 +68,9 @@ locals {
             # Builder index for buildoor nodes (start index + instance offset); null = no tag
             builder_index = node.builder_start != null ? node.builder_start + i : null
 
+            # tysm canary membership; true = tysm tag, [tysm] inventory group, port 8675
+            tysm = node.tysm
+
             # Supernode: explicit > bootnode/mev > validator_count >= 128
             supernode = (
               node.supernode != null ? node.supernode :
@@ -100,6 +103,7 @@ locals {
         id        = group.id
         group_key = group.group_name
         vm_key    = vm_key
+        tysm      = vm.tysm
 
         name        = group.id
         ssh_keys    = [data.digitalocean_ssh_key.main.fingerprint]
@@ -121,7 +125,8 @@ locals {
           ], compact([
             can(regex("bootnode", group.group_name)) ? "bootnode:${var.ethereum_network}" : null,
             can(regex("mev-relay", group.group_name)) ? "mev-relay:${var.ethereum_network}" : null,
-            vm.builder_index != null ? "builder_index:${vm.builder_index}" : null
+            vm.builder_index != null ? "builder_index:${vm.builder_index}" : null,
+            vm.tysm ? "tysm:${var.ethereum_network}" : null
         ]))
       }
     ]
