@@ -85,6 +85,38 @@
     - role: ethpandaops.general.generate_basic_auth_nginx
       tags: [docker_nginx_proxy]
 
+# Hosts running the tysm beacon canary (tysm_enabled in host_vars) need the
+# hook + xatu config files in the prysm datadir before the container starts.
+- hosts: ethereum_node
+  become: true
+  tasks:
+    - name: Deploy tysm config files
+      when: tysm_enabled | default(false)
+      tags: [ethereum, ethereum_node, tysm]
+      block:
+        - name: Add prysm user
+          ansible.builtin.user:
+            name: "{{ prysm_user | default('prysm') }}"
+
+        - name: Create prysm data dir
+          ansible.builtin.file:
+            path: "{{ prysm_datadir | default('/data/prysm') }}"
+            state: directory
+            mode: "0750"
+            owner: "{{ prysm_user | default('prysm') }}"
+            group: "{{ prysm_user | default('prysm') }}"
+
+        - name: Template tysm config files
+          ansible.builtin.template:
+            src: "{{ inventory_dir }}/templates/tysm/{{ item }}.j2"
+            dest: "{{ prysm_datadir | default('/data/prysm') }}/{{ item }}"
+            mode: "0640"
+            owner: "{{ prysm_user | default('prysm') }}"
+            group: "{{ prysm_user | default('prysm') }}"
+          loop:
+            - tysm-hooks.yaml
+            - tysm-xatu-config.yaml
+
 - hosts: ethereum_node
   become: true
   roles:

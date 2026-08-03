@@ -1,0 +1,88 @@
+# tysm hook-control config for {{ inventory_hostname }}. ${TYSM_TOKEN} resolves from the
+# beacon container env at load; it must equal the token bad-tysm validates with.
+api:
+  enabled: true
+  listen: "0.0.0.0:8675"
+  auth_token: "${TYSM_TOKEN}"
+  max_activation_duration: "4h"
+  instance_id: "{{ inventory_hostname }}"
+
+discovery:
+  enabled: true
+  bad_tysm_url: "https://bad-tysm.analytics.production.platform.ethpandaops.io"
+  auth_token: "${TYSM_TOKEN}"
+  # Address bad-tysm dials back to reach this node's control API. Reachable only
+  # once 8675 is published on the host and opened in the devnet firewall.
+  self_url: "http://{{ ansible_host }}:8675"
+  name: "{{ inventory_hostname }}"
+  namespace: "{{ ethereum_network_name }}"
+  pod: "{{ inventory_hostname }}"
+  node_name: "{{ inventory_hostname }}"
+  heartbeat_interval: "30s"
+  labels:
+    network: "{{ ethereum_network_name }}"
+    cl: "{{ ethereum_node_cl }}"
+    el: "{{ ethereum_node_el }}"
+
+hook_logging:
+  enabled: true
+  classes: ["validate", "mutate"]
+
+hooks:
+  - name: epbs-mutator
+    enabled: false
+    config:
+      mutationDelayMs: 0
+      logMutationDetails: true
+      topics:
+        execution_payload_bid:
+          enabledStrategies: []
+          mutationProbability: 0.0
+          slotPattern: "*"
+          strategies:
+            drop:
+              applyProbability: 1.0
+            value_inflate:
+              mode: "uint64_max"
+              absolute: 0
+              multiplier: 10.0
+        execution_payload_envelope:
+          enabledStrategies: []
+          mutationProbability: 0.0
+          slotPattern: "*"
+          strategies:
+            withhold:
+              probability: 1.0
+              slotPattern: "*"
+            delay:
+              delayMs: 9500
+              jitterMs: 0
+              applyProbability: 1.0
+            selective_drop:
+              targetPeerRole: ""
+              dropRate: 0.4
+              seed: 42
+            free_option:
+              triggerSource: "unix_socket"
+              socketPath: "/tmp/tysm-mev-trigger.sock"
+              httpURL: ""
+              defaultState: false
+              pollIntervalMs: 100
+        payload_attestation_message:
+          enabledStrategies: []
+          mutationProbability: 0.0
+          slotPattern: "*"
+          strategies:
+            flip_bit:
+              field: "payload_present"
+              targetValue: "false"
+            corrupt_field:
+              field: "beacon_block_root"
+              mode: "random_32"
+            drop:
+              applyProbability: 1.0
+              targetPeerRole: ""
+              targetValidators: []
+            delay:
+              delayMs: 12000
+              applyProbability: 1.0
