@@ -31,7 +31,11 @@ teku_container_volumes:
   - "{{ teku_datadir }}:/data"
   - "{{ teku_auth_jwt_path }}:/execution-auth.jwt:ro"
   - "{{ eth_testnet_config_dir }}:/network-config:ro"
-teku_container_command_extra_args:
+# Split so groups with higher priority (e.g. buildoor) can re-merge the base
+# args instead of replacing them wholesale.
+teku_container_command_extra_args: >-
+  {{ teku_container_command_extra_simple_args }}
+teku_container_command_extra_simple_args:
   - --network=/network-config/config.yaml
   - --genesis-state=/network-config/genesis.ssz
   - --p2p-discovery-bootnodes={{ ethereum_cl_bootnodes | join(',') }}

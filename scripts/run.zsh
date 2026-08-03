@@ -14,6 +14,61 @@ bn_endpoint="${BEACON_ENDPOINT:-https://$sops_name:$sops_password@$beacon_prefix
 rpc_endpoint="${RPC_ENDPOINT:-https://$sops_name:$sops_password@$rpc_prefix$node.$srv.$prefix-$network.$domain}"
 bootnode_endpoint="${BOOTNODE_ENDPOINT:-https://bootnode-1.$prefix-$network.$domain}"
 
+# Verify every external tool run.zsh depends on is installed.
+# Pass 1 to print every tool; pass 0 (or empty) to print only missing tools.
+check_deps() {
+  local verbose="$1"
+  local tools=(sops yq curl jq awk bc python3 docker cast ethdo ethereal eth2-val-tools)
+  local os
+  case "$(uname -s)" in
+    Darwin) os="macos" ;;
+    Linux)  os="linux" ;;
+    *)      os="other" ;;
+  esac
+  typeset -A hints
+  if [[ "$os" == "macos" ]]; then
+    hints[sops]="brew install sops"
+    hints[yq]="brew install yq"
+    hints[curl]="preinstalled on macOS"
+    hints[jq]="brew install jq"
+    hints[awk]="preinstalled on macOS"
+    hints[bc]="preinstalled on macOS"
+    hints[python3]="preinstalled on macOS (or: brew install python)"
+    hints[docker]="https://docs.docker.com/desktop/install/mac-install/"
+  else
+    hints[sops]="apt install sops  # or download from https://github.com/getsops/sops/releases"
+    hints[yq]="apt install yq  # or download from https://github.com/mikefarah/yq/releases"
+    hints[curl]="apt install curl"
+    hints[jq]="apt install jq"
+    hints[awk]="apt install gawk"
+    hints[bc]="apt install bc"
+    hints[python3]="apt install python3"
+    hints[docker]="https://docs.docker.com/engine/install/"
+  fi
+  hints[cast]="curl -L https://foundry.paradigm.xyz | bash && foundryup"
+  hints[ethdo]="go install github.com/wealdtech/ethdo@latest"
+  hints[ethereal]="go install github.com/wealdtech/ethereal/v2@latest"
+  hints[eth2-val-tools]="go install github.com/protolambda/eth2-val-tools@latest"
+
+  local missing=0
+  [[ "$verbose" == "1" ]] && { echo "Checking dependencies for run.zsh..."; echo "" }
+  for tool in "${tools[@]}"; do
+    if command -v "$tool" >/dev/null 2>&1; then
+      [[ "$verbose" == "1" ]] && printf "  \033[32m✓\033[0m %s\n" "$tool"
+    else
+      printf "  \033[31m✗\033[0m %s — install: %s\n" "$tool" "${hints[$tool]}" >&2
+      missing=$((missing + 1))
+    fi
+  done
+  if [[ $missing -eq 0 ]]; then
+    [[ "$verbose" == "1" ]] && { echo ""; echo "All dependencies present." }
+    return 0
+  fi
+  echo "" >&2
+  echo "$missing tool(s) missing. Install them and retry." >&2
+  return 1
+}
+
 # Helper function to display available options
 print_usage() {
   echo "Usage:"
@@ -52,6 +107,8 @@ print_usage() {
   echo "  set_withdrawal_addr s e address   Set the withdrawal credentials for validator index start (mandatory) to end (optional) and Ethereum address"
   echo "  full_withdrawal s e               Withdraw from the network from validator index start to end - mandatory argument"
   echo "  sync_mapping [src]                Extend validator_names.yaml with post-genesis mnemonic deposits found on the beacon node (src default: main-mnemonic)"
+  echo "  send_funds address amount         Send ETH to an address - amount in ETH"
+  echo "  check_deps                        Verify every external tool this script needs is installed"
   echo "  help                              Print this help message"
   echo ""
   echo " To use an alternative endpoint run the script by setting the environment variable:"
@@ -75,6 +132,10 @@ fi
 # Loop through each argument
 for arg in "${command[@]}"; do
   case $arg in
+    "check_deps")
+      check_deps 1
+      exit $?
+      ;;
     "genesis")
       # Get the genesis block of the network
       genesis=$(curl -s $bn_endpoint/eth/v1/beacon/genesis | jq .data)
@@ -500,6 +561,47 @@ for arg in "${command[@]}"; do
           exit;
         fi
       fi
+      ;;
+    "send_funds")
+      # Send ETH to an address
+      if [[ $# -ne 3 ]]; then
+        echo "Usage: ${0} send_funds <address> <amount_in_eth>"
+        echo "  Example: ${0} send_funds 0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18 10"
+        exit 1
+      fi
+      to_address=${command[2]}
+      eth_amount=${command[3]}
+      if [[ ! $to_address =~ ^0x[a-fA-F0-9]{40}$ ]]; then
+        echo "Invalid address format. Must be a valid Ethereum address (0x + 40 hex chars)."
+        exit 1
+      fi
+      if ! [[ "$eth_amount" =~ ^[0-9]+(\.[0-9]+)?$ ]] || (( $(echo "$eth_amount <= 0" | bc -l) )); then
+        echo "Invalid amount. Must be a positive number."
+        exit 1
+      fi
+      deposit_path="m/44'/60'/0'/0/7"
+      privatekey=$(ethereal hd keys --path="$deposit_path" --seed="$sops_mnemonic" | awk '/Private key/{print $NF}')
+      publickey=$(ethereal hd keys --path="$deposit_path" --seed="$sops_mnemonic" | awk '/Ethereum address/{print $NF}')
+      balance=$(curl -s --header 'Content-Type: application/json' --data-raw '{"jsonrpc":"2.0","method":"eth_getBalance","params":["'$publickey'","latest"],"id":0}' $rpc_endpoint | jq -r '.result' | python -c "import sys; print(int(sys.stdin.read(), 16) / 1e18)")
+      echo "Sending $eth_amount ETH to $to_address"
+      echo "  From: $publickey (balance: $balance ETH)"
+      echo "  To: $to_address"
+      echo "  Amount: $eth_amount ETH"
+      echo ""
+      echo "Continue? (y/n)"
+      read -r response
+      if [[ $response == "y" ]]; then
+        cast send \
+          --private-key "$privatekey" \
+          --rpc-url "$rpc_endpoint" \
+          --value "${eth_amount}ether" \
+          --gas-limit 21000 \
+          "$to_address"
+        echo "Transaction sent!"
+      else
+        echo "Cancelled."
+      fi
+      exit
       ;;
     "topup")
       # Top-up one or more validators with additional ETH (Pectra upgrade feature)

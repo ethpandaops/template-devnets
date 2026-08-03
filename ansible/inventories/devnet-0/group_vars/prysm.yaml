@@ -49,6 +49,9 @@ prysm_container_command_extra_simple_args:
   - --min-sync-peers=1
   - --verbosity=debug
   - --subscribe-all-subnets
+  # Devnet peers are few and often share a /24, which prysm's colocation limit
+  # would otherwise treat as a sybil cluster and refuse to peer with.
+  - --p2p-colocation-whitelist=0.0.0.0/0,::/0
 prysm_container_command_extra_bootnode_args: >-
   {{ ethereum_cl_bootnodes | map('regex_replace', '^', '--bootstrap-node=') | list }}
 
