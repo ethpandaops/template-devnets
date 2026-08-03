@@ -11,8 +11,8 @@ discovery:
   enabled: true
   bad_tysm_url: "https://bad-tysm.analytics.production.platform.ethpandaops.io"
   auth_token: "${TYSM_TOKEN}"
-  # Address bad-tysm dials back to reach this node's control API. Reachable only
-  # once 8675 is published on the host and opened in the devnet firewall.
+  # Address bad-tysm dials back to reach this node's control API. Terraform opens
+  # 8675 for tysm-group members; the beacon container must still publish the port.
   self_url: "http://{{ ansible_host }}:8675"
   name: "{{ inventory_hostname }}"
   namespace: "{{ ethereum_network_name }}"

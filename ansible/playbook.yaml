@@ -85,13 +85,13 @@
     - role: ethpandaops.general.generate_basic_auth_nginx
       tags: [docker_nginx_proxy]
 
-# Hosts running the tysm beacon canary (tysm_enabled in host_vars) need the
-# hook + xatu config files in the prysm datadir before the container starts.
-- hosts: ethereum_node
+# Hosts in the tysm group (tysm = true on the node entry in terraform nodes.tf)
+# run the tysm beacon canary and need the hook + xatu config files in the prysm
+# datadir before the container starts. The group is empty by default.
+- hosts: tysm
   become: true
   tasks:
     - name: Deploy tysm config files
-      when: tysm_enabled | default(false)
       tags: [ethereum, ethereum_node, tysm]
       block:
         - name: Add prysm user
