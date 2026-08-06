@@ -255,8 +255,7 @@ docker_nginx_proxy_acme_companion_container_env:
   ACME_CA_URI: https://acme.zerossl.com/v2/DV90
   ACME_EAB_KID: "{{ secret_zerossl.ACME_EAB_KID }}"
   ACME_EAB_HMAC_KEY: "{{ secret_zerossl.ACME_EAB_HMAC_KEY }}"
-docker_nginx_proxy_container_networks: >-
-  {{ [{'name': 'shared'} | combine({'ipv6_address': docker_nginx_proxy_public_ipv6} if (docker_nginx_proxy_public_ipv6 | default('') | length > 0) else {})] }}
+docker_nginx_proxy_container_networks: "{{ docker_networks_shared }}"
 docker_nginx_proxy_docker_gen_container_networks: []
 docker_nginx_proxy_acme_companion_container_networks: "{{ docker_networks_shared }}"
 docker_nginx_proxy_acme_monitor_container_networks: "{{ docker_networks_shared }}"
