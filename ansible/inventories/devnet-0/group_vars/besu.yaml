@@ -25,6 +25,9 @@ besu_container_command_extra_args:
   - --sync-mode=FULL
   - --data-storage-format=BONSAI
   - --bonsai-limit-trie-logs-enabled=false
+  - --color-enabled=false
+  - --cache-last-blocks=2048
+  - --rpc-http-max-active-connections=1000
 besu_container_pull: true
 
 prometheus_config: |

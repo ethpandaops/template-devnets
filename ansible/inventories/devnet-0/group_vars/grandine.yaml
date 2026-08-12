@@ -11,7 +11,9 @@ docker_daemon_options:
       "max-size": "500m"
       "max-file": "40"
 
-# role: validator_keys
+# role: validator_keys — grandine runs validators in-process in the beacon
+# container (no separate VC), so reshuffles stop/start the beacon.
+validator_keys_container_name: beacon
 validator_keys_sync_files:
   - src: "{{ inventory_dir }}/files/validator_keys/{{ inventory_hostname }}/teku-keys/"
     dest: "{{ grandine_validator_datadir }}/keys/"

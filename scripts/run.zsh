@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 node="bootnode-1"
 network="devnet-0"
 domain="ethpandaops.io"
@@ -13,6 +13,10 @@ beacon_prefix=$(yq -r '.ethereum_node_beacon_prefix' ../ansible/inventories/$net
 bn_endpoint="${BEACON_ENDPOINT:-https://$sops_name:$sops_password@$beacon_prefix$node.$srv.$prefix-$network.$domain}"
 rpc_endpoint="${RPC_ENDPOINT:-https://$sops_name:$sops_password@$rpc_prefix$node.$srv.$prefix-$network.$domain}"
 bootnode_endpoint="${BOOTNODE_ENDPOINT:-https://bootnode-1.$prefix-$network.$domain}"
+assertoor_endpoint="${ASSERTOOR_ENDPOINT:-https://assertoor.$prefix-$network.$domain}"
+auth_endpoint="${AUTH_ENDPOINT:-https://auth.$prefix-$network.$domain}"
+slashing_test_id="validator-slashing-single"
+slashing_playbook="${ASSERTOOR_SLASHING_PLAYBOOK:-https://raw.githubusercontent.com/ethpandaops/assertoor/master/playbooks/dev/$slashing_test_id.yaml}"
 
 # Verify every external tool run.zsh depends on is installed.
 # Pass 1 to print every tool; pass 0 (or empty) to print only missing tools.
@@ -69,47 +73,150 @@ check_deps() {
   return 1
 }
 
+# Mint a JWT for the assertoor API. The assertoor API (POST endpoints)
+# requires a Bearer token issued by the devnet auth provider, which is itself
+# gated by Cloudflare Access. A CF Access service token
+# (CF_ACCESS_CLIENT_ID / CF_ACCESS_CLIENT_SECRET) gets us through CF Access to
+# /auth/token, which returns the JWT assertoor accepts. Set ASSERTOOR_TOKEN
+# directly to skip the exchange (e.g. a token you minted by hand).
+get_assertoor_token() {
+  if [[ -n "$ASSERTOOR_TOKEN" ]]; then
+    echo "$ASSERTOOR_TOKEN"
+    return 0
+  fi
+
+  # The minted JWT is valid for ~30 minutes, so cache it (owner-only) and
+  # reuse it across runs while it still has more than 60s of life left,
+  # rather than hitting the auth provider on every invocation.
+  local cache="${TMPDIR:-/tmp}/.assertoor_token_${prefix}-${network}.json"
+  if [[ -f "$cache" ]]; then
+    local cached_tok cached_exp
+    cached_tok=$(jq -r '.token // empty' "$cache" 2>/dev/null)
+    cached_exp=$(jq -r '.expr // 0' "$cache" 2>/dev/null)
+    if [[ -n "$cached_tok" ]] && (( cached_exp > $(date +%s) + 60 )); then
+      echo "$cached_tok"
+      return 0
+    fi
+  fi
+
+  if [[ -z "$CF_ACCESS_CLIENT_ID" || -z "$CF_ACCESS_CLIENT_SECRET" ]]; then
+    echo "Assertoor API requires authentication and no cached token is valid." >&2
+    echo "Set a Cloudflare Access service token:" >&2
+    echo "  export CF_ACCESS_CLIENT_ID=...    CF_ACCESS_CLIENT_SECRET=..." >&2
+    echo "or provide a ready JWT directly: export ASSERTOOR_TOKEN=..." >&2
+    return 1
+  fi
+
+  # Reject obviously malformed creds early (a common mistake is exporting the
+  # whole 'CF-Access-Client-Id: <id>' header line instead of just the value).
+  if [[ "$CF_ACCESS_CLIENT_ID" != *.access || "$CF_ACCESS_CLIENT_ID" == *[[:space:]]* ]]; then
+    echo "CF_ACCESS_CLIENT_ID does not look like a CF Access client id (expected '<id>.access', no spaces)." >&2
+    echo "Got: '${CF_ACCESS_CLIENT_ID}'" >&2
+    return 1
+  fi
+
+  local body http_code tok
+  body=$(curl -s -w $'\n%{http_code}' "$auth_endpoint/auth/token" \
+    -H "CF-Access-Client-Id: $CF_ACCESS_CLIENT_ID" \
+    -H "CF-Access-Client-Secret: $CF_ACCESS_CLIENT_SECRET")
+  http_code=${body##*$'\n'}
+  body=${body%$'\n'*}
+
+  # Cloudflare Access bounces unauthorized service tokens with a 3xx to its
+  # own login page instead of passing through to /auth/token. A 401/403 means
+  # the same. Either way the token is not accepted for this Access app.
+  if [[ "$http_code" == 3* || "$http_code" == "401" || "$http_code" == "403" ]]; then
+    echo "Cloudflare Access rejected the service token at $auth_endpoint (HTTP $http_code)." >&2
+    echo "This CF Access token is not authorized for the auth app — add it to that" >&2
+    echo "application's CF Access 'Service Auth' policy, or export a different token." >&2
+    return 1
+  fi
+  if [[ "$http_code" != "200" ]]; then
+    echo "Unexpected response from $auth_endpoint/auth/token (HTTP $http_code):" >&2
+    echo "${body:0:300}" >&2
+    return 1
+  fi
+
+  tok=$(echo "$body" | jq -r '.token // empty' 2>/dev/null)
+  if [[ -z "$tok" ]]; then
+    echo "Auth provider returned 200 but no token field:" >&2
+    echo "${body:0:300}" >&2
+    return 1
+  fi
+  (umask 077; echo "$body" > "$cache")
+  echo "$tok"
+}
+
+# Expand a comma-separated list of validator indices and inclusive ranges
+# ("5", "1,2,3", "1..10") into one index per line.
+expand_validator_indices() {
+  local token n range_start range_end
+  for token in ${(s:,:)1}; do
+    if [[ "$token" =~ ^[0-9]+\.\.[0-9]+$ ]]; then
+      range_start=${token%%..*}
+      range_end=${token##*..}
+      if (( range_start > range_end )); then
+        echo "Error: invalid range '$token' (start > end)." >&2
+        return 1
+      fi
+      for ((n=range_start; n<=range_end; n++)); do
+        echo "$n"
+      done
+    elif [[ "$token" =~ ^[0-9]+$ ]]; then
+      echo "$token"
+    else
+      echo "Error: '$token' is not a valid validator index or range." >&2
+      return 1
+    fi
+  done
+}
+
 # Helper function to display available options
 print_usage() {
   echo "Usage:"
   echo "  ./run.zsh [command]"
   echo
   echo "Available commands:"
+  echo "  check_deps                        Verify every external tool this script depends on is installed"
+  echo "  consolidate indices               Self-consolidate: switch validators from 0x01 to 0x02 compounding withdrawal credentials"
+  echo "  consolidate sources target        Consolidate one or more source validators into a target (EIP-7251). sources: 5 | 1,2,3 | 1..10 (inclusive range)"
+  echo "  deposit s e [type]                Deposit to the network from validator index start to end - optional withdrawal type (0x00, 0x01, 0x02)"
+  echo "  epoch_summary n                   Get the epoch summary for epoch n [default current - 1 epoch]"
+  echo "  exit s e                          Exit from the network from validator index start to end - mandatory argument"
+  echo "  finalized_epoch                   Get the finalized epoch"
+  echo "  finalized_slot                    Get the finalized slot"
+  echo "  finalized_slot_exec_payload       Get the finalized slot execution payload"
+  echo "  finalized_slot_verbose            Get the finalized slot with verbose output"
+  echo "  fork_choice                       Get the fork choice of the network"
+  echo "  full_withdrawal s e               Withdraw from the network from validator index start to end - mandatory argument"
   echo "  genesis                           Get the genesis block"
-  echo "  validators                        Get the validator ranges"
+  echo "  get_balance address               Get the balance of address - mandatory argument"
+  echo "  get_beacon                        Get the beacon of the network"
+  echo "  get_block n                       Get the block number n [default latest]"
+  echo "  get_block_for_slot n              Get the block for a given slot - mandatory argument"
+  echo "  get_enodes                        Get the enodes of the network"
+  echo "  get_enrs                          Get the ENRs of the network"
+  echo "  get_inventory                     Get the inventory of the network"
+  echo "  get_peerid                        Get the peerid of the network"
+  echo "  get_rpc                           Get the rpc of the network"
+  echo "  get_slot n                        Get the slot number n [default head]"
+  echo "  get_slot_for_blob txhash          Get the slot for a given blob given txhash, or send blob now"
+  echo "  get_slot_for_blob_verbose txhash  Get the slot for a given blob with verbose output given txhash, or send blob now"
+  echo "  help                              Print this help message"
+  echo "  latest_block                      Get the latest block"
   echo "  latest_root                       Get the latest root"
   echo "  latest_slot                       Get the latest slot"
   echo "  latest_slot_verbose               Get the latest slot with verbose output"
-  echo "  latest_block                      Get the latest block"
-  echo "  get_slot n                        Get the slot number n [default head]"
-  echo "  get_block n                       Get the block number n [default latest]"
-  echo "  get_balance address               Get the balance of address - mandatory argument"
-  echo "  finalized_epoch                   Get the finalized epoch"
-  echo "  finalized_slot                    Get the finalized slot"
-  echo "  finalized_slot_verbose            Get the finalized slot with verbose output"
-  echo "  finalized_slot_exec_payload       Get the finalized slot execution payload"
-  echo "  epoch_summary n                   Get the epoch summary for epoch n [default current - 1 epoch]"
-  echo "  get_slot_for_blob txhash          Get the slot for a given blob given txhash, or send blob now"
-  echo "  get_slot_for_blob_verbose txhash  Get the slot for a given blob with verbose output given txhash, or send blob now"
-  echo "  get_block_for_slot n              Get the block for a given slot - mandatory argument"
-  echo "  whose_validator_for_slot n        Get the validator for a given slot "n" - mandatory argument"
-  echo "  get_enrs                          Get the ENRs of the network"
-  echo "  get_enodes                        Get the enodes of the network"
-  echo "  get_peerid                        Get the peerid of the network"
-  echo "  get_rpc                           Get the rpc of the network"
-  echo "  get_beacon                        Get the beacon of the network"
-  echo "  get_inventory                     Get the inventory of the network"
-  echo "  fork_choice                       Get the fork choice of the network"
   echo "  send_blob n                       Send "n" number of blob(s) to the network [default 1]"
-  echo "  deposit s e [type]                Deposit to the network from validator index start to end - optional withdrawal type (0x00, 0x01, 0x02)"
-  echo "  topup validator_index[,index2,...] eth_amount  Top-up one or more validators with additional ETH (Pectra upgrade feature)"
-  echo "  exit s e                          Exit from the network from validator index start to end - mandatory argument"
-  echo "  set_withdrawal_addr s e address   Set the withdrawal credentials for validator index start (mandatory) to end (optional) and Ethereum address"
-  echo "  full_withdrawal s e               Withdraw from the network from validator index start to end - mandatory argument"
-  echo "  sync_mapping [src]                Extend validator_names.yaml with post-genesis mnemonic deposits found on the beacon node (src default: main-mnemonic)"
   echo "  send_funds address amount         Send ETH to an address - amount in ETH"
-  echo "  check_deps                        Verify every external tool this script needs is installed"
-  echo "  help                              Print this help message"
+  echo "  set_withdrawal_addr s e address   Set the withdrawal credentials for validator index start (mandatory) to end (optional) and Ethereum address"
+  echo "  slash index|start..end            Slash a validator (or inclusive range) via the assertoor proposer-slashing playbook"
+  echo "  sync_mapping [src] [pending]      Extend validator_names.yaml with post-genesis mnemonic deposits found on the beacon node (src default: main-mnemonic)."
+  echo "                                    With 'pending', additionally map the still-queued pending_deposits in one shot: verifies the FIFO queue is strictly"
+  echo "                                    sequential for this mnemonic (no foreign entries; duplicates are top-ups only) and appends the full future range."
+  echo "  topup indices eth_amount          Top-up one or more validators with additional ETH (Pectra). indices: 5 | 1,2,3 | 1..10 (inclusive range)"
+  echo "  validators                        Get the validator ranges"
+  echo "  whose_validator_for_slot n        Get the validator for a given slot "n" - mandatory argument"
   echo ""
   echo " To use an alternative endpoint run the script by setting the environment variable:"
   echo "    BEACON_ENDPOINT=https://bn.alternative.beacon.endpoint \\"
@@ -132,10 +239,6 @@ fi
 # Loop through each argument
 for arg in "${command[@]}"; do
   case $arg in
-    "check_deps")
-      check_deps 1
-      exit $?
-      ;;
     "genesis")
       # Get the genesis block of the network
       genesis=$(curl -s $bn_endpoint/eth/v1/beacon/genesis | jq .data)
@@ -145,6 +248,205 @@ for arg in "${command[@]}"; do
       # Get the validators of the network
       validators=$(curl -s $bootnode_endpoint/meta/api/v1/validator-ranges.json | jq .ranges)
       echo "Validator ranges: $validators"
+      ;;
+    "sync_mapping")
+      # Extend the validator names mapping with post-genesis deposits made from
+      # the genesis mnemonic. Reads the current mapping, fetches the on-chain
+      # validator set from the beacon node, matches newly-deposited validators
+      # back to the mnemonic by deriving its pubkeys, and appends the new index
+      # ranges. Re-running is idempotent: once added, ranges advance past them.
+      # With a trailing 'pending' argument it also maps the NOT-yet-processed
+      # pending_deposits queue in one shot: the queue is FIFO, so if its first
+      # occurrences continue this mnemonic's key sequence with no foreign
+      # entries (duplicates = top-ups only), the future on-chain indices are
+      # already determined and one full-range entry can be written up front.
+      src_name="${command[2]:-main-mnemonic}"
+      include_pending="${command[3]:-}"
+      mapping_file="../network-configs/$network/metadata/validator_names.yaml"
+
+      if [[ ! -f "$mapping_file" ]]; then
+        echo "Mapping file not found: $mapping_file" >&2
+        exit 1
+      fi
+
+      # YAML -> JSON, tolerant of both mikefarah (-o=json) and python-yq (-c) yq.
+      if yq --version 2>&1 | grep -qi mikefarah; then
+        mapping_json=$(yq -o=json -I=0 '.' "$mapping_file")
+      else
+        mapping_json=$(yq -c '.' "$mapping_file")
+      fi
+
+      # Next free mnemonic key index for this source, and next free on-chain index.
+      next_key=$(echo "$mapping_json" | jq --arg src "$src_name" \
+        '[ .[] | to_entries[] | select(.value.src == $src) | .value.to ] | (max // -1) + 1')
+      next_state=$(echo "$mapping_json" | jq \
+        '[ .[] | to_entries[] | (.key | tostring | split("-")[1] | tonumber) ] | (max // -1) + 1')
+
+      echo "Syncing '$src_name' mapping (next on-chain index: $next_state, next key index: $next_key)"
+
+      # The validator set and derived key map can be large (thousands of
+      # entries), so they are exchanged with jq via files (--slurpfile) instead
+      # of command-line args, which would overflow the argument list.
+      sync_tmp=$(mktemp -d)
+
+      # Fetch the full validator set from the beacon node in a single request and
+      # keep the validators beyond the last mapped index (index >= next_state).
+      curl -s "$bn_endpoint/eth/v1/beacon/states/head/validators" \
+        | jq -c --argjson min "$next_state" \
+          '[ .data[] | {index: (.index | tonumber), pubkey: .validator.pubkey} | select(.index >= $min) ]' \
+        > "$sync_tmp/new.json"
+
+      new_count=$(jq 'length' "$sync_tmp/new.json")
+      if [[ "$new_count" == "0" && -z "$include_pending" ]]; then
+        rm -rf "$sync_tmp"
+        echo "No on-chain validators beyond index $((next_state - 1)); mapping is up to date."
+        exit 0
+      fi
+      echo "Found $new_count new on-chain validator(s); matching against the mnemonic..."
+
+      # Derive the mnemonic's pubkeys for the next key indices (at most as many as
+      # there are new validators) into a pubkey -> key-index lookup.
+      eth2-val-tools pubkeys \
+        --source-min=$next_key --source-max=$((next_key + new_count)) \
+        --validators-mnemonic="$sops_mnemonic" \
+        | jq -R -s --argjson base $next_key \
+          '[ split("\n")[] | select(length > 0) ] | to_entries
+           | map({key: (.value | ascii_downcase), value: ($base + .key)}) | from_entries' \
+        > "$sync_tmp/derived.json"
+
+      # Match new validators to the mnemonic by pubkey and collapse runs where the
+      # on-chain index and the key index both advance by one into single entries.
+      new_lines=$(jq -rn \
+        --slurpfile new "$sync_tmp/new.json" \
+        --slurpfile derived "$sync_tmp/derived.json" \
+        --arg src "$src_name" '
+        ($new[0]) as $vals
+        | ($derived[0]) as $keymap
+        | ( $vals
+            | map(. as $v | ($v.pubkey | ascii_downcase) as $pk
+                  | select($keymap | has($pk))
+                  | {state: $v.index, key: $keymap[$pk]})
+            | sort_by(.state) ) as $pairs
+        | reduce $pairs[] as $p ([];
+            if (length > 0) and (.[-1].state_to + 1 == $p.state) and (.[-1].key_to + 1 == $p.key)
+            then .[:-1] + [ .[-1] + {state_to: $p.state, key_to: $p.key} ]
+            else . + [ {state_from: $p.state, state_to: $p.state, key_from: $p.key, key_to: $p.key} ]
+            end)
+        | .[] | "- \(.state_from)-\(.state_to): { src: \"\($src)\", from: \(.key_from), to: \(.key_to) }"
+      ')
+
+      if [[ -z "$new_lines" && -z "$include_pending" ]]; then
+        rm -rf "$sync_tmp"
+        echo "None of the $new_count new validator(s) were derived from '$src_name'; nothing to add."
+        exit 0
+      fi
+
+      # One-shot mapping of the still-queued pending_deposits. Safe because the
+      # queue is processed strictly FIFO: if every first-occurrence pubkey in
+      # queue order continues this mnemonic's key sequence (next_key, next_key+1,
+      # ...) with no foreign pubkeys, the on-chain index of each future validator
+      # is already (next_state + offset). Duplicates are tolerated only as
+      # top-ups: repeats of an earlier queued key or of an already-mapped key
+      # (they add balance, never a validator). Anything else aborts unchanged.
+      pending_line=""
+      if [[ -n "$include_pending" ]]; then
+        if [[ "$include_pending" != "pending" ]]; then
+          echo "Unknown sync_mapping option '$include_pending' (expected 'pending')." >&2
+          rm -rf "$sync_tmp"; exit 1
+        fi
+        # Key/state cursors advanced past the in-state matches from this run.
+        instate_n=$(printf '%s\n' "$new_lines" | grep -c "src: \"$src_name\"" || true)
+        [[ -z "$new_lines" ]] && instate_n=0
+        pend_key=$next_key
+        pend_state=$next_state
+        if [[ "$instate_n" -gt 0 ]]; then
+          pend_key=$(printf '%s\n' "$new_lines" | tail -1 | sed -E 's/.*to: ([0-9]+).*/\1/')
+          pend_key=$((pend_key + 1))
+          pend_state=$(printf '%s\n' "$new_lines" | tail -1 | sed -E 's/^- [0-9]+-([0-9]+):.*/\1/')
+          pend_state=$((pend_state + 1))
+        fi
+
+        curl -s "$bn_endpoint/eth/v1/beacon/states/head/pending_deposits" \
+          | jq -c '[ .data[].pubkey | ascii_downcase ]' > "$sync_tmp/pending.json"
+        pend_count=$(jq 'length' "$sync_tmp/pending.json")
+
+        if [[ "$pend_count" == "0" ]]; then
+          echo "Pending deposit queue is empty; nothing to pre-map."
+        else
+          # Derive from key 0 so duplicates of already-mapped keys are recognized.
+          eth2-val-tools pubkeys \
+            --source-min=0 --source-max=$((pend_key + pend_count)) \
+            --validators-mnemonic="$sops_mnemonic" \
+            | jq -R -s \
+              '[ split("\n")[] | select(length > 0) ] | to_entries
+               | map({key: (.value | ascii_downcase), value: .key}) | from_entries' \
+            > "$sync_tmp/derived_all.json"
+
+          pend_n=$(jq -n \
+            --slurpfile q "$sync_tmp/pending.json" \
+            --slurpfile d "$sync_tmp/derived_all.json" \
+            --argjson base "$pend_key" '
+            ($d[0]) as $keymap
+            | reduce ($q[0])[] as $pk ({n: 0, seen: {}, ok: true};
+                if .ok == false then .
+                else ($keymap[$pk] // null) as $k
+                | if $k == null then .ok = false                # foreign pubkey
+                  elif $k < $base or .seen[($k|tostring)] then . # top-up duplicate
+                  elif $k == $base + .n then .n += 1 | .seen[($k|tostring)] = true
+                  else .ok = false                              # gap / out of order
+                  end
+                end)
+            | if .ok then .n else -1 end')
+
+          if [[ "$pend_n" == "-1" ]]; then
+            echo "Pending queue is NOT strictly sequential for '$src_name' (foreign or out-of-order entries); not pre-mapping. Run plain sync_mapping as validators activate instead." >&2
+            rm -rf "$sync_tmp"; exit 1
+          elif [[ "$pend_n" == "0" ]]; then
+            echo "Pending queue holds only top-ups of already-mapped keys; nothing to pre-map."
+          else
+            pending_line="- $pend_state-$((pend_state + pend_n - 1)): { src: \"$src_name\", from: $pend_key, to: $((pend_key + pend_n - 1)) }"
+            echo "Pending queue verified FIFO-sequential ($pend_count entries -> $pend_n future validators; $((pend_count - pend_n)) top-up duplicates)."
+          fi
+        fi
+      fi
+
+      rm -rf "$sync_tmp"
+
+      if [[ -z "$new_lines" && -z "$pending_line" ]]; then
+        echo "Nothing to add; mapping is up to date."
+        exit 0
+      fi
+
+      echo "Adding mapping entr(y/ies):"
+      [[ -n "$new_lines" ]] && echo "$new_lines"
+      [[ -n "$pending_line" ]] && echo "$pending_line"
+
+      # Make sure the file ends with a newline before appending.
+      [[ -n "$(tail -c1 "$mapping_file" 2>/dev/null)" ]] && printf '\n' >> "$mapping_file"
+      [[ -n "$new_lines" ]] && printf '%s\n' "$new_lines" >> "$mapping_file"
+      [[ -n "$pending_line" ]] && printf '%s\n' "$pending_line" >> "$mapping_file"
+      echo "Updated $mapping_file"
+
+      # Refresh the inventory web on the bootnode so it serves the new mapping.
+      ( cd ../ansible && ansible-playbook -i "inventories/$network/inventory.ini" \
+          --tags ethereum_inventory_web --limit bootnode playbook.yaml )
+
+      # Roll Dora so it re-pulls the updated validator-names inventory.
+      kubectl --context services -n "$prefix-$network" rollout restart deployment/dora
+
+      # Commit ONLY the updated mapping to master. Passing the pathspec to
+      # `git commit` makes a partial commit: it takes the working-tree content of
+      # just this file and ignores the index, so any other modified or untracked
+      # files in the tree are never swept into the commit.
+      if git diff --quiet HEAD -- "$mapping_file"; then
+        echo "No changes to $mapping_file to commit."
+      elif git commit -m "$prefix-$network: sync validator_names.yaml" -- "$mapping_file"; then
+        git push origin HEAD:master
+      else
+        echo "git commit failed; not pushing." >&2
+        exit 1
+      fi
+      exit 0
       ;;
     "latest_root")
       # Get the latest root of the network
@@ -203,7 +505,7 @@ for arg in "${command[@]}"; do
         echo "  Example: ${0} get_balance 0xf97e180c050e5ab072211ad2c213eb5aee4df134"
         exit;
       elif [[ (${#command[2]} == 42) && (${command[2]} == 0x*) ]]; then
-        balance=$(curl -s  --header 'Content-Type: application/json' --data-raw '{"jsonrpc":"2.0","method":"eth_getBalance", "params":["'${command[2]}'","latest"], "id":0}' $rpc_endpoint | jq -r '.result' | python -c "import sys; print(int(sys.stdin.read(), 16) / 1e18)")
+        balance=$(curl -s  --header 'Content-Type: application/json' --data-raw '{"jsonrpc":"2.0","method":"eth_getBalance", "params":["'${command[2]}'","latest"], "id":0}' $rpc_endpoint | jq -r '.result' | python3 -c "import sys; print(int(sys.stdin.read(), 16) / 1e18)")
         echo "balance ${command[2]}: $balance Ether"
         exit;
       else
@@ -532,6 +834,9 @@ for arg in "${command[@]}"; do
 
           echo "Starting nonce: $nonce | Deposit per validator: ${deposit_eth} ETH"
 
+          tmpdir=$(mktemp -d)
+          # zsh's background job table caps at 1024; batch so the active set stays well below.
+          batch_size=500
           i=0
           while read x; do
             account_name="$(echo "$x" | jq -r '.account')"
@@ -540,21 +845,46 @@ for arg in "${command[@]}"; do
             signature_val="0x$(echo "$x" | jq -r '.signature')"
             data_root="0x$(echo "$x" | jq -r '.deposit_data_root')"
             echo "Sending deposit for validator $account_name (nonce: $((nonce + i)))"
+            echo "$account_name" > "$tmpdir/cast-$i.name"
             cast send \
               --private-key "$privatekey" \
               --rpc-url "$rpc_endpoint" \
               --nonce $((nonce + i)) \
               --value "${deposit_eth}ether" \
-              --gas-limit 200000 \
+              --gas-limit 2000000 \
               "$deposit_contract_address" \
               "deposit(bytes,bytes,bytes,bytes32)" \
-              "$pubkey_val" "$withdrawal_creds" "$signature_val" "$data_root" > /dev/null 2>&1 &
+              "$pubkey_val" "$withdrawal_creds" "$signature_val" "$data_root" > "$tmpdir/cast-$i.log" 2>&1 &
             i=$((i + 1))
+            if (( i % batch_size == 0 )); then
+              wait
+              echo "Drained batch — $i submitted so far..."
+            fi
           done < deposits_$prefix-$network-${command[2]}_${command[3]}.txt
 
-          echo "Submitted $i deposits in parallel, waiting for confirmations..."
+          echo "Submitted $i deposits in batches of $batch_size, waiting for final batch..."
           wait
-          echo "All $i deposits confirmed"
+          echo ""
+          ok=0
+          fail=0
+          for ((j=0; j<i; j++)); do
+            log="$tmpdir/cast-$j.log"
+            name=$(cat "$tmpdir/cast-$j.name" 2>/dev/null)
+            txhash=$(grep -E '^transactionHash' "$log" 2>/dev/null | awk '{print $2}' | head -1)
+            tx_status=$(grep -E '^status' "$log" 2>/dev/null | awk '{print $2}' | head -1)
+            if [[ "$tx_status" == "1" ]]; then
+              printf "  \033[32m✓\033[0m %s — %s\n" "$name" "$txhash"
+              ok=$((ok + 1))
+            else
+              printf "  \033[31m✗\033[0m %s — failed (status=%s tx=%s)\n" \
+                "$name" "${tx_status:-no-receipt}" "${txhash:-none}"
+              grep -iE 'error|revert' "$log" 2>/dev/null | head -1 | sed 's/^/      /'
+              fail=$((fail + 1))
+            fi
+          done
+          echo ""
+          echo "$ok confirmed, $fail failed (of $i submitted)"
+          rm -rf "$tmpdir"
           exit;
         else
           echo "Exiting without depositing to the network"
@@ -582,7 +912,7 @@ for arg in "${command[@]}"; do
       deposit_path="m/44'/60'/0'/0/7"
       privatekey=$(ethereal hd keys --path="$deposit_path" --seed="$sops_mnemonic" | awk '/Private key/{print $NF}')
       publickey=$(ethereal hd keys --path="$deposit_path" --seed="$sops_mnemonic" | awk '/Ethereum address/{print $NF}')
-      balance=$(curl -s --header 'Content-Type: application/json' --data-raw '{"jsonrpc":"2.0","method":"eth_getBalance","params":["'$publickey'","latest"],"id":0}' $rpc_endpoint | jq -r '.result' | python -c "import sys; print(int(sys.stdin.read(), 16) / 1e18)")
+      balance=$(curl -s --header 'Content-Type: application/json' --data-raw '{"jsonrpc":"2.0","method":"eth_getBalance","params":["'$publickey'","latest"],"id":0}' $rpc_endpoint | jq -r '.result' | python3 -c "import sys; print(int(sys.stdin.read(), 16) / 1e18)")
       echo "Sending $eth_amount ETH to $to_address"
       echo "  From: $publickey (balance: $balance ETH)"
       echo "  To: $to_address"
@@ -610,6 +940,7 @@ for arg in "${command[@]}"; do
         echo "  Usage: ${0} topup validator_index[,index2,...] eth_amount"
         echo "  Example: ${0} topup 5 35"
         echo "  Example: ${0} topup 1,2,3 10"
+        echo "  Example: ${0} topup 1..10 10        # inclusive range, same as 1,2,...,10"
         exit;
       else
         validator_indices=${command[2]}
@@ -621,42 +952,47 @@ for arg in "${command[@]}"; do
           exit 1
         fi
 
-        # Parse validator indices (handle both single index and comma-separated list)
-        VALIDATOR_ARRAY=(${(s:,:)validator_indices})
+        topup_indices=$(expand_validator_indices "$validator_indices") || exit 1
+        VALIDATOR_ARRAY=("${(@f)topup_indices}")
 
-        # Validate all validator indices and get their info
+        # Resolve each validator's pubkey from the beacon node.
         declare -a validator_pubkeys
-
         for validator_index in "${VALIDATOR_ARRAY[@]}"; do
-          # Validate that each index is a number
-          if ! [[ "$validator_index" =~ ^[0-9]+$ ]]; then
-            echo "Error: Validator index '$validator_index' must be a positive integer."
-            exit 1
-          fi
-
-          # Get validator info
           validator_info=$(curl -s "$bn_endpoint/eth/v1/beacon/states/head/validators/$validator_index")
           if [[ $(echo "$validator_info" | jq -r '.data') == "null" ]]; then
             echo "Error: Validator $validator_index not found."
             exit 1
           fi
-
-          validator_pubkey=$(echo "$validator_info" | jq -r '.data.validator.pubkey')
-          validator_pubkeys+=("$validator_pubkey")
+          validator_pubkeys+=("$(echo "$validator_info" | jq -r '.data.validator.pubkey')")
         done
 
-        # Get common info
-        deposit_contract_address=$(curl -s $bn_endpoint/eth/v1/config/spec | jq -r '.data.DEPOSIT_CONTRACT_ADDRESS')
+        # Get common info. We submit top-ups straight to the deposit contract via
+        # `cast send` (like `deposit`) rather than `ethereal validator topup`:
+        # ethereal ignores --nonce when online and can't run offline for topups, so
+        # parallel ethereal calls all collide on one nonce. cast honours --nonce, so
+        # each top-up gets its own and they can all broadcast at once.
         deposit_path="m/44'/60'/0'/0/7"
         privatekey=$(ethereal hd keys --path="$deposit_path" --seed="$sops_mnemonic" | awk '/Private key/{print $NF}')
         publickey=$(ethereal hd keys --path="$deposit_path" --seed="$sops_mnemonic" | awk '/Ethereum address/{print $NF}')
+        deposit_contract_address=$(curl -s $bn_endpoint/eth/v1/config/spec | jq -r '.data.DEPOSIT_CONTRACT_ADDRESS')
+
+        # A top-up is a deposit reusing an existing validator's pubkey. The consensus
+        # layer ignores the withdrawal credentials and signature for an already-known
+        # validator, so we send zeros for both; the execution-layer deposit contract
+        # only checks that deposit_data_root matches the SSZ root of the deposit data.
+        zero_wc="0x$(printf '0%.0s' {1..64})"
+        zero_sig="0x$(printf '0%.0s' {1..192})"
 
         echo ""
         echo "Top-up Summary:"
         echo "  Validators: ${#VALIDATOR_ARRAY} validator(s)"
-        for ((i=1; i<=${#VALIDATOR_ARRAY}; i++)); do
-          echo "    ${VALIDATOR_ARRAY[$i]}: ${validator_pubkeys[$i]}"
-        done
+        if (( ${#VALIDATOR_ARRAY} <= 20 )); then
+          for ((i=1; i<=${#VALIDATOR_ARRAY}; i++)); do
+            echo "    ${VALIDATOR_ARRAY[$i]}: ${validator_pubkeys[$i]}"
+          done
+        else
+          echo "    ${VALIDATOR_ARRAY[1]} .. ${VALIDATOR_ARRAY[-1]}"
+        fi
         echo "  Amount per validator: $eth_amount ETH"
         echo "  Total amount: $(echo "${#VALIDATOR_ARRAY} * $eth_amount" | bc) ETH"
         echo "  Deposit Contract: $deposit_contract_address"
@@ -665,102 +1001,362 @@ for arg in "${command[@]}"; do
         read -r response
 
         if [[ $response == "y" ]]; then
-          echo "Submitting top-ups using ethereal..."
+          tmpdir=$(mktemp -d)
+
+          # Compute deposit_data_root for each validator locally (zero wc + zero sig).
+          printf '%s\n' "${validator_pubkeys[@]}" > "$tmpdir/pubkeys.txt"
+          python3 - "$eth_amount" "$tmpdir/pubkeys.txt" "$tmpdir/roots.txt" <<'PY'
+import sys, hashlib
+from decimal import Decimal
+def h(b): return hashlib.sha256(b).digest()
+amount_gwei = int(Decimal(sys.argv[1]) * (10**9))
+wc = b'\x00'*32
+sig = b'\x00'*96
+sig_root = h(h(sig[0:64]) + h(sig[64:96] + b'\x00'*32))
+amount_root = amount_gwei.to_bytes(8, 'little') + b'\x00'*24
+out = []
+with open(sys.argv[2]) as f:
+    for line in f:
+        pk = line.strip()
+        if not pk:
+            continue
+        pub = bytes.fromhex(pk[2:] if pk.startswith('0x') else pk)
+        pub_root = h(pub + b'\x00'*16)
+        out.append('0x' + h(h(pub_root + wc) + h(amount_root + sig_root)).hex())
+with open(sys.argv[3], 'w') as f:
+    f.write('\n'.join(out) + '\n')
+PY
+          roots=("${(@f)$(cat "$tmpdir/roots.txt")}")
+
+          # Fetch the nonce once and assign each top-up an explicit, incrementing
+          # nonce so they can all be broadcast in parallel (same as `deposit`).
+          nonce_hex=$(curl -s --header 'Content-Type: application/json' --data-raw '{"jsonrpc":"2.0","method":"eth_getTransactionCount","params":["'$publickey'","pending"],"id":0}' $rpc_endpoint | jq -r '.result')
+          nonce=$(( ${nonce_hex} ))
+          echo "Starting nonce: $nonce | Top-up per validator: ${eth_amount} ETH"
           echo ""
 
-          # Process each validator
-          for ((i=1; i<=${#VALIDATOR_ARRAY}; i++)); do
-            validator_index="${VALIDATOR_ARRAY[$i]}"
-            validator_pubkey="${validator_pubkeys[$i]}"
-
-            echo "Processing validator $validator_index ($i/${#VALIDATOR_ARRAY})..."
-            echo "Command: ethereal validator topup --from=\"$publickey\" --validator=\"$validator_pubkey\" --topup-amount=\"${eth_amount}eth\" --no-safety-checks"
-
-            # Submit topup for this validator with retry logic
-            topup_success=false
-            for retry in {1..3}; do
-              echo "Attempt $retry/3..."
-              topup_output=$(ethereal validator topup \
-                --from="$publickey" \
-                --validator="$validator_pubkey" \
-                --topup-amount="${eth_amount}eth" \
-                --privatekey="$privatekey" \
-                --connection="$rpc_endpoint" \
-                --consensus-connection="$bn_endpoint" \
-                --no-safety-checks \
-                --timeout=60s 2>&1)
-
-              if [[ $? -eq 0 ]]; then
-                topup_success=true
-                break
-              else
-                echo "Attempt $retry failed. Error: $topup_output"
-                if [[ $retry -lt 3 ]]; then
-                  echo "Retrying in 5 seconds..."
-                  sleep 5
-                fi
-              fi
-            done
-
-            if [[ "$topup_success" == "true" ]]; then
-              # Extract transaction hash from output
-              tx_hash=$(echo "$topup_output" | grep -oE '0x[a-fA-F0-9]{64}' | head -1)
-              if [[ -n "$tx_hash" ]]; then
-                echo "Transaction hash: $tx_hash"
-                echo "Waiting for transaction confirmation..."
-
-                # Wait for transaction to be mined
-                for attempt in {1..30}; do
-                  receipt_response=$(curl -s --header 'Content-Type: application/json' --data-raw "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getTransactionReceipt\", \"params\":[\"$tx_hash\"], \"id\":0}" $rpc_endpoint)
-
-                  # Debug: show raw response if it's not valid JSON
-                  if ! echo "$receipt_response" | jq . >/dev/null 2>&1; then
-                    echo "Invalid JSON response: $receipt_response"
-                    echo "Retrying..."
-                    sleep 2
-                    continue
-                  fi
-
-                  receipt_result=$(echo "$receipt_response" | jq -r '.result // empty')
-                  if [[ -n "$receipt_result" && "$receipt_result" != "null" ]]; then
-                    tx_status=$(echo "$receipt_result" | jq -r '.status // empty')
-                    if [[ "$tx_status" == "0x1" ]]; then
-                      echo "✓ Validator $validator_index top-up successful! (confirmed)"
-                      break
-                    else
-                      echo "✗ Validator $validator_index top-up failed! (transaction reverted)"
-                      break
-                    fi
-                  fi
-                  echo "Waiting for confirmation... (attempt $attempt/30)"
-                  sleep 2
-                done
-
-                if [[ $attempt -eq 30 ]]; then
-                  echo "⚠ Transaction confirmation timeout for validator $validator_index"
-                fi
-              else
-                echo "✓ Validator $validator_index top-up successful! (no tx hash found)"
-              fi
-            else
-              echo "✗ Validator $validator_index top-up failed!"
-              echo "Error output: $topup_output"
-            fi
-            echo ""
-
-            # Small delay between transactions
-            if [[ $i -lt ${#VALIDATOR_ARRAY} ]]; then
-              echo "Waiting 2 seconds before next transaction..."
-              sleep 2
+          # zsh's background job table caps at 1024; batch so the active set stays well below.
+          batch_size=500
+          i=0
+          for validator_index in "${VALIDATOR_ARRAY[@]}"; do
+            validator_pubkey="${validator_pubkeys[$((i + 1))]}"
+            data_root="${roots[$((i + 1))]}"
+            echo "Sending top-up for validator $validator_index (nonce: $((nonce + i)))"
+            echo "$validator_index" > "$tmpdir/cast-$i.name"
+            cast send \
+              --private-key "$privatekey" \
+              --rpc-url "$rpc_endpoint" \
+              --nonce $((nonce + i)) \
+              --value "${eth_amount}ether" \
+              --gas-limit 2000000 \
+              "$deposit_contract_address" \
+              "deposit(bytes,bytes,bytes,bytes32)" \
+              "$validator_pubkey" "$zero_wc" "$zero_sig" "$data_root" > "$tmpdir/cast-$i.log" 2>&1 &
+            i=$((i + 1))
+            if (( i % batch_size == 0 )); then
+              wait
+              echo "Drained batch — $i submitted so far..."
             fi
           done
 
-          echo "Top-up process completed for ${#VALIDATOR_ARRAY} validator(s)."
+          echo "Submitted $i top-ups in batches of $batch_size, waiting for final batch..."
+          wait
+          echo ""
+          ok=0
+          fail=0
+          for ((j=0; j<i; j++)); do
+            log="$tmpdir/cast-$j.log"
+            name=$(cat "$tmpdir/cast-$j.name" 2>/dev/null)
+            txhash=$(grep -E '^transactionHash' "$log" 2>/dev/null | awk '{print $2}' | head -1)
+            tx_status=$(grep -E '^status' "$log" 2>/dev/null | awk '{print $2}' | head -1)
+            if [[ "$tx_status" == "1" ]]; then
+              printf "  \033[32m✓\033[0m validator %s — %s\n" "$name" "$txhash"
+              ok=$((ok + 1))
+            else
+              printf "  \033[31m✗\033[0m validator %s — failed (status=%s tx=%s)\n" \
+                "$name" "${tx_status:-no-receipt}" "${txhash:-none}"
+              grep -iE 'error|revert' "$log" 2>/dev/null | head -1 | sed 's/^/      /'
+              fail=$((fail + 1))
+            fi
+          done
+          echo ""
+          echo "$ok confirmed, $fail failed (of $i submitted)"
+          rm -rf "$tmpdir"
+          exit;
         else
           echo "Top-up cancelled."
+          exit;
+        fi
+      fi
+      ;;
+    "consolidate")
+      # EIP-7251 consolidation requests. Two shapes:
+      #   consolidate <sources> <target>  move the sources' balance into target
+      #   consolidate <indices>           self-consolidation: 0x01 -> 0x02 credentials
+      # Requests go to the consolidation predeploy and are only honoured when they
+      # come from the source validator's own execution withdrawal address, so every
+      # source in one run must share that address (it signs and pays the fee).
+      if [[ $# -lt 2 || $# -gt 3 ]]; then
+        echo "Consolidate calls for 1 or 2 arguments!"
+        echo "  Usage: ${0} consolidate sourceIndex[,index2,...] targetIndex"
+        echo "         ${0} consolidate validator_index[,index2,...]"
+        echo "  Example: ${0} consolidate 5 6           # consolidate validator 5 into validator 6"
+        echo "  Example: ${0} consolidate 1,2,3 10      # consolidate validators 1, 2 and 3 into validator 10"
+        echo "  Example: ${0} consolidate 1..10 10      # inclusive range, same as 1,2,...,10"
+        echo "  Example: ${0} consolidate 5             # self-consolidate: switch validator 5 to 0x02 credentials"
+        echo "  Example: ${0} consolidate 1..10         # switch validators 1-10 to 0x02 compounding credentials"
+        exit;
+      else
+        consolidation_contract="${CONSOLIDATION_CONTRACT:-0x0000BBdDc7CE488642fb579F8B00f3a590007251}"
+        if [[ $# -eq 2 ]]; then
+          consolidate_mode="self"
+          source_spec="${command[2]}"
+        else
+          consolidate_mode="consolidate"
+          source_spec="${command[2]}"
+          target_index="${command[3]}"
+          if [[ ! "$target_index" =~ ^[0-9]+$ ]]; then
+            echo "Error: '$target_index' is not a valid target validator index."
+            exit 1
+          fi
         fi
 
-        exit;
+        source_list=$(expand_validator_indices "$source_spec") || exit 1
+        SOURCE_ARRAY=("${(@f)source_list}")
+
+        if [[ "$(cast code "$consolidation_contract" --rpc-url "$rpc_endpoint" 2>/dev/null)" == "0x" ]]; then
+          echo "Consolidation predeploy $consolidation_contract has no code on ${prefix}-${network}."
+          exit 1
+        fi
+
+        spec=$(curl -s "$bn_endpoint/eth/v1/config/spec")
+        slots_per_epoch=$(echo "$spec" | jq -r '.data.SLOTS_PER_EPOCH')
+        shard_committee_period=$(echo "$spec" | jq -r '.data.SHARD_COMMITTEE_PERIOD')
+        head_slot=$(curl -s "$bn_endpoint/eth/v1/beacon/headers/head" | jq -r '.data.header.message.slot')
+        if [[ -z "$head_slot" || "$head_slot" == "null" || -z "$slots_per_epoch" || "$slots_per_epoch" == "null" ]]; then
+          echo "Could not read the head slot / spec from $bn_endpoint."
+          exit 1
+        fi
+        current_epoch=$((head_slot / slots_per_epoch))
+
+        # Resolve every source: pubkey, withdrawal address and eligibility.
+        declare -a source_indices source_pubkeys
+        sender_address=""
+        for validator_index in "${SOURCE_ARRAY[@]}"; do
+          validator_info=$(curl -s "$bn_endpoint/eth/v1/beacon/states/head/validators/$validator_index")
+          if [[ $(echo "$validator_info" | jq -r '.data') == "null" ]]; then
+            echo "Error: Validator $validator_index not found."
+            exit 1
+          fi
+          validator_pubkey=$(echo "$validator_info" | jq -r '.data.validator.pubkey')
+          validator_creds=$(echo "$validator_info" | jq -r '.data.validator.withdrawal_credentials')
+          validator_status=$(echo "$validator_info" | jq -r '.data.status')
+          validator_activation=$(echo "$validator_info" | jq -r '.data.validator.activation_epoch')
+          creds_type="${validator_creds:2:2}"
+
+          if [[ "$creds_type" != "01" && "$creds_type" != "02" ]]; then
+            echo "Error: validator $validator_index still has BLS (0x00) withdrawal credentials."
+            echo "  Set an execution address first: ${0} set_withdrawal_addr $validator_index $validator_index <address>"
+            exit 1
+          fi
+          if [[ "$consolidate_mode" == "self" && "$creds_type" == "02" ]]; then
+            echo "Skipping validator $validator_index (already compounding, 0x02)."
+            continue
+          fi
+          if [[ "$validator_status" != "active_ongoing" ]]; then
+            echo "Error: validator $validator_index is $validator_status; consolidation requests are only honoured for active, non-exiting validators."
+            exit 1
+          fi
+          # Only a real consolidation carries the SHARD_COMMITTEE_PERIOD wait;
+          # a switch to compounding is valid from activation.
+          if [[ "$consolidate_mode" == "consolidate" ]] && (( current_epoch < validator_activation + shard_committee_period )); then
+            echo "Error: validator $validator_index activated at epoch $validator_activation; it can only be consolidated from epoch $((validator_activation + shard_committee_period)) (current: $current_epoch)."
+            exit 1
+          fi
+
+          validator_address="0x${validator_creds:26}"
+          if [[ -z "$sender_address" ]]; then
+            sender_address="$validator_address"
+          elif [[ "${validator_address:l}" != "${sender_address:l}" ]]; then
+            echo "Error: validator $validator_index withdraws to $validator_address, earlier sources withdraw to $sender_address."
+            echo "  Every source in one run must share a withdrawal address — split the run per address."
+            exit 1
+          fi
+
+          source_indices+=("$validator_index")
+          source_pubkeys+=("$validator_pubkey")
+        done
+
+        if (( ${#source_indices} == 0 )); then
+          echo "Nothing to do."
+          exit;
+        fi
+
+        if [[ "$consolidate_mode" == "consolidate" ]]; then
+          if (( ${source_indices[(I)$target_index]} )); then
+            echo "Error: validator $target_index is both a source and the target; use '${0} consolidate $target_index' for a self-consolidation."
+            exit 1
+          fi
+          target_info=$(curl -s "$bn_endpoint/eth/v1/beacon/states/head/validators/$target_index")
+          if [[ $(echo "$target_info" | jq -r '.data') == "null" ]]; then
+            echo "Error: Target validator $target_index not found."
+            exit 1
+          fi
+          target_pubkey=$(echo "$target_info" | jq -r '.data.validator.pubkey')
+          target_creds=$(echo "$target_info" | jq -r '.data.validator.withdrawal_credentials')
+          target_status=$(echo "$target_info" | jq -r '.data.status')
+          # A consolidation target must already be compounding; the CL drops the
+          # request otherwise. Point at the fix rather than letting it be dropped.
+          if [[ "${target_creds:2:2}" == "00" ]]; then
+            echo "Error: target validator $target_index still has BLS (0x00) withdrawal credentials, so it cannot receive a consolidation."
+            echo "  Give it an execution address first, then self-consolidate it to 0x02:"
+            echo "    ${0} set_withdrawal_addr $target_index $target_index <address>"
+            echo "    ${0} consolidate $target_index"
+            exit 1
+          fi
+          if [[ "${target_creds:2:2}" != "02" ]]; then
+            echo "Error: target validator $target_index does not have compounding (0x02) withdrawal credentials, so it cannot receive a consolidation."
+            echo "  Self-consolidate it first and wait for that request to be processed, then re-run this:"
+            echo "    ${0} consolidate $target_index"
+            exit 1
+          fi
+          if [[ "$target_status" != "active_ongoing" ]]; then
+            echo "Error: target validator $target_index is $target_status; the target must be active and not exiting."
+            exit 1
+          fi
+        fi
+
+        # The predeploy keeps whatever value is sent and its fee climbs with every
+        # request queued beyond MAX_CONSOLIDATION_REQUESTS_PER_PAYLOAD per block, so
+        # a batch priced at the current fee can face a higher one by the time the
+        # later transactions are mined. Overpay wildly — the fee is wei-scale, and
+        # 1 gwei still covers a queue several hundred requests deep.
+        fee_hex=$(cast call "$consolidation_contract" --rpc-url "$rpc_endpoint" 2>/dev/null)
+        fee_wei=$(cast to-dec "$fee_hex" 2>/dev/null)
+        if [[ ! "$fee_wei" =~ ^[0-9]+$ ]]; then
+          echo "Could not read the current fee from the consolidation predeploy $consolidation_contract."
+          exit 1
+        fi
+        send_fee=$((fee_wei * 8))
+        (( send_fee < 1000000000 )) && send_fee=1000000000
+        send_fee="${CONSOLIDATION_FEE_WEI:-$send_fee}"
+
+        # The request must be signed by the source validators' withdrawal address.
+        # Genesis validators point at the genesis generator's default address, whose
+        # key is not derivable from the mnemonic — only validators deposited with an
+        # address off this mnemonic can be consolidated, unless a key is passed in.
+        privatekey="${CONSOLIDATION_PRIVATE_KEY:-}"
+        if [[ -z "$privatekey" ]]; then
+          for n in {0..15}; do
+            hd_keys=$(ethereal hd keys --path="m/44'/60'/0'/0/$n" --seed="$sops_mnemonic")
+            hd_address=$(echo "$hd_keys" | awk '/Ethereum address/{print $NF}')
+            if [[ "${hd_address:l}" == "${sender_address:l}" ]]; then
+              privatekey=$(echo "$hd_keys" | awk '/Private key/{print $NF}')
+              signer_account="mnemonic account $n"
+              break
+            fi
+          done
+        else
+          signer_account="CONSOLIDATION_PRIVATE_KEY"
+        fi
+        if [[ -z "$privatekey" ]]; then
+          echo "No private key found for withdrawal address $sender_address (searched mnemonic accounts 0-15)."
+          echo "  Consolidation requests must come from that address; pass its key with CONSOLIDATION_PRIVATE_KEY=0x..."
+          exit 1
+        fi
+
+        echo ""
+        if [[ "$consolidate_mode" == "self" ]]; then
+          echo "Switch-to-compounding Summary:"
+        else
+          echo "Consolidation Summary:"
+        fi
+        echo "  Sources: ${#source_indices} validator(s)"
+        if (( ${#source_indices} <= 20 )); then
+          for ((i=1; i<=${#source_indices}; i++)); do
+            echo "    ${source_indices[$i]}: ${source_pubkeys[$i]}"
+          done
+        else
+          echo "    ${source_indices[1]} .. ${source_indices[-1]}"
+        fi
+        if [[ "$consolidate_mode" == "consolidate" ]]; then
+          echo "  Target: $target_index ($target_pubkey)"
+        else
+          echo "  Target: each source itself (0x01 -> 0x02 credentials)"
+        fi
+        echo "  From: $sender_address ($signer_account)"
+        echo "  Contract: $consolidation_contract"
+        echo "  Fee: $fee_wei wei, sending $send_fee wei per request"
+        echo ""
+        echo "Continue? (y/n)"
+        read -r response
+
+        if [[ $response == "y" ]]; then
+          tmpdir=$(mktemp -d)
+
+          nonce_hex=$(curl -s --header 'Content-Type: application/json' --data-raw '{"jsonrpc":"2.0","method":"eth_getTransactionCount","params":["'$sender_address'","pending"],"id":0}' $rpc_endpoint | jq -r '.result')
+          nonce=$(( ${nonce_hex} ))
+          echo "Starting nonce: $nonce"
+          echo ""
+
+          # zsh's background job table caps at 1024; batch so the active set stays well below.
+          batch_size=500
+          i=0
+          for validator_index in "${source_indices[@]}"; do
+            source_pubkey="${source_pubkeys[$((i + 1))]}"
+            if [[ "$consolidate_mode" == "self" ]]; then
+              request_target="$source_pubkey"
+            else
+              request_target="$target_pubkey"
+            fi
+            # Calldata is source_pubkey (48 bytes) ++ target_pubkey (48 bytes).
+            echo "Sending consolidation request for validator $validator_index (nonce: $((nonce + i)))"
+            echo "$validator_index" > "$tmpdir/cast-$i.name"
+            cast send \
+              --private-key "$privatekey" \
+              --rpc-url "$rpc_endpoint" \
+              --nonce $((nonce + i)) \
+              --value "$send_fee" \
+              --gas-limit 2000000 \
+              "$consolidation_contract" \
+              "0x${source_pubkey#0x}${request_target#0x}" > "$tmpdir/cast-$i.log" 2>&1 &
+            i=$((i + 1))
+            if (( i % batch_size == 0 )); then
+              wait
+              echo "Drained batch — $i submitted so far..."
+            fi
+          done
+
+          echo "Submitted $i consolidation requests in batches of $batch_size, waiting for final batch..."
+          wait
+          echo ""
+          ok=0
+          fail=0
+          for ((j=0; j<i; j++)); do
+            log="$tmpdir/cast-$j.log"
+            name=$(cat "$tmpdir/cast-$j.name" 2>/dev/null)
+            txhash=$(grep -E '^transactionHash' "$log" 2>/dev/null | awk '{print $2}' | head -1)
+            tx_status=$(grep -E '^status' "$log" 2>/dev/null | awk '{print $2}' | head -1)
+            if [[ "$tx_status" == "1" ]]; then
+              printf "  \033[32m✓\033[0m validator %s — %s\n" "$name" "$txhash"
+              ok=$((ok + 1))
+            else
+              printf "  \033[31m✗\033[0m validator %s — failed (status=%s tx=%s)\n" \
+                "$name" "${tx_status:-no-receipt}" "${txhash:-none}"
+              grep -iE 'error|revert' "$log" 2>/dev/null | head -1 | sed 's/^/      /'
+              fail=$((fail + 1))
+            fi
+          done
+          echo ""
+          echo "$ok confirmed, $fail failed (of $i submitted)"
+          echo "A confirmed request is only accepted by the CL if it still passes the checks at inclusion; watch the queue:"
+          echo "  curl -s $bn_endpoint/eth/v1/beacon/states/head/pending_consolidations | jq"
+          rm -rf "$tmpdir"
+          exit;
+        else
+          echo "Consolidation cancelled."
+          exit;
+        fi
       fi
       ;;
     "exit")
@@ -808,6 +1404,100 @@ for arg in "${command[@]}"; do
           echo "validator $i exit submitted"
           exit;
         fi
+        exit;
+      fi
+      ;;
+    "slash")
+      # Trigger an assertoor proposer-slashing run against a single validator
+      # or an inclusive contiguous range. The validator-slashing-single playbook
+      # takes a start index and a count, so ranges must be contiguous (start..end).
+      # The genesis mnemonic is passed through so the slashing targets this
+      # devnet's validators rather than the playbook's hardcoded kurtosis default.
+      if [[ -z "${command[2]}" ]]; then
+        echo "Slash calls for one validator index or an inclusive range!"
+        echo "  Usage: ${0} slash index"
+        echo "         ${0} slash start..end"
+        echo "  Example: ${0} slash 0       # slash validator 0"
+        echo "  Example: ${0} slash 0..2    # slash validators 0, 1, 2"
+        exit;
+      else
+        slash_arg="${command[2]}"
+        if [[ "$slash_arg" =~ ^[0-9]+\.\.[0-9]+$ ]]; then
+          slash_start=${slash_arg%%..*}
+          slash_end=${slash_arg##*..}
+          if (( slash_start > slash_end )); then
+            echo "Error: invalid range '$slash_arg' (start > end)."
+            exit 1
+          fi
+        elif [[ "$slash_arg" =~ ^[0-9]+$ ]]; then
+          slash_start=$slash_arg
+          slash_end=$slash_arg
+        else
+          echo "Error: '$slash_arg' is not a valid validator index or range."
+          exit 1
+        fi
+        slash_count=$((slash_end - slash_start + 1))
+
+        echo "Slashing validator(s) $slash_start..$slash_end ($slash_count total) on ${prefix}-${network}"
+        echo "  Assertoor: $assertoor_endpoint"
+        echo "Continue? (y/n)"
+        read -r response
+        if [[ $response != "y" ]]; then
+          echo "Slashing cancelled."
+          exit;
+        fi
+
+        slash_token=$(get_assertoor_token) || exit 1
+
+        # Make sure the slashing test is registered; on a fresh assertoor it
+        # won't be, so register it from the upstream playbook before scheduling.
+        slash_registered=$(curl -s -H "Authorization: Bearer $slash_token" \
+          "$assertoor_endpoint/api/v1/tests" \
+          | jq -r --arg id "$slashing_test_id" '[.data[]?.id] | index($id) != null')
+        if [[ "$slash_registered" != "true" ]]; then
+          echo "Test '$slashing_test_id' not registered; registering from $slashing_playbook"
+          slash_reg=$(curl -s \
+            -H "Authorization: Bearer $slash_token" \
+            -H "Content-Type: application/json" \
+            -X POST "$assertoor_endpoint/api/v1/tests/register_external" \
+            -d "$(jq -n --arg file "$slashing_playbook" '{file: $file}')")
+          if [[ "$(echo "$slash_reg" | jq -r '.data.test_id // empty')" != "$slashing_test_id" ]]; then
+            echo "Failed to register slashing test:"
+            echo "$slash_reg" | jq . 2>/dev/null || echo "$slash_reg"
+            exit 1
+          fi
+          echo "Registered test '$slashing_test_id'"
+        fi
+
+        slash_payload=$(jq -n \
+          --arg test "$slashing_test_id" \
+          --arg mnemonic "$sops_mnemonic" \
+          --argjson index "$slash_start" \
+          --argjson count "$slash_count" \
+          '{test_id: $test, allow_duplicate: true,
+            config: {validatorMnemonic: $mnemonic, validatorIndex: $index, validatorCount: $count}}')
+
+        slash_response=$(curl -s \
+          -H "Authorization: Bearer $slash_token" \
+          -H "Content-Type: application/json" \
+          -X POST "$assertoor_endpoint/api/v1/test_runs/schedule" \
+          -d "$slash_payload")
+
+        slash_status=$(echo "$slash_response" | jq -r '.status // empty' 2>/dev/null)
+        if [[ "$slash_status" != "OK" ]]; then
+          echo "Failed to schedule slashing run:"
+          echo "$slash_response" | jq . 2>/dev/null || echo "$slash_response"
+          # A rejected Bearer token means the cached JWT is stale/invalid;
+          # drop it so the next run mints a fresh one.
+          if [[ "$slash_status" == *unauthorized* ]]; then
+            rm -f "${TMPDIR:-/tmp}/.assertoor_token_${prefix}-${network}.json"
+            echo "(cleared cached auth token — re-run to mint a fresh one)" >&2
+          fi
+          exit 1
+        fi
+        slash_run_id=$(echo "$slash_response" | jq -r '.data.run_id')
+        echo "Scheduled slashing run #$slash_run_id"
+        echo "  Watch: $assertoor_endpoint/run/$slash_run_id"
         exit;
       fi
       ;;
@@ -868,101 +1558,8 @@ for arg in "${command[@]}"; do
         echo
       fi
       ;;
-    "sync_mapping")
-      # Extend the validator names mapping with post-genesis deposits made from
-      # the genesis mnemonic. Reads the current mapping, fetches the on-chain
-      # validator set from the beacon node, matches newly-deposited validators
-      # back to the mnemonic by deriving its pubkeys, and appends the new index
-      # ranges. Re-running is idempotent: once added, ranges advance past them.
-      src_name="${command[2]:-main-mnemonic}"
-      mapping_file="../network-configs/$network/metadata/validator_names.yaml"
-
-      if [[ ! -f "$mapping_file" ]]; then
-        echo "Mapping file not found: $mapping_file" >&2
-        exit 1
-      fi
-
-      # YAML -> JSON, tolerant of both mikefarah (-o=json) and python-yq (-c) yq.
-      if yq --version 2>&1 | grep -qi mikefarah; then
-        mapping_json=$(yq -o=json -I=0 '.' "$mapping_file")
-      else
-        mapping_json=$(yq -c '.' "$mapping_file")
-      fi
-
-      # Next free mnemonic key index for this source, and next free on-chain index.
-      next_key=$(echo "$mapping_json" | jq --arg src "$src_name" \
-        '[ .[] | to_entries[] | select(.value.src == $src) | .value.to ] | (max // -1) + 1')
-      next_state=$(echo "$mapping_json" | jq \
-        '[ .[] | to_entries[] | (.key | tostring | split("-")[1] | tonumber) ] | (max // -1) + 1')
-
-      echo "Syncing '$src_name' mapping (next on-chain index: $next_state, next key index: $next_key)"
-
-      # The validator set and derived key map can be large (thousands of
-      # entries), so they are exchanged with jq via files (--slurpfile) instead
-      # of command-line args, which would overflow the argument list.
-      sync_tmp=$(mktemp -d)
-
-      # Fetch the full validator set from the beacon node in a single request and
-      # keep the validators beyond the last mapped index (index >= next_state).
-      curl -s "$bn_endpoint/eth/v1/beacon/states/head/validators" \
-        | jq -c --argjson min "$next_state" \
-          '[ .data[] | {index: (.index | tonumber), pubkey: .validator.pubkey} | select(.index >= $min) ]' \
-        > "$sync_tmp/new.json"
-
-      new_count=$(jq 'length' "$sync_tmp/new.json")
-      if [[ "$new_count" == "0" ]]; then
-        rm -rf "$sync_tmp"
-        echo "No on-chain validators beyond index $((next_state - 1)); mapping is up to date."
-        exit 0
-      fi
-      echo "Found $new_count new on-chain validator(s); matching against the mnemonic..."
-
-      # Derive the mnemonic's pubkeys for the next key indices (at most as many as
-      # there are new validators) into a pubkey -> key-index lookup.
-      eth2-val-tools pubkeys \
-        --source-min=$next_key --source-max=$((next_key + new_count)) \
-        --validators-mnemonic="$sops_mnemonic" \
-        | jq -R -s --argjson base $next_key \
-          '[ split("\n")[] | select(length > 0) ] | to_entries
-           | map({key: (.value | ascii_downcase), value: ($base + .key)}) | from_entries' \
-        > "$sync_tmp/derived.json"
-
-      # Match new validators to the mnemonic by pubkey and collapse runs where the
-      # on-chain index and the key index both advance by one into single entries.
-      new_lines=$(jq -rn \
-        --slurpfile new "$sync_tmp/new.json" \
-        --slurpfile derived "$sync_tmp/derived.json" \
-        --arg src "$src_name" '
-        ($new[0]) as $vals
-        | ($derived[0]) as $keymap
-        | ( $vals
-            | map(. as $v | ($v.pubkey | ascii_downcase) as $pk
-                  | select($keymap | has($pk))
-                  | {state: $v.index, key: $keymap[$pk]})
-            | sort_by(.state) ) as $pairs
-        | reduce $pairs[] as $p ([];
-            if (length > 0) and (.[-1].state_to + 1 == $p.state) and (.[-1].key_to + 1 == $p.key)
-            then .[:-1] + [ .[-1] + {state_to: $p.state, key_to: $p.key} ]
-            else . + [ {state_from: $p.state, state_to: $p.state, key_from: $p.key, key_to: $p.key} ]
-            end)
-        | .[] | "- \(.state_from)-\(.state_to): { src: \"\($src)\", from: \(.key_from), to: \(.key_to) }"
-      ')
-
-      rm -rf "$sync_tmp"
-
-      if [[ -z "$new_lines" ]]; then
-        echo "None of the $new_count new validator(s) were derived from '$src_name'; nothing to add."
-        exit 0
-      fi
-
-      echo "Adding mapping entr(y/ies):"
-      echo "$new_lines"
-
-      # Make sure the file ends with a newline before appending.
-      [[ -n "$(tail -c1 "$mapping_file" 2>/dev/null)" ]] && printf '\n' >> "$mapping_file"
-      printf '%s\n' "$new_lines" >> "$mapping_file"
-      echo "Updated $mapping_file"
-      exit 0
+    "check_deps")
+      check_deps 1 || exit 1
       ;;
     "help")
       print_usage "${command[@]}"

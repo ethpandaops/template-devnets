@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       el-client:
-        description: 'Comma-separated list of execution layer clients (geth,besu,nethermind,erigon,reth)'
+        description: 'Comma-separated list of execution layer clients (geth,besu,nethermind,erigon,reth,nimbusel,ethrex)'
         required: false
-        default: '"geth","reth","nethermind","besu","erigon"'
+        default: '"geth","reth","nethermind","besu","erigon","nimbusel","ethrex"'
         type: string
       cl-client:
         description: 'Comma-separated list of consensus layer clients (lighthouse,teku,prysm,nimbus,lodestar,grandine)'
@@ -22,7 +22,9 @@ on:
           run-timeout: timeout in minutes.
           cl-synctype: "checkpoint" (sync from checkpoint) or "genesis" (sync from genesis).
           cl-nodetype: "fullnode" (normal node) or "supernode" (subscribes to all custody groups).
-          runs-on: GitHub runner label (ccx13: 2c/8GB RAM/80GB disk, ccx23: 4c/16GB RAM/160GB disk, ccx33: 8c/32GB RAM/240GB disk, ccx43: 16c/64GB RAM/360GB disk).
+          runs-on: GitHub runner label.
+          DigitalOcean: self-hosted-ghr-size-l-do-x64, self-hosted-ghr-size-xl-do-x64.
+          Hetzner: self-hosted-ghr-size-ccx13-x64 (2c/8GB RAM/80GB disk), ccx23 (4c/16GB/160GB), ccx33 (8c/32GB/240GB), ccx43 (16c/64GB/360GB).
           Example: {"run-timeout": "1800", "cl-synctype": ["checkpoint"], "cl-nodetype": ["fullnode"]}
         required: false
         default: >-
@@ -58,7 +60,8 @@ on:
             "erigon": "erigontech/erigon:latest",
             "nethermind": "nethermind/nethermind:latest",
             "reth": "ghcr.io/paradigmxyz/reth",
-            "nimbusel": "ethpandaops/nimbus-eth1:master"
+            "nimbusel": "ethpandaops/nimbus-eth1:master",
+            "ethrex": "ghcr.io/lambdaclass/ethrex:latest"
           }
         type: string
       cl-image:
@@ -103,8 +106,10 @@ jobs:
             fromJSON(format('[{0}]', inputs.el-client || '
               "besu",
               "erigon",
+              "ethrex",
               "geth",
               "nethermind",
+              "nimbusel",
               "reth"
           '))}}
         cl-client: >-
@@ -143,7 +148,8 @@ jobs:
           "erigon": "erigontech/erigon:latest",
           "nethermind": "nethermind/nethermind:latest",
           "reth": "ghcr.io/paradigmxyz/reth",
-          "nimbusel": "ethpandaops/nimbus-eth1:master"
+          "nimbusel": "ethpandaops/nimbus-eth1:master",
+          "ethrex": "ghcr.io/lambdaclass/ethrex:latest"
         }
         EOF
         echo "el-images=$(cat /tmp/default-el-images.json | jq -c .)" >> $GITHUB_OUTPUT
