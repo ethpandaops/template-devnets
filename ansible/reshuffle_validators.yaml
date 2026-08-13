@@ -1,0 +1,43 @@
+# Safely reassign validator key ranges after editing validator_start/validator_end
+# (terraform/devnet-N/nodes.tf -> terraform apply -> inventory.ini).
+#
+# Preferred usage is FLEET-WIDE (no -l): only hosts whose deployed range (recorded in
+# <validator datadir>/.validator_keyrange) differs from the inventory are touched;
+# everything else no-ops. When limiting with -l, ALWAYS include localhost (local key
+# regeneration) and BOTH sides of every moved range (donor and recipient) — a donor
+# left out of the play keeps signing keys a recipient is about to load.
+#   ansible-playbook reshuffle_validators.yaml -l 'localhost,<donor-1>,<recipient-1>,...'
+#
+# Drifted hosts go through: stop VC -> wipe keys -> wait >= 2 epochs (play-wide
+# barrier, linear strategy) -> sync new keys -> start VC. any_errors_fatal aborts the
+# whole play before any client restarts if any host is unreachable or fails.
+#
+# Do NOT set batch_count for this playbook: the slashing-safety barrier only covers
+# hosts inside the same play batch.
+
+- hosts: localhost
+  roles:
+    - role: ethpandaops.general.ethereum_genesis
+      tags: [ethereum_genesis]
+
+- hosts: ethereum_node
+  strategy: linear
+  any_errors_fatal: true
+  become: true
+  vars:
+    validator_keys_reshuffle: true
+  pre_tasks:
+    # A donor that dropped out unreachable would keep signing keys a recipient
+    # is about to load; refuse to move anything unless every host answered.
+    - name: Abort if any play host is unreachable
+      run_once: true
+      ansible.builtin.assert:
+        that: ansible_play_hosts == ansible_play_hosts_all
+        fail_msg: >-
+          Unreachable hosts: {{ ansible_play_hosts_all | difference(ansible_play_hosts) }}
+          — aborting before any key movement.
+      tags: always
+  roles:
+    - role: ethpandaops.general.validator_keys
+      when: ethereum_node_cl_validator_enabled == true
+      tags: [ethereum, validator_keys]
