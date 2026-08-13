@@ -18,7 +18,7 @@ besu_container_volumes:
   - "{{ besu_auth_jwt_path }}:/execution-auth.jwt:ro"
   - "{{ eth_testnet_config_dir }}:/network-config:ro"
 besu_container_command_extra_args:
-  - --genesis-file=/network-config/besu.json
+  - --genesis-file=/network-config/genesis.json
   - --bootnodes={{ ethereum_el_bootnodes | join(',') }}
   - --discovery-mode=V5
   - --rpc-http-api=ADMIN,DEBUG,ETH,MINER,NET,TRACE,TXPOOL,WEB3
