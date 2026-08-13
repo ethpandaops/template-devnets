@@ -17,6 +17,10 @@ validator_bls_sync_files:
     owner: nimbus
     group: nimbus
 
+# role: ethpandaops.general.validator_keys — nimbus runs validators in-process in
+# the beacon container (no separate VC), so reshuffles stop/start the beacon.
+validator_keys_container_name: beacon
+
 # role: ethpandaops.general.ethereum_node
 ethereum_node_cl: nimbus
 

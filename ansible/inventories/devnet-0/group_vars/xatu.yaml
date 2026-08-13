@@ -33,10 +33,13 @@ xatu_sentry_config:
     - voluntary_exit
     - contribution_and_proof
     - blob_sidecar
+    - data_column_sidecar
   attestationData:
     enabled: false
   beaconCommittees:
-    enabled: false
+    enabled: true
+  proposerDuty:
+    enabled: true
   forkChoice:
     enabled: false
   outputs:
