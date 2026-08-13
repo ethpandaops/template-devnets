@@ -24,22 +24,37 @@ buildoor_wallet_privkey: "{{ secret_buildoor_wallet_privkey }}"
 buildoor_builder_mnemonic: "{{ secret_buildoor_builder_mnemonic }}"
 buildoor_builder_mnemonic_index: "{{ builder_index }}"
 
+# Lets the overview label builders by the validator range they serve.
+buildoor_container_command_extra_args:
+  - --validator-ranges-url=https://config.{{ network_subdomain }}/api/v1/nodes/validator-ranges
+
 buildoor_container_env:
   VIRTUAL_HOST: "api-{{ server_fqdn }}"
   VIRTUAL_PORT: "{{ buildoor_api_port | string }}"
   LETSENCRYPT_HOST: "api-{{ server_fqdn }}"
 
-# Re-apply the prysm.yaml merge so we don't lose the bootnode args while adding --prepare-all-payloads
+# A builder has to see every attestation subnet to value a payload correctly,
+# so each CL also gets its subscribe-all-subnets flag here.
+#
+# These re-apply each client's base args because buildoor wins on group
+# precedence — assigning the flag alone would drop the client's own args
+# (bootnodes included).
 prysm_container_command_extra_args: >-
   {{ prysm_container_command_extra_simple_args
      + prysm_container_command_extra_bootnode_args
-     + ['--prepare-all-payloads'] }}
+     + ['--prepare-all-payloads', '--subscribe-all-subnets'] }}
 lighthouse_container_command_extra_args: >-
   {{ lighthouse_container_command_extra_simple_args
-     + ['--always-prepare-payload'] }}
+     + ['--always-prepare-payload', '--subscribe-all-subnets', '--import-all-attestations'] }}
 lodestar_container_command_extra_args: >-
   {{ lodestar_container_command_extra_simple_args
-     + ['--emitPayloadAttributes'] }}
+     + ['--emitPayloadAttributes', '--subscribeAllSubnets'] }}
+teku_container_command_extra_args: >-
+  {{ teku_container_command_extra_simple_args
+     + ['--Xfork-choice-updated-always-send-payload-attributes=true', '--p2p-subscribe-all-subnets-enabled'] }}
+grandine_container_command_extra_args: >-
+  {{ grandine_container_command_extra_simple_args
+     + ['--features=AlwaysPrepareExecutionPayload', '--subscribe-all-subnets'] }}
 
 ethereum_node_docker_watchtower_containers_list:
   - execution

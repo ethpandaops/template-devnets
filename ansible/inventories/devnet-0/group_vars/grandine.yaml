@@ -11,7 +11,9 @@ docker_daemon_options:
       "max-size": "500m"
       "max-file": "40"
 
-# role: validator_keys
+# role: validator_keys — grandine runs validators in-process in the beacon
+# container (no separate VC), so reshuffles stop/start the beacon.
+validator_keys_container_name: beacon
 validator_keys_sync_files:
   - src: "{{ inventory_dir }}/files/validator_keys/{{ inventory_hostname }}/teku-keys/"
     dest: "{{ grandine_validator_datadir }}/keys/"
@@ -38,7 +40,11 @@ grandine_container_volumes:
   - "{{ grandine_datadir }}:/data"
   - "{{ grandine_auth_jwt_path }}:/execution-auth.jwt:ro"
   - "{{ eth_testnet_config_dir }}:/network-config:ro"
-grandine_container_command_extra_args:
+# Split so groups with higher priority (e.g. buildoor) can re-merge the base
+# args instead of replacing them wholesale.
+grandine_container_command_extra_args: >-
+  {{ grandine_container_command_extra_simple_args }}
+grandine_container_command_extra_simple_args:
   - --configuration-directory=/network-config/
   - --boot-nodes={{ ethereum_cl_bootnodes | join(',') }}
   - --graffiti={{ ansible_hostname }}
