@@ -77,9 +77,11 @@ locals {
               (node.count > 0 ? (node.validator_end - node.validator_start) / node.count >= 128 : false)
             )
 
-            region = node.region != null ? node.region : var.digitalocean_regions[i % length(var.digitalocean_regions)]
-            ipv6   = node.ipv6
-            arch   = "amd64"
+            region = node.region != null ? node.region : var.digitalocean_regions[
+              parseint(substr(md5("${node.name}-${node.start_index + i + 1}"), 0, 8), 16) % length(var.digitalocean_regions)
+            ]
+            ipv6 = node.ipv6
+            arch = "amd64"
           }
         }
       }

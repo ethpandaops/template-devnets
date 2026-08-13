@@ -112,7 +112,9 @@ locals {
               ) ? var.hetzner_supernode_size : var.hetzner_fullnode_size
             )
 
-            location     = node.location != null ? node.location : local.hetzner_regions_effective[i % length(local.hetzner_regions_effective)]
+            location = node.location != null ? node.location : local.hetzner_regions_effective[
+              parseint(substr(md5("${node.name}-${node.start_index + i + 1}"), 0, 8), 16) % length(local.hetzner_regions_effective)
+            ]
             ipv4_enabled = node.ipv4_enabled
             ipv6_enabled = node.ipv6_enabled
           }
