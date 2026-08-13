@@ -36,7 +36,7 @@ default_tooling_images:
   homepage: ethpandaops/ethereum-testnet-homepage:latest
   checkpointz: ethpandaops/checkpointz:latest
   blockscout: blockscout/blockscout:latest
-  blockscout_frontend: docker.ethquokkaops.io/gh/blockscout/frontend:latest
+  blockscout_frontend: ghcr.io/blockscout/frontend:latest
   beacon_metrics_gazer: dapplion/beacon-metrics-gazer:latest
   eth_fauceth: chainflag/eth-faucet:latest
   blobscan: blossomlabs/blobscan:latest
@@ -49,7 +49,7 @@ default_tooling_images:
   lcli: ethpandaops/lighthouse:unstable
   zcli: electra
   assertoor: ethpandaops/assertoor:master-latest
-  erpc: docker.ethquokkaops.io/gh/erpc/erpc:0.0.49
+  erpc: ghcr.io/erpc/erpc:0.0.49
   prometheus: prom/prometheus:v2.40.7
   node_exporter: prom/node-exporter:v1.5.0
   cl_bootnode: protolambda/eth2-bootnode:cleanup
@@ -62,5 +62,5 @@ default_tooling_images:
   vector: timberio/vector:0.56.0-alpine
   spamoor: ethpandaops/spamoor:master-latest
   blobber: ethpandaops/blobber:latest
-  syncoor_web: docker.ethquokkaops.io/gh/ethpandaops/syncoor-web:master
-  syncoor_server: docker.ethquokkaops.io/gh/ethpandaops/syncoor:master
+  syncoor_web: ghcr.io/ethpandaops/syncoor-web:master
+  syncoor_server: ghcr.io/ethpandaops/syncoor:master
