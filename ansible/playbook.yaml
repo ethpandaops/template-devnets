@@ -20,6 +20,13 @@
 - import_playbook: ethpandaops.general.bootstrap_server
   vars:
     target: "all:!localhost"
+    bootstrap_docker_registry_auths:
+      registry-1.docker.io:
+        username: "{{ secret_dockerhub.username }}"
+        password: "{{ secret_dockerhub.token }}"
+      https://index.docker.io/v1/:
+        username: "{{ secret_dockerhub.username }}"
+        password: "{{ secret_dockerhub.token }}"
   tags: [init-server, bootstrap]
 
 - hosts: all:!localhost

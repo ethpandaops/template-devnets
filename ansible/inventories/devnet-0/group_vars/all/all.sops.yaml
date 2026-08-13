@@ -38,14 +38,17 @@ tysm_secret_key: ENC[AES256_GCM,data:MuvclVLaNVZ+7vRumg==,iv:XGBLMISj2wL7MQznXnV
 tempo_grpc_url: ENC[AES256_GCM,data:ltAVTGgrqhUBXdAZe7D1HvdXK72YIORL/x4DYHgX911s+X8IZM9/guRqE1I/ZYSzNrQX0qON3/TrNSjpG1BUpkK9M0SLzqE4EKhaOOQonJRLunnufZVrZIDhXSMaGQhZcjsHQCV8,iv:4mzqA4Ck1g91+tST5oTSnTepikjOCWKJrV04Rsp/8Ts=,tag:MgjQUb+lR1SIU2d8KpvOew==,type:str]
 secret_buildoor_wallet_privkey: ENC[AES256_GCM,data:K4iVB2j+py1CYUsR6j7UUPtGVMeYdIkV9EY0Foi23lr7toUSlLTfqqZE23u533YQrpovinMl4z2Gji8V1VGAeA==,iv:POAoPAmGeZTYoqwGsSB8NMSI4MsCMMbIhv3zefnzfE4=,tag:05IHrIPCpwJnMafB3nDE8g==,type:str]
 secret_buildoor_builder_mnemonic: ENC[AES256_GCM,data:c3Rx/8cro5KfJIWCbbEyToDrnmWgNioqTiodgnZA5Gf6OvAlL4NL6fpLquZBGmDPn54is1eNUnV0Im3xpWrdk3PCcI1kI2VM2LS4ln/NDIu79BN9FlSUWC1mCJfVcSs6tUtU11zvxKh/zZASQviR3ZAt6OTPsXuDW4TEcZUmrPZw/W2w8NTc4V4E6UlkNeUqDfM0YkMVTrZu,iv:kHYF3ro1RdqRvPhjUy13EEFF1zCX/E+dh4VY+MiB/sg=,tag:GGo6bhK0AwxDVkNYxq8RLA==,type:str]
+secret_dockerhub:
+    username: ENC[AES256_GCM,data:wcbaPWvspoChKgU=,iv:EYS6a81vnt+aCvSnpeU40CgFgMArsz8hdjvJeQWfnvs=,tag:iy6Q5IHa0ER6OpkIxmVPwg==,type:str]
+    token: ENC[AES256_GCM,data:AzHPPsXNzM6iX7+56rkUhN6fdYA1wogPT46FfpcthjaBCC07,iv:HR7r2vH/dTIs8/bgfwdOjcCxH/Yn8mLXrycQYFxbYwY=,tag:dR2464U4Q+D250To5hvZ+w==,type:str]
 sops:
     kms: []
     gcp_kms: []
     azure_kv: []
     hc_vault: []
     age: []
-    lastmodified: "2026-07-06T00:38:47Z"
-    mac: ENC[AES256_GCM,data:qFxJu5tAet6FaoY8uhNa/oxZdc5Ehc1F6wIJ9cRipXVk/1nxhtD+jJUizstlZHJMIHnIeey67f9sgXELLD4VerhV3domlHWvG3Jw1OmqkEiU22c95cuDbxQJdHacF6lASzsHZS9Bv8aYAgHcpr0Vhml+8XxwDlmc5ctFUI2df3I=,iv:vAOKQZHU3srQ6BDZv+CfSOPH0mtF0D0gjOKpQg0MyO0=,tag:JdgqYAE3lC89/6kA1UOzww==,type:str]
+    lastmodified: "2026-08-13T11:15:26Z"
+    mac: ENC[AES256_GCM,data:05c0YjAXhJ0aQfRSc+nBDT74QXNM0WueGJbNfupAtxhim+5nBXo7G80sWmgknyWytansqHQkcMnGK08RXFcRsWswOjAn+4TD7oseAsXVl6hY0yesvDeVpXm3CLrrNkjJCDMmNnlWZ0E/8WsitEGT4tmeusRN0VmLaSkYP8QUuI8=,iv:k5Ht4VaGDX58zNNSTfMHFaDolftNyQm4W8uamp/dIBk=,tag:O5nGaQmkR90hr/khOAVywA==,type:str]
     pgp:
         - created_at: "2025-10-27T13:25:35Z"
           enc: |-
