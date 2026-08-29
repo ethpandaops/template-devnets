@@ -84,6 +84,16 @@ ${replace(gid, "-", "_")}
 [buildoor:vars]
 ansible_group_priority=100
 
+# tysm canary hosts (tysm = true on the node entry in nodes.tf); the group always
+# exists so the tysm play in the playbook resolves, it is just empty by default.
+
+[tysm]
+%{ for key, host in hosts ~}
+%{ if host.tysm != "" ~}
+${host.hostname}
+%{ endif ~}
+%{ endfor ~}
+
 # Global groups
 
 [consensus_node:children]

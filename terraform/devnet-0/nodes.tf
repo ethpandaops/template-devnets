@@ -16,11 +16,15 @@
 #     - supernode       : Force supernode=true/false (auto-detected from name)
 #     - builder_start   : First builder index (buildoor nodes only). Exposes a
 #                         builder_index=N server tag and inventory var per instance.
+#     - tysm            : true puts the instances in the [tysm] inventory group: the
+#                         playbook deploys the tysm canary configs there and a
+#                         group-scoped firewall opens the control port 8675.
 #
 # Examples:
 #   { name = "bootnode", count = 1, cloud = "digitalocean" }
 #   { name = "lighthouse-geth-super", count = 2, cloud = "hetzner", validator_start = 0, validator_end = 200 }
 #   { name = "mev-relay", count = 1, cloud = "hetzner", size = "ccx53" }
+#   { name = "prysm-geth", count = 1, cloud = "hetzner", tysm = true }
 #
 ########################################################################################
 
