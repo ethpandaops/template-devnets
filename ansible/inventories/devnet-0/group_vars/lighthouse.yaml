@@ -43,6 +43,6 @@ lighthouse_validator_container_volumes:
   - "{{ eth_testnet_config_dir }}:/network-config:ro"
 lighthouse_validator_container_command_extra_args:
   - --testnet-dir=/network-config
-  - --graffiti={{ ansible_hostname }}
+  - --graffiti={{ inventory_hostname }}
 lighthouse_validator_datadir: /data/lighthouse-validator
 lighthouse_container_pull: true

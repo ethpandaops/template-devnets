@@ -19,6 +19,8 @@ terraform {
 }
 
 terraform {
+  # The merge-testnets bucket is shared by every devnet repo: keep the key
+  # <name>-devnet-N. Backend blocks cannot read variables, so rename it by hand.
   backend "s3" {
     skip_credentials_validation = true
     skip_metadata_api_check     = true
@@ -27,7 +29,7 @@ terraform {
     skip_s3_checksum            = true
     region                      = "us-east-1"
     bucket                      = "merge-testnets"
-    key                         = "infrastructure/devnet-0/terraform.tfstate"
+    key                         = "infrastructure/template-devnet-0/terraform.tfstate"
   }
 }
 

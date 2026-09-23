@@ -27,11 +27,12 @@ primary_bootnode: bootnode-1
 
 ### Checkpoint sync specific for Ansible & Kubernetes
 checkpoint_sync_node: "{{ primary_bootnode }}"
+# Enable once the network is past genesis and checkpointz is serving.
 ethereum_node_cl_checkpoint_sync_enabled: false
 
 checkpoint_sync_url: https://checkpoint-sync.{{ ethereum_network_name }}.{{ domain }}
 #checkpoint_sync_url: https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@{{ ethereum_node_beacon_prefix }}{{ checkpoint_sync_node }}.{{ ethereum_network_name }}.{{ domain }}
-checkpoint_sync_url_kube: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.template-devnets.node_ingress.combined}>@{{ ethereum_node_beacon_prefix }}{{ checkpoint_sync_node }}.{{ ethereum_network_name }}.{{ domain }}
+checkpoint_sync_url_kube: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.{{ devnet_name }}-devnets.node_ingress.combined}>@{{ ethereum_node_beacon_prefix }}{{ checkpoint_sync_node }}.{{ ethereum_network_name }}.{{ domain }}
 
 #  ██████╗░░█████╗░██╗░░░░░███████╗  ██╗░░░██╗░█████╗░██████╗░░██████╗
 #  ██╔══██╗██╔══██╗██║░░░░░██╔════╝  ██║░░░██║██╔══██╗██╔══██╗██╔════╝
@@ -69,6 +70,8 @@ ethereum_genesis_generator_config_files:
     export DENEB_FORK_VERSION="0x50{{ ethereum_genesis_fork_version_suffix }}"
     export ELECTRA_FORK_VERSION="0x60{{ ethereum_genesis_fork_version_suffix }}"
     export FULU_FORK_VERSION="0x70{{ ethereum_genesis_fork_version_suffix }}"
+    export GLOAS_FORK_VERSION="0x80{{ ethereum_genesis_fork_version_suffix }}"
+    export HEZE_FORK_VERSION="0x90{{ ethereum_genesis_fork_version_suffix }}"
     export GENESIS_TIMESTAMP={{ ethereum_genesis_timestamp }}
     export GENESIS_DELAY={{ ethereum_genesis_timedelay }}
     export WITHDRAWAL_TYPE=0x02
@@ -153,6 +156,9 @@ ethereum_node_validator_public_ipv6: "{{ host_ipv6_prefix | ansible.utils.ipaddr
 ethereum_node_snooper_rpc_public_ipv6: "{{ host_ipv6_prefix | ansible.utils.ipaddr(service_ipv6_offsets.snooper_rpc) | ansible.utils.ipaddr('address') if (docker_network_enable_ipv6 | bool) else '' }}"
 ethereum_node_snooper_engine_public_ipv6: "{{ host_ipv6_prefix | ansible.utils.ipaddr(service_ipv6_offsets.snooper_engine) | ansible.utils.ipaddr('address') if (docker_network_enable_ipv6 | bool) else '' }}"
 ethereum_node_skip_cleanup: true
+# Watchtower: daily image check at a per-host slot in 15:00-17:59 CET/CEST
+# (seeded by network+hostname), so an image roll restarts nodes one by one
+# instead of fleet-wide at once. 18:00 is the end of the update window.
 ethereum_node_docker_watchtower_enabled: true
 ethereum_node_docker_watchtower_containers_list:
   - execution
@@ -161,9 +167,11 @@ ethereum_node_docker_watchtower_containers_list:
   - xatu-sentry
   - external-block-builder
 docker_watchtower_container_additional_args:
-  - --interval=900
+  - "--schedule=0 {{ 60 | random(seed=ethereum_network_name ~ inventory_hostname ~ 'min') }} {{ 15 + (3 | random(seed=ethereum_network_name ~ inventory_hostname ~ 'hour')) }} * * *"
   - --stop-timeout=300s
   - --include-restarting
+docker_watchtower_container_env:
+  TZ: Europe/Paris
 ethereum_node_json_rpc_snooper_engine_enabled: true
 ethereum_node_json_rpc_snooper_engine_name: "snooper-engine"
 ethereum_node_json_rpc_snooper_engine_port: 8561
@@ -185,9 +193,11 @@ json_rpc_snooper_container_volumes:
 # role: ethpandaops.general.generate_kubernetes_config
 gen_kubernetes_config_dora_execution_snooper_port: 8961
 gen_kubernetes_config_dora_frontend_rainbowkit_id: "15fe4ab4d5c0bcb6f0dc7c398301ff0e"
-gen_kubernetes_config_dora_execution_endpoints_url: "https://raw.githubusercontent.com/ethpandaops/template-devnets/refs/heads/master/kubernetes/{{ network_iteration }}/dora/endpoints-el.yaml"
-gen_kubernetes_config_dora_consensus_endpoints_url: "https://raw.githubusercontent.com/ethpandaops/template-devnets/refs/heads/master/kubernetes/{{ network_iteration }}/dora/endpoints-cl.yaml"
+gen_kubernetes_config_dora_execution_endpoints_url: "https://raw.githubusercontent.com/ethpandaops/{{ devnet_name }}-devnets/refs/heads/master/kubernetes/{{ network_iteration }}/dora/endpoints-el.yaml"
+gen_kubernetes_config_dora_consensus_endpoints_url: "https://raw.githubusercontent.com/ethpandaops/{{ devnet_name }}-devnets/refs/heads/master/kubernetes/{{ network_iteration }}/dora/endpoints-cl.yaml"
 gen_kubernetes_config_dora_api_secret: "{{ secret_dora_api_key }}"
+# Dora block-arrival views from the per-devnet xatu databases.
+gen_kubernetes_config_dora_xatu_enabled: true
 
 # role: ethpandaops.general.xatu_sentry
 xatu_sentry_container_image: "{{ default_tooling_images.xatu_sentry }}"
@@ -307,6 +317,8 @@ otlp_endpoint: "https://otlp.analytics.production.platform.ethpandaops.io"
 otlp_deployment_env: production
 
 # role: ethpandaops.general.vector
+vector_container_memory: 1g
+vector_container_memory_swap: 1g
 vector_config: |
   # Docker container logs (clean per-container metadata straight from the Docker API)
   [sources.in]
@@ -320,10 +332,20 @@ vector_config: |
       "snooper-",
     ]
 
-  # Shape docker_logs events into an OTLP resourceLogs envelope with full metadata.
+  # Per-container ceiling on shipped lines. A client or sentry in a failure loop
+  # emits thousands of lines a second, and across a large fleet that alone can
+  # saturate the analytics ingress; healthy containers sit far below this.
+  [transforms.throttle]
+    type = "throttle"
+    inputs = ["in"]
+    threshold = 20000
+    window_secs = 60
+    key_field = "{% raw %}{{ container_name }}{% endraw %}"
+
+  # Shape docker_logs events into an OTLP log record plus the resource it belongs to.
   [transforms.otel_shape]
     type = "remap"
-    inputs = ["in"]
+    inputs = ["throttle"]
     source = '''
       ts_ns = to_string(to_unix_timestamp(now(), unit: "nanoseconds"))
       if is_timestamp(.timestamp) {
@@ -398,46 +420,61 @@ vector_config: |
       attrs = push(attrs, {"key": "ethereum_el", "value": {"stringValue": "{{ ethereum_node_el }}"}})
   {%- endif +%}
       . = {
-        "resource_log": {
-          "resource": {"attributes": attrs},
-          "scopeLogs": [{
-            "scope": {"name": "{{ ethereum_network_name }}-vector"},
-            "logRecords": [{
-              "timeUnixNano":   ts_ns,
-              "severityNumber": sevnum,
-              "severityText":   sevtext,
-              "body": {"stringValue": msg},
-              "attributes": [{"key": "stream", "value": {"stringValue": strm}}]
-            }]
-          }]
+        "container_name": ctr,
+        "resource": {"attributes": attrs},
+        "log_record": {
+          "timeUnixNano":   ts_ns,
+          "severityNumber": sevnum,
+          "severityText":   sevtext,
+          "body": {"stringValue": msg},
+          "attributes": [{"key": "stream", "value": {"stringValue": strm}}]
         }
       }
     '''
 
-  # Batch many shaped log events into one OTLP envelope (reduce works on logs).
+  # One envelope per container per period. The resource block is carried once
+  # and the records ride under it, instead of every record repeating it.
   [transforms.batch_envelope]
     type = "reduce"
     inputs = ["otel_shape"]
+    group_by = ["container_name"]
     expire_after_ms = 30000
     end_every_period_ms = 5000
     max_events = 500
-    merge_strategies.resource_log = "array"
+    merge_strategies.container_name = "discard"
+    merge_strategies.resource = "discard"
+    merge_strategies.log_record = "array"
 
   [transforms.finalize_envelope]
     type = "remap"
     inputs = ["batch_envelope"]
     source = '''
-      . = {"resourceLogs": .resource_log}
+      recs = .log_record
+      if !is_array(recs) {
+        recs = [recs]
+      }
+      . = {"resourceLogs": [{
+        "resource": .resource,
+        "scopeLogs": [{
+          "scope": {"name": "{{ ethereum_network_name }}-vector"},
+          "logRecords": recs
+        }]
+      }]}
     '''
 
   [sinks.otlp_logs]
     type = "opentelemetry"
     inputs = ["finalize_envelope"]
+    # A slow or refusing gateway must not turn into unbounded buffering here.
+    buffer.type = "memory"
+    buffer.max_events = 200
+    buffer.when_full = "drop_newest"
     [sinks.otlp_logs.protocol]
       type = "http"
       uri = "{{ otlp_endpoint }}/v1/logs"
       method = "post"
       encoding.codec = "otlp"
+      compression = "gzip"
       auth.strategy = "basic"
       auth.user = "{{ ethereum_network_name }}"
       auth.password = "{{ secret_loki.password }}"
@@ -445,3 +482,4 @@ vector_config: |
       # max_events MUST be 1 — OTLP/HTTP allows one envelope per request.
       batch.max_events = 1
       batch.timeout_secs = 5
+      request.retry_attempts = 5

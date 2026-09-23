@@ -1,10 +1,14 @@
-ethereum_cl_bootnodes:
-  - "{{ hostvars[primary_bootnode]['bootnodoor_fact_enr'] }}"
-  - "{{ hostvars[primary_bootnode]['ethereum_node_fact_discovery_cl_enr'] }}"
+# Empty ENRs are dropped: a single '' entry makes clients refuse to start
+# (teku: "bootnode () does not start with enr:-", ethrex: invalid --bootnodes).
+ethereum_cl_bootnodes: >-
+  {{ [hostvars[primary_bootnode]['bootnodoor_fact_enr'],
+      hostvars[primary_bootnode]['ethereum_node_fact_discovery_cl_enr']]
+     | reject('equalto', '') | list }}
 
-ethereum_el_bootnodes:
-  - "{{ hostvars[primary_bootnode]['bootnodoor_fact_el_enr'] }}"
-  - "{{ hostvars[primary_bootnode]['ethereum_node_fact_discovery_el_enr'] }}"
+ethereum_el_bootnodes: >-
+  {{ [hostvars[primary_bootnode]['bootnodoor_fact_el_enr'],
+      hostvars[primary_bootnode]['ethereum_node_fact_discovery_el_enr']]
+     | reject('equalto', '') | list }}
 
 ethereum_node_xatu_sentry_enabled: true
 
