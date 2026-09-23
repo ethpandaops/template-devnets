@@ -4,6 +4,8 @@ on:
     paths:
       - 'ansible/**'
       - '.tool-versions'
+      - 'setup.sh'
+      - 'requirements.txt'
       - '.github/actions/**'
       - '.github/workflows/lint-ansible.yaml'
   push:
@@ -12,6 +14,8 @@ on:
     paths:
       - 'ansible/**'
       - '.tool-versions'
+      - 'setup.sh'
+      - 'requirements.txt'
       - '.github/actions/**'
       - '.github/workflows/lint-ansible.yaml'
 
