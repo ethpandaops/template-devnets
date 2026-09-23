@@ -31,7 +31,7 @@ ethereum_node_cl_checkpoint_sync_enabled: false
 
 checkpoint_sync_url: https://checkpoint-sync.{{ ethereum_network_name }}.{{ domain }}
 #checkpoint_sync_url: https://{{ secret_nginx_shared_basic_auth.name }}:{{ secret_nginx_shared_basic_auth.password }}@{{ ethereum_node_beacon_prefix }}{{ checkpoint_sync_node }}.{{ ethereum_network_name }}.{{ domain }}
-checkpoint_sync_url_kube: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.template-devnets.node_ingress.combined}>@{{ ethereum_node_beacon_prefix }}{{ checkpoint_sync_node }}.{{ ethereum_network_name }}.{{ domain }}
+checkpoint_sync_url_kube: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.{{ devnet_name }}-devnets.node_ingress.combined}>@{{ ethereum_node_beacon_prefix }}{{ checkpoint_sync_node }}.{{ ethereum_network_name }}.{{ domain }}
 
 #  ██████╗░░█████╗░██╗░░░░░███████╗  ██╗░░░██╗░█████╗░██████╗░░██████╗
 #  ██╔══██╗██╔══██╗██║░░░░░██╔════╝  ██║░░░██║██╔══██╗██╔══██╗██╔════╝
@@ -185,8 +185,8 @@ json_rpc_snooper_container_volumes:
 # role: ethpandaops.general.generate_kubernetes_config
 gen_kubernetes_config_dora_execution_snooper_port: 8961
 gen_kubernetes_config_dora_frontend_rainbowkit_id: "15fe4ab4d5c0bcb6f0dc7c398301ff0e"
-gen_kubernetes_config_dora_execution_endpoints_url: "https://raw.githubusercontent.com/ethpandaops/template-devnets/refs/heads/master/kubernetes/{{ network_iteration }}/dora/endpoints-el.yaml"
-gen_kubernetes_config_dora_consensus_endpoints_url: "https://raw.githubusercontent.com/ethpandaops/template-devnets/refs/heads/master/kubernetes/{{ network_iteration }}/dora/endpoints-cl.yaml"
+gen_kubernetes_config_dora_execution_endpoints_url: "https://raw.githubusercontent.com/ethpandaops/{{ devnet_name }}-devnets/refs/heads/master/kubernetes/{{ network_iteration }}/dora/endpoints-el.yaml"
+gen_kubernetes_config_dora_consensus_endpoints_url: "https://raw.githubusercontent.com/ethpandaops/{{ devnet_name }}-devnets/refs/heads/master/kubernetes/{{ network_iteration }}/dora/endpoints-cl.yaml"
 gen_kubernetes_config_dora_api_secret: "{{ secret_dora_api_key }}"
 
 # role: ethpandaops.general.xatu_sentry
