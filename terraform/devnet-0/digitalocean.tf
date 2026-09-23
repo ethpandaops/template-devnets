@@ -80,6 +80,7 @@ locals {
             region = node.region != null ? node.region : var.digitalocean_regions[
               parseint(substr(md5("${node.name}-${node.start_index + i + 1}"), 0, 8), 16) % length(var.digitalocean_regions)
             ]
+            size = node.size
             ipv6 = node.ipv6
             arch = "amd64"
           }
@@ -109,7 +110,7 @@ locals {
         ssh_keys    = [data.digitalocean_ssh_key.main.fingerprint]
         region      = vm.region
         image       = local.digitalocean_default_image
-        size        = vm.supernode ? var.digitalocean_supernode_size : var.digitalocean_fullnode_size
+        size        = coalesce(vm.size, vm.supernode ? var.digitalocean_supernode_size : var.digitalocean_fullnode_size)
         resize_disk = true
         monitoring  = true
         backups     = false
