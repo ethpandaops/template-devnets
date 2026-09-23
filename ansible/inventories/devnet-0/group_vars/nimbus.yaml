@@ -49,7 +49,7 @@ nimbus_container_command_extra_simple_args:
   - --doppelganger-detection=off
   - --log-level=DEBUG
   - --light-client-data-serve=false
-  - --graffiti={{ ansible_hostname }}
+  - --graffiti={{ inventory_hostname }}
 nimbus_container_command_extra_bootnode_args: >-
   {{ ethereum_cl_bootnodes | map('regex_replace', '^', '--bootstrap-node=') | list }}
 

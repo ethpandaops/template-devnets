@@ -25,7 +25,7 @@ nethermind_container_command_extra_args:
   - --Discovery.Bootnodes={{ ethereum_el_bootnodes | join(',') }}
   - --Discovery.DiscoveryVersion=V5
   - --Pruning.Mode=None
-  - --config=none
+  - --config=none  # else Nethermind loads mainnet defaults (snap sync + mainnet pivot) and never leaves Syncing
   - --log=DEBUG
   - --Seq.MinLevel=Info
   - --Seq.ServerUrl={{ nethermind_seq_server }}

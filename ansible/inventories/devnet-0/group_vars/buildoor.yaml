@@ -55,6 +55,10 @@ teku_container_command_extra_args: >-
 grandine_container_command_extra_args: >-
   {{ grandine_container_command_extra_simple_args
      + ['--features=AlwaysPrepareExecutionPayload', '--subscribe-all-subnets'] }}
+nimbus_container_command_extra_args: >-
+  {{ nimbus_container_command_extra_simple_args
+     + nimbus_container_command_extra_bootnode_args
+     + ['--subscribe-all-subnets'] }}
 
 ethereum_node_docker_watchtower_containers_list:
   - execution

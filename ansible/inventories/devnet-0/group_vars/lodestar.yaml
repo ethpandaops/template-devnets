@@ -46,6 +46,6 @@ lodestar_validator_container_volumes:
   - "{{ eth_testnet_config_dir }}:/network-config:ro"
 lodestar_validator_container_command_extra_args:
   - --paramsFile=/network-config/config.yaml
-  - --graffiti={{ ansible_hostname }}
+  - --graffiti={{ inventory_hostname }}
 lodestar_validator_datadir: /data/lodestar-validator
 lodestar_container_pull: true

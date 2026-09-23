@@ -47,7 +47,7 @@ grandine_container_command_extra_args: >-
 grandine_container_command_extra_simple_args:
   - --configuration-directory=/network-config/
   - --boot-nodes={{ ethereum_cl_bootnodes | join(',') }}
-  - --graffiti={{ ansible_hostname }}
+  - --graffiti={{ inventory_hostname }}
   - --features=LogHttpRequests
 
 grandine_validator_container_volumes:
