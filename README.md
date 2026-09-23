@@ -3,9 +3,9 @@
 <h1 align="center">Infrastructure code for Dev/Testnets</h1>
 
 <p align="center">
-<a href="https://github.com/ethpandaops/template-testnet/actions/workflows/ansible_lint.yaml"><img src="https://github.com/ethpandaops/template-testnet/actions/workflows/ansible_lint.yaml/badge.svg"></a>
-<a href="https://github.com/ethpandaops/template-testnet/actions/workflows/terraform_lint.yaml"><img src="https://github.com/ethpandaops/template-testnet/actions/workflows/terraform_lint.yaml/badge.svg"></a>
-<a href="https://github.com/ethpandaops/template-testnet/actions/workflows/helm_lint.yaml"><img src="https://github.com/ethpandaops/template-testnet/actions/workflows/helm_lint.yaml/badge.svg"></a>
+<a href="https://github.com/ethpandaops/template-devnets/actions/workflows/lint-ansible.yaml"><img src="https://github.com/ethpandaops/template-devnets/actions/workflows/lint-ansible.yaml/badge.svg"></a>
+<a href="https://github.com/ethpandaops/template-devnets/actions/workflows/lint-terraform.yaml"><img src="https://github.com/ethpandaops/template-devnets/actions/workflows/lint-terraform.yaml/badge.svg"></a>
+<a href="https://github.com/ethpandaops/template-devnets/actions/workflows/lint-helm.yaml"><img src="https://github.com/ethpandaops/template-devnets/actions/workflows/lint-helm.yaml/badge.svg"></a>
 </p>
 
 This repository contains the infrastructure code used to setup ~all~ dev/testnets. A lot of the code uses reusable components either provided by our [ansible collection](https://github.com/ethpandaops/ansible-collection-general) or our [helm charts for kubernetes](https://github.com/ethpandaops/ethereum-helm-charts/).
@@ -21,7 +21,7 @@ Status   | Network    | Links   | Ansible                                       
 
 We're using [asdf](https://github.com/asdf-vm/asdf) to make sure that we all use the same versions across tools. Our repositories should contain versions defined in .tools-versions.
 
-You can then use [`./setup.sh`](./asdf-setup.sh) to install all dependencies.
+You can then use [`./setup.sh`](./setup.sh) to install all dependencies.
 
 ## Terraform
 From [`./terraform/devnet-0/`](./terraform/devnet-0/)
