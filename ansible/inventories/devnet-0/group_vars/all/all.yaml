@@ -317,6 +317,8 @@ otlp_endpoint: "https://otlp.analytics.production.platform.ethpandaops.io"
 otlp_deployment_env: production
 
 # role: ethpandaops.general.vector
+vector_container_memory: 1g
+vector_container_memory_swap: 1g
 vector_config: |
   # Docker container logs (clean per-container metadata straight from the Docker API)
   [sources.in]
@@ -330,10 +332,20 @@ vector_config: |
       "snooper-",
     ]
 
-  # Shape docker_logs events into an OTLP resourceLogs envelope with full metadata.
+  # Per-container ceiling on shipped lines. A client or sentry in a failure loop
+  # emits thousands of lines a second, and across a large fleet that alone can
+  # saturate the analytics ingress; healthy containers sit far below this.
+  [transforms.throttle]
+    type = "throttle"
+    inputs = ["in"]
+    threshold = 20000
+    window_secs = 60
+    key_field = "{% raw %}{{ container_name }}{% endraw %}"
+
+  # Shape docker_logs events into an OTLP log record plus the resource it belongs to.
   [transforms.otel_shape]
     type = "remap"
-    inputs = ["in"]
+    inputs = ["throttle"]
     source = '''
       ts_ns = to_string(to_unix_timestamp(now(), unit: "nanoseconds"))
       if is_timestamp(.timestamp) {
@@ -408,46 +420,61 @@ vector_config: |
       attrs = push(attrs, {"key": "ethereum_el", "value": {"stringValue": "{{ ethereum_node_el }}"}})
   {%- endif +%}
       . = {
-        "resource_log": {
-          "resource": {"attributes": attrs},
-          "scopeLogs": [{
-            "scope": {"name": "{{ ethereum_network_name }}-vector"},
-            "logRecords": [{
-              "timeUnixNano":   ts_ns,
-              "severityNumber": sevnum,
-              "severityText":   sevtext,
-              "body": {"stringValue": msg},
-              "attributes": [{"key": "stream", "value": {"stringValue": strm}}]
-            }]
-          }]
+        "container_name": ctr,
+        "resource": {"attributes": attrs},
+        "log_record": {
+          "timeUnixNano":   ts_ns,
+          "severityNumber": sevnum,
+          "severityText":   sevtext,
+          "body": {"stringValue": msg},
+          "attributes": [{"key": "stream", "value": {"stringValue": strm}}]
         }
       }
     '''
 
-  # Batch many shaped log events into one OTLP envelope (reduce works on logs).
+  # One envelope per container per period. The resource block is carried once
+  # and the records ride under it, instead of every record repeating it.
   [transforms.batch_envelope]
     type = "reduce"
     inputs = ["otel_shape"]
+    group_by = ["container_name"]
     expire_after_ms = 30000
     end_every_period_ms = 5000
     max_events = 500
-    merge_strategies.resource_log = "array"
+    merge_strategies.container_name = "discard"
+    merge_strategies.resource = "discard"
+    merge_strategies.log_record = "array"
 
   [transforms.finalize_envelope]
     type = "remap"
     inputs = ["batch_envelope"]
     source = '''
-      . = {"resourceLogs": .resource_log}
+      recs = .log_record
+      if !is_array(recs) {
+        recs = [recs]
+      }
+      . = {"resourceLogs": [{
+        "resource": .resource,
+        "scopeLogs": [{
+          "scope": {"name": "{{ ethereum_network_name }}-vector"},
+          "logRecords": recs
+        }]
+      }]}
     '''
 
   [sinks.otlp_logs]
     type = "opentelemetry"
     inputs = ["finalize_envelope"]
+    # A slow or refusing gateway must not turn into unbounded buffering here.
+    buffer.type = "memory"
+    buffer.max_events = 200
+    buffer.when_full = "drop_newest"
     [sinks.otlp_logs.protocol]
       type = "http"
       uri = "{{ otlp_endpoint }}/v1/logs"
       method = "post"
       encoding.codec = "otlp"
+      compression = "gzip"
       auth.strategy = "basic"
       auth.user = "{{ ethereum_network_name }}"
       auth.password = "{{ secret_loki.password }}"
@@ -455,3 +482,4 @@ vector_config: |
       # max_events MUST be 1 — OTLP/HTTP allows one envelope per request.
       batch.max_events = 1
       batch.timeout_secs = 5
+      request.retry_attempts = 5
