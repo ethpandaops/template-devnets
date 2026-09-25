@@ -233,4 +233,6 @@ Here's a table of where the keys are used
 | 10            | assertoor         | ✅               |                | Runs various test scenarios       |
 | 11            | mev_signing_key   | ✅               |                | Subsidizes mev-able txs on the network |
 | 12            | buildoor wallet   | ✅               |                | Pre-funded wallet for buildoor lifecycle deposits/top-ups |
-| 13-29         | available         |                  |                |                                   |
+| 13            | faucet-agents     | ✅               |                | Agent faucet wallet (faucet_agents_private_key) |
+| 14            | faucet-agents REST| ✅               |                | Agent faucet REST wallet, pays every agent claim (faucet_agents_rest_private_key) |
+| 15-29         | available         |                  |                |                                   |

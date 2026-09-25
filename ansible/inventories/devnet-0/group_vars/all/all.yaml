@@ -81,6 +81,13 @@ ethereum_genesis_generator_config_files:
 # 0x107781Bc6FA8f66B843f4216fd6D5862D3aa4fcd: 100000ETH - optimism
 # 0x118A1030baf8Fa56f9B8235C163d3112FA8c3b89: 100000ETH - lido
 
+# The agent faucet (faucet-agents, reached only through the panda proxy) signs
+# with mnemonic accounts 13 and 14, so both wallets are premined with the other
+# mnemonic accounts and need no EL_PREMINE_ADDRS entry. The vault holds the same
+# two keys under testnets.<family>-devnets.faucet_agents_private_key (account 13,
+# backs the reported balance and the non-REST claim path) and
+# .faucet_agents_rest_private_key (account 14, pays every agent claim).
+
 ethereum_genesis_validator_keys_output_dir: "{{ ansible_inventory_sources[0] | dirname }}/files/validator_keys"
 ethereum_genesis_validator_bls_change_execution_address: "{{ ethereum_node_cl_validator_fee_recipient }}"
 ethereum_genesis_validator_keyranges: >-
