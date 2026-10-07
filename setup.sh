@@ -23,3 +23,6 @@ export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
 
 # Install python tools
 python -m pip install -r requirements.txt
+
+# Create asdf shims for the executables pip just installed (ansible-lint, ansible-playbook, ...).
+asdf reshim python
