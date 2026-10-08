@@ -1,6 +1,6 @@
 age 1.2.1
 helm 3.15.3
-sops 3.8.1
+sops 3.13.3
 shellcheck 0.11.0
 python 3.12.12
 awscli 2.22.26
