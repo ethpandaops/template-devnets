@@ -236,3 +236,6 @@ Here's a table of where the keys are used
 | 13            | faucet-agents     | ✅               |                | Agent faucet wallet (faucet_agents_private_key) |
 | 14            | faucet-agents REST| ✅               |                | Agent faucet REST wallet, pays every agent claim (faucet_agents_rest_private_key) |
 | 15-29         | available         |                  |                |                                   |
+
+### EIP-8253 prestate
+The accounts in [ansible/inventories/devnet-0/files/eip8253-prestate.json](ansible/inventories/devnet-0/files/eip8253-prestate.json) are preloaded into the EL genesis alloc with their full state (balance, nonce, storage) via `ADDITIONAL_PRELOADED_CONTRACTS` in `values.env` (see `ethereum_genesis_eip8253_prestate_file` in [ansible/inventories/devnet-0/group_vars/all/all.yaml](ansible/inventories/devnet-0/group_vars/all/all.yaml)). Edit the JSON file to change them; the genesis has to be regenerated afterwards.
