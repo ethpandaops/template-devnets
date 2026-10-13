@@ -163,9 +163,6 @@ ethereum_node_validator_public_ipv6: "{{ host_ipv6_prefix | ansible.utils.ipaddr
 ethereum_node_snooper_rpc_public_ipv6: "{{ host_ipv6_prefix | ansible.utils.ipaddr(service_ipv6_offsets.snooper_rpc) | ansible.utils.ipaddr('address') if (docker_network_enable_ipv6 | bool) else '' }}"
 ethereum_node_snooper_engine_public_ipv6: "{{ host_ipv6_prefix | ansible.utils.ipaddr(service_ipv6_offsets.snooper_engine) | ansible.utils.ipaddr('address') if (docker_network_enable_ipv6 | bool) else '' }}"
 ethereum_node_skip_cleanup: true
-# Watchtower: daily image check at a per-host slot in 15:00-17:59 CET/CEST
-# (seeded by network+hostname), so an image roll restarts nodes one by one
-# instead of fleet-wide at once. 18:00 is the end of the update window.
 ethereum_node_docker_watchtower_enabled: true
 ethereum_node_docker_watchtower_containers_list:
   - execution
@@ -174,11 +171,9 @@ ethereum_node_docker_watchtower_containers_list:
   - xatu-sentry
   - external-block-builder
 docker_watchtower_container_additional_args:
-  - "--schedule=0 {{ 60 | random(seed=ethereum_network_name ~ inventory_hostname ~ 'min') }} {{ 15 + (3 | random(seed=ethereum_network_name ~ inventory_hostname ~ 'hour')) }} * * *"
+  - "--schedule={{ 60 | random(seed=ethereum_network_name ~ inventory_hostname ~ 'sec') }} {{ 15 | random(seed=ethereum_network_name ~ inventory_hostname ~ 'min') }}/15 * * * *"
   - --stop-timeout=300s
   - --include-restarting
-docker_watchtower_container_env:
-  TZ: Europe/Paris
 ethereum_node_json_rpc_snooper_engine_enabled: true
 ethereum_node_json_rpc_snooper_engine_name: "snooper-engine"
 ethereum_node_json_rpc_snooper_engine_port: 8561
