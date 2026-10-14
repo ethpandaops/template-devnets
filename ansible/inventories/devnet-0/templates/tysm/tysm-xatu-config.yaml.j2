@@ -1,0 +1,16 @@
+# Minimal Xatu config: every tysm beacon requires --xatu-config-file to start.
+# The xatu hook is disabled and this output points at a local no-op address that
+# is never required to connect; devnet events still ship via the xatu-sentry sidecar.
+name: "{{ inventory_hostname }}"
+
+ethereum:
+  network: "{{ ethereum_network_name }}"
+
+outputs:
+  - name: noop
+    type: xatu
+    config:
+      address: localhost:19999
+      tls: false
+      maxQueueSize: 1000
+      batchTimeout: 5s
