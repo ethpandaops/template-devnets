@@ -311,10 +311,6 @@ docker_nginx_proxy_wildcard_cert_url: "http://cert.{{ network_server_subdomain }
 docker_nginx_proxy_wildcard_cert_psk: "{{ secret_cert_encryption_psk }}"
 
 # OTLP egress to the prod analytics gateway (Vector ships container logs here).
-# Ingress identity (auth username + ingress_user tag) is the current devnet name
-# rather than secret_loki.username: the sops username drifts stale between devnet
-# iterations, while the gateway only validates the (constant) password — so using
-# the network name keeps log attribution correct no matter what sops holds.
 otlp_endpoint: "https://otlp.analytics.production.platform.ethpandaops.io"
 otlp_deployment_env: production
 

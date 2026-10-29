@@ -116,13 +116,6 @@ creation_rules:
 secret_zerossl:
     ACME_EAB_KID:
     ACME_EAB_HMAC_KEY:
-secret_prometheus_remote_write:
-    username:
-    password:
-secret_loki:
-    endpoint:
-    username:
-    password:
 secret_nginx_shared_basic_auth:
     name:
     password:
@@ -132,6 +125,17 @@ secret_genesis_mnemonic:
 4. Encrypt it to `all.sops.yaml`
 ```bash
 sops encrypt secrets.yaml --output ansible/inventories/devnet-0/group_vars/all/all.sops.yaml
+```
+5. The logs/metrics ingress passwords live in `ingress.sops.yaml`, which platform ArgoCD can also decrypt. The ingress username is the network name (`ethereum_network_name`), so it is not stored:
+```yaml
+secret_prometheus_remote_write:
+    password:
+secret_loki:
+    endpoint:
+    password:
+```
+```bash
+sops encrypt ingress.yaml --output ansible/inventories/devnet-0/group_vars/all/ingress.sops.yaml
 ```
 
 This will encrypt the elements in the yaml file and put it as ansible yaml file. Each element in the yaml file will be decrypted and used as variables using the configured PGP key.
