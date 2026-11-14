@@ -100,7 +100,7 @@ lodestar-besu-1 ansible_host=167.99.34.241 cloud=digitalocean cloud_region=ams3 
 1. [ansible/inventories/devnet-0/group_vars/all/all.yaml](ansible/inventories/devnet-0/group_vars/all/all.yaml) has all the network configuration parameters. Adjust the parameters according to your requirements. Most likely you will not need to adjust these, unless you would like to use a custom setup. The default configuration will work for most networks.
 
 ## Services Configuration
-[ansible/inventories/devnet-0/group_vars/all/services.yaml](ansible/inventories/devnet-0/group_vars/all/services.yaml) lists the services of the devnet's service cluster: which ones run, their settings, and the access groups that say who may use which service.
+[ansible/inventories/devnet-0/group_vars/all/services.yaml](ansible/inventories/devnet-0/group_vars/all/services.yaml) lists the services of the devnet's service cluster: which ones run, and the access groups that say who may use which service.
 
 ## Secret Configuration
 There are multiple secrets used throughout the ansible files, defined in [ansible/inventories/devnet-0/group_vars/all/all.sops.yaml](ansible/inventories/devnet-0/group_vars/all/all.sops.yaml).
