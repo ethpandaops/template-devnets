@@ -1,4 +1,5 @@
-# Services of the devnet's service cluster: which run and who may use them. Read by the role ethpandaops.general.generate_kubernetes_config.
+# Services of the devnet's service cluster: which run and who may use them.
+# Read by the role ethpandaops.general.generate_kubernetes_config.
 
 # Services that are not deployed. Everything else the role knows is.
 gen_kubernetes_config_disabled_services: []
