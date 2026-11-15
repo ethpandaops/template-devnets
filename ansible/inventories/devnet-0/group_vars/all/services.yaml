@@ -19,8 +19,7 @@ gen_kubernetes_config_authenticatoor_grants:
       - "cfaccess/principal:service"
     services: ["all:all"]
   # Core devs: everyone the IdP lets in (its panda-access group), whatever
-  # their team. The faucet with its login perks; faucet:drop_100eth would add
-  # the free 100 ETH drop per day.
+  # their team. The faucet, with the free 100 ETH drop per day.
   - name: core-devs
     members:
       - "authentik/groups:panda-access"
