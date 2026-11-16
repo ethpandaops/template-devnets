@@ -161,6 +161,7 @@ resource "digitalocean_droplet" "main" {
   name        = "${var.ethereum_network}-${each.value.name}"
   region      = each.value.region
   ssh_keys    = each.value.ssh_keys
+  user_data   = local.root_user_data
   image       = each.value.image
   size        = each.value.size
   resize_disk = each.value.resize_disk
@@ -169,6 +170,10 @@ resource "digitalocean_droplet" "main" {
   ipv6        = each.value.ipv6
   vpc_uuid    = each.value.vpc_uuid
   tags        = each.value.tags
+
+  lifecycle {
+    ignore_changes = [user_data]
+  }
 }
 
 resource "digitalocean_project_resources" "droplets" {

@@ -199,6 +199,7 @@ resource "hcloud_server" "main" {
   server_type = each.value.server_type
   location    = each.value.location
   ssh_keys    = each.value.ssh_keys
+  user_data   = local.root_user_data
   backups     = each.value.backups
   labels      = { for label in each.value.labels : split(":", label)[0] => split(":", label)[1] }
   public_net {
@@ -207,7 +208,7 @@ resource "hcloud_server" "main" {
   }
 
   lifecycle {
-    ignore_changes = [location]
+    ignore_changes = [location, user_data]
   }
 }
 
