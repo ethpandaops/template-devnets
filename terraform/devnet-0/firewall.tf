@@ -133,6 +133,20 @@ resource "digitalocean_firewall" "bootnode" {
   depends_on = [digitalocean_project_resources.droplets]
 }
 
+resource "digitalocean_firewall" "tysm" {
+  count = length([for vm in local.digitalocean_vms : vm.id if vm.tysm]) > 0 ? 1 : 0
+  name  = "${var.ethereum_network}-nodes-tysm"
+  tags  = ["tysm:${var.ethereum_network}"]
+
+  // TYSM control API (bad-tysm reaches back on this port)
+  inbound_rule {
+    protocol         = "tcp"
+    port_range       = "8675"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }
+  depends_on = [digitalocean_project_resources.droplets]
+}
+
 resource "digitalocean_firewall" "mev_relay" {
   count = contains(keys(digitalocean_droplet.main), "mev-relay-1") ? 1 : 0
   name  = "${var.ethereum_network}-nodes-mev-relay"
@@ -322,6 +336,24 @@ resource "hcloud_firewall" "bootnode_firewall" {
     direction   = "in"
     protocol    = "udp"
     port        = "9010"
+    source_ips  = ["0.0.0.0/0", "::/0"]
+  }
+}
+
+resource "hcloud_firewall" "tysm_firewall" {
+  count = length([for vm in local.hcloud_vms : vm.id if vm.tysm]) > 0 ? 1 : 0
+  name  = "${var.ethereum_network}-tysm-firewall"
+
+  apply_to {
+    label_selector = "tysm=${var.ethereum_network}"
+  }
+
+  // TYSM control API (bad-tysm reaches back on this port)
+  rule {
+    description = "Allow TYSM control API port TCP"
+    direction   = "in"
+    protocol    = "tcp"
+    port        = "8675"
     source_ips  = ["0.0.0.0/0", "::/0"]
   }
 }

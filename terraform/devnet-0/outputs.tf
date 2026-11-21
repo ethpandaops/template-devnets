@@ -21,6 +21,7 @@ resource "local_file" "ansible_inventory" {
             supernode       = try(title([for tag in tolist(server.tags) : split(":", tag)[1] if can(regex("^supernode:", tag))][0]), "undefined")
             arch            = try([for tag in tolist(server.tags) : split(":", tag)[1] if can(regex("^arch:", tag))][0], "amd64")
             builder_index   = try([for tag in tolist(server.tags) : split(":", tag)[1] if can(regex("^builder_index:", tag))][0], "")
+            tysm            = try([for tag in tolist(server.tags) : split(":", tag)[1] if can(regex("^tysm:", tag))][0], "")
             tags            = "${server.tags}"
             hostname        = "${split(".", key)[0]}"
             cloud           = "digitalocean"
@@ -37,6 +38,7 @@ resource "local_file" "ansible_inventory" {
             supernode       = server.labels.supernode
             arch            = server.labels.arch
             builder_index   = try(server.labels.builder_index, "")
+            tysm            = try(server.labels.tysm, "")
             tags            = server.labels
             hostname        = split(".", key)[0]
             cloud           = "hetzner"
