@@ -74,7 +74,6 @@ env:
   GLOBAL_EXTRA_FLAGS: >-
     --client.checktimelimit=180s
     --sim.parallelism=4
-    --docker.auth
     --docker.buildoutput
   # Flags used for the ethereum/eest/consume-engine simulator
   EEST_ENGINE_FLAGS: >-
@@ -171,10 +170,20 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: ethpandaops/hive-github-action/helpers/self-hosted-runner-dependencies@09050fc75bae8a10b1876a0826ca4114ea9ed6e8 # v0.6.3
         if: runner.environment != 'github-hosted'
-      - uses: ethpandaops/actions/docker-login@99b48ca2b233a2eff93e6a6df76e46b718aca108
-        with:
-          username: ethpandaops
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      # Self-hosted runners' Docker already pulls Docker Hub images through
+      # the ethpandaops pull-through cache, falling back to Docker Hub. Set
+      # GitHub-hosted runners up the same way: hive-github-action starts
+      # Docker with this daemon.json.
+      - name: Use the Docker Hub pull-through cache
+        if: runner.environment == 'github-hosted'
+        run: |
+          config=/etc/docker/daemon.json
+          current=$(sudo cat "$config" 2>/dev/null || true)
+          [ -n "$current" ] || current='{}'
+          echo "$current" \
+            | jq '."registry-mirrors" = ["https://docker-cache.ethquokkaops.io"]' \
+            | sudo tee "$config"
+          sudo systemctl restart docker
       - uses: ethpandaops/hive-github-action@09050fc75bae8a10b1876a0826ca4114ea9ed6e8 # v0.6.3
         with:
           hive_repository: ${{ needs.prepare.outputs.hive_repo }}
