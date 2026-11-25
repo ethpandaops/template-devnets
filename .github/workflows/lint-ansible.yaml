@@ -5,7 +5,9 @@ on:
       - 'ansible/**'
       - '.tool-versions'
       - 'setup.sh'
-      - 'requirements.txt'
+      - '.python-version'
+      - 'pyproject.toml'
+      - 'uv.lock'
       - '.github/actions/**'
       - '.github/workflows/lint-ansible.yaml'
   push:
@@ -15,7 +17,9 @@ on:
       - 'ansible/**'
       - '.tool-versions'
       - 'setup.sh'
-      - 'requirements.txt'
+      - '.python-version'
+      - 'pyproject.toml'
+      - 'uv.lock'
       - '.github/actions/**'
       - '.github/workflows/lint-ansible.yaml'
 

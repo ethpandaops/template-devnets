@@ -19,9 +19,15 @@ Status   | Network    | Links   | Ansible                                       
 # Development
 ## Version management for tools
 
-We're using [asdf](https://github.com/asdf-vm/asdf) to make sure that we all use the same versions across tools. Our repositories should contain versions defined in .tools-versions.
+We're using [asdf](https://github.com/asdf-vm/asdf) to make sure that we all use the same versions across tools. Binary tools (terraform, helm, sops, uv, ...) are pinned in [`.tool-versions`](.tool-versions).
+
+Python and the Python tools (ansible, ansible-lint, ...) are managed by [uv](https://docs.astral.sh/uv/), not asdf: the interpreter is pinned in [`.python-version`](.python-version), dependencies in [`pyproject.toml`](pyproject.toml), exact versions in [`uv.lock`](uv.lock). They are installed into `.venv/`.
 
 You can then use [`./setup.sh`](./setup.sh) to install all dependencies.
+
+To activate `.venv` automatically when you `cd` into the repo, install [direnv](https://direnv.net/docs/installation.html), [hook it into your shell](https://direnv.net/docs/hook.html), and run `direnv allow` once. [`.envrc`](.envrc) then also re-syncs the venv whenever `pyproject.toml`, `uv.lock` or `.python-version` change. Without direnv, run `source .venv/bin/activate` or prefix commands with `uv run`.
+
+To add or bump a Python dependency: `uv add 'ansible==X.Y.Z'` (updates `pyproject.toml` and `uv.lock`), or edit `pyproject.toml` and run `uv lock`.
 
 ## Terraform
 From [`./terraform/devnet-0/`](./terraform/devnet-0/)
