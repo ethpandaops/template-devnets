@@ -5,7 +5,9 @@ on:
       - 'ansible/**'
       - '.tool-versions'
       - 'setup.sh'
-      - 'requirements.txt'
+      - '.python-version'
+      - 'pyproject.toml'
+      - 'uv.lock'
       - '.github/actions/**'
       - '.github/workflows/lint-ansible.yaml'
   push:
@@ -15,7 +17,9 @@ on:
       - 'ansible/**'
       - '.tool-versions'
       - 'setup.sh'
-      - 'requirements.txt'
+      - '.python-version'
+      - 'pyproject.toml'
+      - 'uv.lock'
       - '.github/actions/**'
       - '.github/workflows/lint-ansible.yaml'
 
@@ -25,13 +29,11 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
-      - name: Install ansible role/collection dependencies
-        working-directory: ./ansible
-        run: ./install_dependencies.sh
       - name: Lint
         working-directory: ./ansible
         run: >
           ansible-lint playbook.yaml
+          --offline
           --nocolor
           --exclude vendor
           --exclude '*.sops.yaml'
