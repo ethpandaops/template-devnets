@@ -52,6 +52,8 @@
       tags: [init-server, prometheus]
     - role: ethpandaops.general.vector
       tags: [init-server, vector]
+    - role: ethpandaops.general.upgradoor_agent
+      tags: [init-server, upgradoor]
 
 - hosts: dns_server
   become: true
