@@ -38,3 +38,4 @@ scripts/*.json
 
 # Python (uv, see pyproject.toml)
 .venv/
+__pycache__/
