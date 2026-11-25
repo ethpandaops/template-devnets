@@ -1,5 +1,8 @@
 ansible_user: devops
 ansible_python_interpreter: /usr/bin/python3
+# Header for templated files. A variable, not ansible.cfg's ansible_managed key:
+# ansible-core 2.21 deprecates that key and 2.23 removes it. Renders the same text.
+ansible_managed: "Ansible managed. Don't change this file manually. Template info: {{ template_fullpath | replace(playbook_dir, '') }}"
 # Template name refers to the name of the devnet without number
 # Generally refer to the first word of the repository name
 # e.g. peerdas, or pectra

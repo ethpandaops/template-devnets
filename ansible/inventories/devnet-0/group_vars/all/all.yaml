@@ -189,7 +189,7 @@ ethereum_node_json_rpc_snooper_engine_container_env:
   SNOOPER_XATU_ENABLED: "true"
   SNOOPER_XATU_NAME: "{{ ethereum_network_name }}-{{ inventory_hostname }}"
   SNOOPER_XATU_NETWORK_NAME: "{{ ethereum_network_name }}"
-  SNOOPER_XATU_NETWORK_ID: "{{ ethereum_network_id }}"
+  SNOOPER_XATU_NETWORK_ID: "{{ ethereum_network_id | string }}"
   SNOOPER_XATU_OUTPUTS: "xatu:{{ xatu_sentry_config_server_address }}"
   SNOOPER_XATU_TLS: "true"
   SNOOPER_XATU_HEADERS: "authorization=Basic {{ (xatu_sentry_config_server_auth_user + ':' + xatu_sentry_config_server_auth_password) | b64encode }}"
